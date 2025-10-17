@@ -20,14 +20,14 @@ var Colors = {
   brown: 0x59332e,
   peach: 0xffdab9,
   yellow: 0xffff00,
-  olive: 0x556b2f,
+  olive: 0x556b2f
 };
 
 var deg2Rad = Math.PI / 180;
 
 // Make a new world when the page is loaded.
-window.addEventListener("load", function () {
-  new World(document.getElementById("world"));
+window.addEventListener('load', function () {
+  new World(document.getElementById('world'));
 });
 
 /**
@@ -47,8 +47,7 @@ function sinusoid(frequency, minimum, maximum, phase) {
   var angularFrequency = 2 * Math.PI * frequency;
   var phaseRadians = (phase * Math.PI) / 180;
   var currTimeInSecs = new Date() / 1000;
-  var offset =
-    amplitude * Math.sin(angularFrequency * currTimeInSecs + phaseRadians);
+  var offset = amplitude * Math.sin(angularFrequency * currTimeInSecs + phaseRadians);
   var average = (minimum + maximum) / 2;
   return average + offset;
 }
@@ -86,7 +85,7 @@ function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
   var geom = new THREE.BoxGeometry(dx, dy, dz);
   var mat = new THREE.MeshPhongMaterial({
     color: color,
-    flatShading: notFlatShading != true,
+    flatShading: notFlatShading != true
   });
   var box = new THREE.Mesh(geom, mat);
   box.castShadow = true;
@@ -197,16 +196,12 @@ function Character() {
     self.torso.rotation.x = sinusoid(2 * self.stepFreq, -10, -5, 180) * deg2Rad;
     self.leftArm.rotation.x = sinusoid(self.stepFreq, -70, 50, 180) * deg2Rad;
     self.rightArm.rotation.x = sinusoid(self.stepFreq, -70, 50, 0) * deg2Rad;
-    self.leftLowerArm.rotation.x =
-      sinusoid(self.stepFreq, 70, 140, 180) * deg2Rad;
-    self.rightLowerArm.rotation.x =
-      sinusoid(self.stepFreq, 70, 140, 0) * deg2Rad;
+    self.leftLowerArm.rotation.x = sinusoid(self.stepFreq, 70, 140, 180) * deg2Rad;
+    self.rightLowerArm.rotation.x = sinusoid(self.stepFreq, 70, 140, 0) * deg2Rad;
     self.leftLeg.rotation.x = sinusoid(self.stepFreq, -20, 80, 0) * deg2Rad;
     self.rightLeg.rotation.x = sinusoid(self.stepFreq, -20, 80, 180) * deg2Rad;
-    self.leftLowerLeg.rotation.x =
-      sinusoid(self.stepFreq, -130, 5, 240) * deg2Rad;
-    self.rightLowerLeg.rotation.x =
-      sinusoid(self.stepFreq, -130, 5, 60) * deg2Rad;
+    self.leftLowerLeg.rotation.x = sinusoid(self.stepFreq, -130, 5, 240) * deg2Rad;
+    self.rightLowerLeg.rotation.x = sinusoid(self.stepFreq, -130, 5, 60) * deg2Rad;
   };
 }
 
@@ -231,7 +226,7 @@ function World(element) {
     // Initialize the renderer.
     renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: true
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -251,18 +246,13 @@ function World(element) {
 
     // Initialize the camera with field of view, aspect ratio,
     // near plane, and far plane.
-    camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      1,
-      2000
-    );
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
     camera.position.set(0, 400, 800);
     camera.lookAt(new THREE.Vector3(0, 150, 0));
     window.camera = camera;
 
     // Set up resizing capabilities.
-    window.addEventListener("resize", handleWindowResize, false);
+    window.addEventListener('resize', handleWindowResize, false);
 
     // Initialize the character and add it to the scene.
     character = new Character();

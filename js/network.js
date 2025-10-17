@@ -10,7 +10,7 @@ class NetworkManager {
     this.connected = false;
     this.roomId = null;
     this.playerId = null;
-    this.playerName = "Player";
+    this.playerName = 'Player';
     this.opponents = new Map();
     this.eventHandlers = new Map();
     this.isMultiplayer = false;
@@ -19,99 +19,99 @@ class NetworkManager {
   /**
    * Connect to the multiplayer server
    */
-  connect(serverUrl = "") {
+  connect(serverUrl = '') {
     return new Promise((resolve, reject) => {
       try {
         this.socket = io(serverUrl || window.location.origin);
 
-        this.socket.on("connect", () => {
-          console.log("Connected to server");
+        this.socket.on('connect', () => {
+          console.log('Connected to server');
           this.connected = true;
           this.playerId = this.socket.id;
           resolve();
         });
 
-        this.socket.on("disconnect", () => {
-          console.log("Disconnected from server");
+        this.socket.on('disconnect', () => {
+          console.log('Disconnected from server');
           this.connected = false;
-          this.emit("disconnected");
+          this.emit('disconnected');
         });
 
-        this.socket.on("error", (data) => {
-          console.error("Server error:", data.message);
-          this.emit("error", data);
+        this.socket.on('error', (data) => {
+          console.error('Server error:', data.message);
+          this.emit('error', data);
         });
 
         // Room events
-        this.socket.on("roomCreated", (data) => {
+        this.socket.on('roomCreated', (data) => {
           this.roomId = data.roomId;
           this.playerId = data.playerId;
           this.isMultiplayer = true;
-          this.emit("roomCreated", data);
+          this.emit('roomCreated', data);
         });
 
-        this.socket.on("roomJoined", (data) => {
+        this.socket.on('roomJoined', (data) => {
           this.roomId = data.roomId;
           this.playerId = data.playerId;
           this.isMultiplayer = true;
-          this.emit("roomJoined", data);
+          this.emit('roomJoined', data);
         });
 
-        this.socket.on("roomList", (rooms) => {
-          this.emit("roomList", rooms);
+        this.socket.on('roomList', (rooms) => {
+          this.emit('roomList', rooms);
         });
 
-        this.socket.on("playerJoined", (data) => {
-          this.emit("playerJoined", data);
+        this.socket.on('playerJoined', (data) => {
+          this.emit('playerJoined', data);
         });
 
-        this.socket.on("playerLeft", (data) => {
+        this.socket.on('playerLeft', (data) => {
           this.opponents.delete(data.playerId);
-          this.emit("playerLeft", data);
+          this.emit('playerLeft', data);
         });
 
-        this.socket.on("playersUpdated", (data) => {
-          this.emit("playersUpdated", data);
+        this.socket.on('playersUpdated', (data) => {
+          this.emit('playersUpdated', data);
         });
 
-        this.socket.on("newHost", (data) => {
-          this.emit("newHost", data);
+        this.socket.on('newHost', (data) => {
+          this.emit('newHost', data);
         });
 
         // Race events
-        this.socket.on("raceCountdown", (data) => {
-          this.emit("raceCountdown", data);
+        this.socket.on('raceCountdown', (data) => {
+          this.emit('raceCountdown', data);
         });
 
-        this.socket.on("raceStart", (data) => {
-          this.emit("raceStart", data);
+        this.socket.on('raceStart', (data) => {
+          this.emit('raceStart', data);
         });
 
-        this.socket.on("opponentUpdate", (data) => {
+        this.socket.on('opponentUpdate', (data) => {
           this.opponents.set(data.playerId, data.data);
-          this.emit("opponentUpdate", data);
+          this.emit('opponentUpdate', data);
         });
 
-        this.socket.on("playerFinishedRace", (data) => {
-          this.emit("playerFinishedRace", data);
+        this.socket.on('playerFinishedRace', (data) => {
+          this.emit('playerFinishedRace', data);
         });
 
-        this.socket.on("raceEnded", (data) => {
-          this.emit("raceEnded", data);
+        this.socket.on('raceEnded', (data) => {
+          this.emit('raceEnded', data);
         });
 
-        this.socket.on("raceReset", (data) => {
+        this.socket.on('raceReset', (data) => {
           this.opponents.clear();
-          this.emit("raceReset", data);
+          this.emit('raceReset', data);
         });
 
         setTimeout(() => {
           if (!this.connected) {
-            reject(new Error("Connection timeout"));
+            reject(new Error('Connection timeout'));
           }
         }, 5000);
       } catch (error) {
-        console.error("Connection error:", error);
+        console.error('Connection error:', error);
         reject(error);
       }
     });
@@ -121,18 +121,18 @@ class NetworkManager {
    * Create a new room
    */
   createRoom(playerName) {
-    this.playerName = playerName || "Player";
-    this.socket.emit("createRoom", { playerName: this.playerName });
+    this.playerName = playerName || 'Player';
+    this.socket.emit('createRoom', { playerName: this.playerName });
   }
 
   /**
    * Join an existing room
    */
   joinRoom(roomId, playerName) {
-    this.playerName = playerName || "Player";
-    this.socket.emit("joinRoom", {
+    this.playerName = playerName || 'Player';
+    this.socket.emit('joinRoom', {
       roomId: roomId,
-      playerName: this.playerName,
+      playerName: this.playerName
     });
   }
 
@@ -140,14 +140,14 @@ class NetworkManager {
    * Get list of available rooms
    */
   listRooms() {
-    this.socket.emit("listRooms");
+    this.socket.emit('listRooms');
   }
 
   /**
    * Toggle player ready state
    */
   setReady(ready) {
-    this.socket.emit("playerReady", { ready: ready });
+    this.socket.emit('playerReady', { ready: ready });
   }
 
   /**
@@ -156,12 +156,12 @@ class NetworkManager {
   sendPlayerUpdate(data) {
     if (!this.isMultiplayer || !this.connected) return;
 
-    this.socket.emit("playerUpdate", {
+    this.socket.emit('playerUpdate', {
       position: data.position,
       lane: data.lane,
       isJumping: data.isJumping,
       score: data.score,
-      rotation: data.rotation,
+      rotation: data.rotation
     });
   }
 
@@ -170,7 +170,7 @@ class NetworkManager {
    */
   sendPlayerFinished(score) {
     if (!this.isMultiplayer || !this.connected) return;
-    this.socket.emit("playerFinished", { score: score });
+    this.socket.emit('playerFinished', { score: score });
   }
 
   /**
@@ -178,7 +178,7 @@ class NetworkManager {
    */
   leaveRoom() {
     if (this.socket && this.connected) {
-      this.socket.emit("leaveRoom");
+      this.socket.emit('leaveRoom');
       this.roomId = null;
       this.opponents.clear();
       this.isMultiplayer = false;
@@ -250,7 +250,7 @@ class NetworkManager {
   getAllOpponents() {
     return Array.from(this.opponents.entries()).map(([id, data]) => ({
       id: id,
-      ...data,
+      ...data
     }));
   }
 
@@ -263,7 +263,7 @@ class NetworkManager {
 }
 
 // Create global instance
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.NetworkManager = NetworkManager;
   window.networkManager = new NetworkManager();
 }

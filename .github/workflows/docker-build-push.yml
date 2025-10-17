@@ -6,7 +6,7 @@ on:
       - main
       - master
     tags:
-      - "v*"
+      - 'v*'
   pull_request:
     branches:
       - main
@@ -28,8 +28,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: '18'
+          cache: 'npm'
 
       - name: Verify package-lock.json
         run: |
@@ -128,10 +128,10 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.DOCKER_IMAGE }}:latest
-          format: "sarif"
-          output: "trivy-results.sarif"
+          format: 'sarif'
+          output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: "trivy-results.sarif"
+          sarif_file: 'trivy-results.sarif'

@@ -21,7 +21,7 @@ var Colors = {
   grey: 0x696969,
   sand: 0xc2b280,
   brownDark: 0x23190f,
-  green: 0x669900,
+  green: 0x669900
 };
 
 var deg2Rad = Math.PI / 180;
@@ -30,12 +30,12 @@ var deg2Rad = Math.PI / 180;
 var networkManager = null;
 
 // Make a new world when the page is loaded.
-window.addEventListener("load", function () {
+window.addEventListener('load', function () {
   // Check if in multiplayer mode
   const urlParams = new URLSearchParams(window.location.search);
-  const mode = urlParams.get("mode");
+  const mode = urlParams.get('mode');
 
-  if (mode === "multiplayer" && typeof window.networkManager !== "undefined") {
+  if (mode === 'multiplayer' && typeof window.networkManager !== 'undefined') {
     networkManager = window.networkManager;
   }
 
@@ -78,11 +78,11 @@ function World() {
   init();
 
   function init() {
-    element = document.getElementById("world");
+    element = document.getElementById('world');
 
     renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: true
     });
     renderer.setSize(element.clientWidth, element.clientHeight);
     renderer.shadowMap.enabled = true;
@@ -92,17 +92,12 @@ function World() {
     fogDistance = 40000;
     scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
 
-    camera = new THREE.PerspectiveCamera(
-      60,
-      element.clientWidth / element.clientHeight,
-      1,
-      120000
-    );
+    camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
     camera.position.set(0, 1500, -2000);
     camera.lookAt(new THREE.Vector3(0, 600, -5000));
     window.camera = camera;
 
-    window.addEventListener("resize", handleWindowResize, false);
+    window.addEventListener('resize', handleWindowResize, false);
 
     light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
     scene.add(light);
@@ -135,7 +130,7 @@ function World() {
     var p = 80;
 
     keysAllowed = {};
-    document.addEventListener("keydown", function (e) {
+    document.addEventListener('keydown', function (e) {
       if (!gameOver) {
         var key = e.keyCode;
         if (keysAllowed[key] === false) return;
@@ -144,19 +139,17 @@ function World() {
         if (paused && !collisionsDetected() && key > 18) {
           paused = false;
           character.onUnpause();
-          document.getElementById("variable-content").style.visibility =
-            "hidden";
-          if (document.getElementById("controls")) {
-            document.getElementById("controls").style.display = "none";
+          document.getElementById('variable-content').style.visibility = 'hidden';
+          if (document.getElementById('controls')) {
+            document.getElementById('controls').style.display = 'none';
           }
         } else {
           if (key == p) {
             paused = true;
             character.onPause();
-            document.getElementById("variable-content").style.visibility =
-              "visible";
-            document.getElementById("variable-content").innerHTML =
-              "Game is paused. Press any key to resume.";
+            document.getElementById('variable-content').style.visibility = 'visible';
+            document.getElementById('variable-content').innerHTML =
+              'Game is paused. Press any key to resume.';
           }
           if (key == up && !paused) {
             character.onUpKeyPressed();
@@ -171,17 +164,17 @@ function World() {
       }
     });
 
-    document.addEventListener("keyup", function (e) {
+    document.addEventListener('keyup', function (e) {
       keysAllowed[e.keyCode] = true;
     });
 
-    document.addEventListener("focus", function (e) {
+    document.addEventListener('focus', function (e) {
       keysAllowed = {};
     });
 
     score = 0;
     difficulty = 0;
-    document.getElementById("score").innerHTML = score;
+    document.getElementById('score').innerHTML = score;
 
     loop();
   }
@@ -193,23 +186,23 @@ function World() {
     isMultiplayer = true;
 
     // Handle opponent updates
-    networkManager.on("opponentUpdate", function (data) {
+    networkManager.on('opponentUpdate', function (data) {
       updateOpponent(data.playerId, data.data);
     });
 
     // Handle player joined
-    networkManager.on("playerJoined", function (data) {
-      console.log("Player joined:", data);
+    networkManager.on('playerJoined', function (data) {
+      console.log('Player joined:', data);
     });
 
     // Handle player left
-    networkManager.on("playerLeft", function (data) {
+    networkManager.on('playerLeft', function (data) {
       removeOpponent(data.playerId);
     });
 
     // Handle race start
-    networkManager.on("raceStart", function (data) {
-      console.log("Race started!");
+    networkManager.on('raceStart', function (data) {
+      console.log('Race started!');
       paused = false;
       character.onUnpause();
 
@@ -222,12 +215,12 @@ function World() {
     });
 
     // Handle race end
-    networkManager.on("raceEnded", function (data) {
+    networkManager.on('raceEnded', function (data) {
       displayRaceResults(data.rankings);
     });
 
     // Handle countdown
-    networkManager.on("raceCountdown", function (data) {
+    networkManager.on('raceCountdown', function (data) {
       displayCountdown(data.countdown);
     });
   }
@@ -243,7 +236,7 @@ function World() {
     scene.add(opponent.element);
 
     opponents.set(playerData.id, opponent);
-    console.log("Added opponent:", playerData.name);
+    console.log('Added opponent:', playerData.name);
   }
 
   /**
@@ -255,11 +248,7 @@ function World() {
 
     // Update position
     if (data.position) {
-      opponent.element.position.set(
-        data.position.x,
-        data.position.y,
-        data.position.z
-      );
+      opponent.element.position.set(data.position.x, data.position.y, data.position.z);
     }
 
     // Update lane
@@ -281,7 +270,7 @@ function World() {
     if (opponent) {
       scene.remove(opponent.element);
       opponents.delete(playerId);
-      console.log("Removed opponent:", playerId);
+      console.log('Removed opponent:', playerId);
     }
   }
 
@@ -289,12 +278,12 @@ function World() {
    * Display countdown before race
    */
   function displayCountdown(count) {
-    var countdownElement = document.getElementById("countdown");
+    var countdownElement = document.getElementById('countdown');
     if (!countdownElement) {
-      countdownElement = document.createElement("div");
-      countdownElement.id = "countdown";
+      countdownElement = document.createElement('div');
+      countdownElement.id = 'countdown';
       countdownElement.style.cssText =
-        "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;";
+        'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
       document.body.appendChild(countdownElement);
     }
 
@@ -306,7 +295,7 @@ function World() {
       if (countdown > 0) {
         countdownElement.innerHTML = countdown;
       } else {
-        countdownElement.innerHTML = "GO!";
+        countdownElement.innerHTML = 'GO!';
         setTimeout(function () {
           countdownElement.remove();
         }, 1000);
@@ -319,21 +308,21 @@ function World() {
    * Display race results
    */
   function displayRaceResults(rankings) {
-    var resultsHtml = "<h2>Race Results</h2><table>";
+    var resultsHtml = '<h2>Race Results</h2><table>';
     rankings.forEach(function (rank) {
       resultsHtml +=
-        "<tr><td>" +
+        '<tr><td>' +
         rank.rank +
-        "</td><td>" +
+        '</td><td>' +
         rank.playerName +
-        "</td><td>" +
+        '</td><td>' +
         rank.score +
-        "</td></tr>";
+        '</td></tr>';
     });
-    resultsHtml += "</table>";
+    resultsHtml += '</table>';
 
-    document.getElementById("variable-content").innerHTML = resultsHtml;
-    document.getElementById("variable-content").style.visibility = "visible";
+    document.getElementById('variable-content').innerHTML = resultsHtml;
+    document.getElementById('variable-content').style.visibility = 'visible';
   }
 
   /**
@@ -379,10 +368,7 @@ function World() {
         }
         if (difficulty >= 5 * levelLength && difficulty < 6 * levelLength) {
           fogDistance -= 25000 / levelLength;
-        } else if (
-          difficulty >= 8 * levelLength &&
-          difficulty < 9 * levelLength
-        ) {
+        } else if (difficulty >= 8 * levelLength && difficulty < 9 * levelLength) {
           fogDistance -= 5000 / levelLength;
         }
         createRowOfTrees(-120000, treePresenceProb, 0.5, maxTreeSize);
@@ -410,11 +396,11 @@ function World() {
             position: {
               x: character.element.position.x,
               y: character.element.position.y,
-              z: character.element.position.z,
+              z: character.element.position.z
             },
             lane: character.currentLane,
             isJumping: character.isJumping,
-            score: score,
+            score: score
           });
           lastUpdateTime = currentTime;
         }
@@ -430,27 +416,26 @@ function World() {
           networkManager.sendPlayerFinished(score);
         }
 
-        document.addEventListener("keydown", function (e) {
+        document.addEventListener('keydown', function (e) {
           if (e.keyCode == 40) {
             document.location.reload(true);
           }
         });
 
-        var variableContent = document.getElementById("variable-content");
-        variableContent.style.visibility = "visible";
-        variableContent.innerHTML =
-          "Game over! Press the down arrow to try again.";
+        var variableContent = document.getElementById('variable-content');
+        variableContent.style.visibility = 'visible';
+        variableContent.innerHTML = 'Game over! Press the down arrow to try again.';
 
-        var table = document.getElementById("ranks");
+        var table = document.getElementById('ranks');
         var rankNames = [
-          "Typical Engineer",
-          "Couch Potato",
-          "Weekend Jogger",
-          "Daily Runner",
-          "Local Prospect",
-          "Regional Star",
-          "National Champ",
-          "Second Mo Farah",
+          'Typical Engineer',
+          'Couch Potato',
+          'Weekend Jogger',
+          'Daily Runner',
+          'Local Prospect',
+          'Regional Star',
+          'National Champ',
+          'Second Mo Farah'
         ];
         var rankIndex = Math.floor(score / 15000);
 
@@ -458,50 +443,44 @@ function World() {
           var nextRankRow = table.insertRow(0);
           nextRankRow.insertCell(0).innerHTML =
             rankIndex <= 5
-              ? "".concat((rankIndex + 1) * 15, "k-", (rankIndex + 2) * 15, "k")
+              ? ''.concat((rankIndex + 1) * 15, 'k-', (rankIndex + 2) * 15, 'k')
               : rankIndex == 6
-              ? "105k-124k"
-              : "124k+";
-          nextRankRow.insertCell(1).innerHTML =
-            "*Score within this range to earn the next rank*";
+                ? '105k-124k'
+                : '124k+';
+          nextRankRow.insertCell(1).innerHTML = '*Score within this range to earn the next rank*';
         }
 
         var achievedRankRow = table.insertRow(0);
         achievedRankRow.insertCell(0).innerHTML =
           rankIndex <= 6
-            ? "".concat(rankIndex * 15, "k-", (rankIndex + 1) * 15, "k").bold()
+            ? ''.concat(rankIndex * 15, 'k-', (rankIndex + 1) * 15, 'k').bold()
             : score < 124000
-            ? "105k-124k".bold()
-            : "124k+".bold();
+              ? '105k-124k'.bold()
+              : '124k+'.bold();
         achievedRankRow.insertCell(1).innerHTML =
           rankIndex <= 6
-            ? "Congrats! You're a ".concat(rankNames[rankIndex], "!").bold()
+            ? "Congrats! You're a ".concat(rankNames[rankIndex], '!').bold()
             : score < 124000
-            ? "Congrats! You're a ".concat(rankNames[7], "!").bold()
-            : "Congrats! You exceeded the creator's high score of 123790 and beat the game!".bold();
+              ? "Congrats! You're a ".concat(rankNames[7], '!').bold()
+              : "Congrats! You exceeded the creator's high score of 123790 and beat the game!".bold();
 
         if (score >= 120000) {
           rankIndex = 7;
         }
         for (var i = 0; i < rankIndex; i++) {
           var row = table.insertRow(i);
-          row.insertCell(0).innerHTML = "".concat(
-            i * 15,
-            "k-",
-            (i + 1) * 15,
-            "k"
-          );
+          row.insertCell(0).innerHTML = ''.concat(i * 15, 'k-', (i + 1) * 15, 'k');
           row.insertCell(1).innerHTML = rankNames[i];
         }
         if (score > 124000) {
           var row = table.insertRow(7);
-          row.insertCell(0).innerHTML = "105k-124k";
+          row.insertCell(0).innerHTML = '105k-124k';
           row.insertCell(1).innerHTML = rankNames[7];
         }
       }
 
       score += 10;
-      document.getElementById("score").innerHTML = score;
+      document.getElementById('score').innerHTML = score;
     }
 
     renderer.render(scene, camera);
@@ -534,16 +513,7 @@ function World() {
     var charMinZ = character.element.position.z - 40;
     var charMaxZ = character.element.position.z + 40;
     for (var i = 0; i < objects.length; i++) {
-      if (
-        objects[i].collides(
-          charMinX,
-          charMaxX,
-          charMinY,
-          charMaxY,
-          charMinZ,
-          charMaxZ
-        )
-      ) {
+      if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ)) {
         return true;
       }
     }
@@ -639,16 +609,16 @@ function Character(customColors) {
       self.queuedActions.length > 0
     ) {
       switch (self.queuedActions.shift()) {
-        case "up":
+        case 'up':
           self.isJumping = true;
           self.jumpStartTime = new Date() / 1000;
           break;
-        case "left":
+        case 'left':
           if (self.currentLane != -1) {
             self.isSwitchingLeft = true;
           }
           break;
-        case "right":
+        case 'right':
           if (self.currentLane != 1) {
             self.isSwitchingRight = true;
           }
@@ -659,48 +629,25 @@ function Character(customColors) {
     if (self.isJumping) {
       var jumpClock = currentTime - self.jumpStartTime;
       self.element.position.y =
-        self.jumpHeight *
-          Math.sin((1 / self.jumpDuration) * Math.PI * jumpClock) +
-        sinusoid(
-          2 * self.stepFreq,
-          0,
-          20,
-          0,
-          self.jumpStartTime - self.runningStartTime
-        );
+        self.jumpHeight * Math.sin((1 / self.jumpDuration) * Math.PI * jumpClock) +
+        sinusoid(2 * self.stepFreq, 0, 20, 0, self.jumpStartTime - self.runningStartTime);
       if (jumpClock > self.jumpDuration) {
         self.isJumping = false;
         self.runningStartTime += self.jumpDuration;
       }
     } else {
       var runningClock = currentTime - self.runningStartTime;
-      self.element.position.y = sinusoid(
-        2 * self.stepFreq,
-        0,
-        20,
-        0,
-        runningClock
-      );
-      self.head.rotation.x =
-        sinusoid(2 * self.stepFreq, -10, -5, 0, runningClock) * deg2Rad;
-      self.torso.rotation.x =
-        sinusoid(2 * self.stepFreq, -10, -5, 180, runningClock) * deg2Rad;
-      self.leftArm.rotation.x =
-        sinusoid(self.stepFreq, -70, 50, 180, runningClock) * deg2Rad;
-      self.rightArm.rotation.x =
-        sinusoid(self.stepFreq, -70, 50, 0, runningClock) * deg2Rad;
-      self.leftLowerArm.rotation.x =
-        sinusoid(self.stepFreq, 70, 140, 180, runningClock) * deg2Rad;
-      self.rightLowerArm.rotation.x =
-        sinusoid(self.stepFreq, 70, 140, 0, runningClock) * deg2Rad;
-      self.leftLeg.rotation.x =
-        sinusoid(self.stepFreq, -20, 80, 0, runningClock) * deg2Rad;
-      self.rightLeg.rotation.x =
-        sinusoid(self.stepFreq, -20, 80, 180, runningClock) * deg2Rad;
-      self.leftLowerLeg.rotation.x =
-        sinusoid(self.stepFreq, -130, 5, 240, runningClock) * deg2Rad;
-      self.rightLowerLeg.rotation.x =
-        sinusoid(self.stepFreq, -130, 5, 60, runningClock) * deg2Rad;
+      self.element.position.y = sinusoid(2 * self.stepFreq, 0, 20, 0, runningClock);
+      self.head.rotation.x = sinusoid(2 * self.stepFreq, -10, -5, 0, runningClock) * deg2Rad;
+      self.torso.rotation.x = sinusoid(2 * self.stepFreq, -10, -5, 180, runningClock) * deg2Rad;
+      self.leftArm.rotation.x = sinusoid(self.stepFreq, -70, 50, 180, runningClock) * deg2Rad;
+      self.rightArm.rotation.x = sinusoid(self.stepFreq, -70, 50, 0, runningClock) * deg2Rad;
+      self.leftLowerArm.rotation.x = sinusoid(self.stepFreq, 70, 140, 180, runningClock) * deg2Rad;
+      self.rightLowerArm.rotation.x = sinusoid(self.stepFreq, 70, 140, 0, runningClock) * deg2Rad;
+      self.leftLeg.rotation.x = sinusoid(self.stepFreq, -20, 80, 0, runningClock) * deg2Rad;
+      self.rightLeg.rotation.x = sinusoid(self.stepFreq, -20, 80, 180, runningClock) * deg2Rad;
+      self.leftLowerLeg.rotation.x = sinusoid(self.stepFreq, -130, 5, 240, runningClock) * deg2Rad;
+      self.rightLowerLeg.rotation.x = sinusoid(self.stepFreq, -130, 5, 60, runningClock) * deg2Rad;
 
       if (self.isSwitchingLeft) {
         self.element.position.x -= 200;
@@ -724,15 +671,15 @@ function Character(customColors) {
   };
 
   this.onLeftKeyPressed = function () {
-    self.queuedActions.push("left");
+    self.queuedActions.push('left');
   };
 
   this.onUpKeyPressed = function () {
-    self.queuedActions.push("up");
+    self.queuedActions.push('up');
   };
 
   this.onRightKeyPressed = function () {
-    self.queuedActions.push("right");
+    self.queuedActions.push('right');
   };
 
   this.onPause = function () {
@@ -808,7 +755,7 @@ function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
   var geom = new THREE.BoxGeometry(dx, dy, dz);
   var mat = new THREE.MeshPhongMaterial({
     color: color,
-    flatShading: notFlatShading != true,
+    flatShading: notFlatShading != true
   });
   var box = new THREE.Mesh(geom, mat);
   box.castShadow = true;
@@ -817,25 +764,11 @@ function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
   return box;
 }
 
-function createCylinder(
-  radiusTop,
-  radiusBottom,
-  height,
-  radialSegments,
-  color,
-  x,
-  y,
-  z
-) {
-  var geom = new THREE.CylinderGeometry(
-    radiusTop,
-    radiusBottom,
-    height,
-    radialSegments
-  );
+function createCylinder(radiusTop, radiusBottom, height, radialSegments, color, x, y, z) {
+  var geom = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
   var mat = new THREE.MeshPhongMaterial({
     color: color,
-    flatShading: true,
+    flatShading: true
   });
   var cylinder = new THREE.Mesh(geom, mat);
   cylinder.castShadow = true;

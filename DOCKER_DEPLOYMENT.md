@@ -420,22 +420,22 @@ sudo certbot renew --dry-run
 
 ```yaml
 # docker-compose.yml
-version: "3.8"
+version: '3.8'
 services:
   boxy-run-1:
     image: lcaohoanq/boxy-run:latest
     ports:
-      - "3001:3000"
+      - '3001:3000'
 
   boxy-run-2:
     image: lcaohoanq/boxy-run:latest
     ports:
-      - "3002:3000"
+      - '3002:3000'
 
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - '80:80'
     # Configure load balancing
 ```
 

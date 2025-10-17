@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   boxy-run:
     image: ${DOCKER_USERNAME:-lcaohoanq}/boxy-run:${VERSION:-latest}

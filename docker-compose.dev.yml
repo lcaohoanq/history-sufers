@@ -1,0 +1,44 @@
+services:
+  boxy-run-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: boxy-run-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MAX_PLAYERS=50
+      - ENABLE_ROOM_BROWSER=true
+      - ROOM_CLEANUP_INTERVAL=300000
+    volumes:
+      # Mount source code for hot-reloading
+      - .:/app
+      # Use named volume for node_modules to avoid conflicts
+      - /app/node_modules
+      # Optional: Mount logs directory
+      - ./logs:/app/logs
+    networks:
+      - boxy-run-dev-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.boxy-run.description=Boxy Run Development Server"
+      - "com.boxy-run.environment=development"
+    # Development doesn't need strict resource limits
+    stdin_open: true
+    tty: true
+
+networks:
+  boxy-run-dev-network:
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local

@@ -1,6 +1,6 @@
 /**
  *
- * BOXY RUN
+ * HISTORY SUFERS
  * ----
  * Character demonstration, created with love by Walvin An
  *

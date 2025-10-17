@@ -1,5 +1,5 @@
 /**
- * BOXY RUN - MULTIPLAYER NETWORKING
+ * HISTORY SUFERS - MULTIPLAYER NETWORKING
  *
  * Client-side Socket.IO networking for multiplayer functionality
  */

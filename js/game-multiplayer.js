@@ -1,6 +1,6 @@
 /**
  *
- * BOXY RUN - MULTIPLAYER EDITION
+ * HISTORY SUFERS - MULTIPLAYER EDITION
  * ----
  * Enhanced Temple-Run-esque game with multiplayer racing support
  *

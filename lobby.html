@@ -10,7 +10,6 @@
       type="text/css"
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -34,7 +33,7 @@
     </script>
     <style>
       body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #121212;
         font-family: "Inter", sans-serif;
       }
     </style>
@@ -77,9 +76,7 @@
         </a>
       </div>
       <div class="flex-none">
-        <div class="badge badge-primary badge-lg font-bold">
-          MULTIPLAYER LOBBY
-        </div>
+        <div class="badge badge-secondary badge-lg font-bold">Sảnh chờ</div>
       </div>
     </div>
 
@@ -90,19 +87,19 @@
         id="modeSelection"
         class="flex items-center justify-center min-h-[calc(100vh-200px)]"
       >
-        <div class="card w-full max-w-2xl bg-base-100 shadow-2xl">
+        <div class="card w-full bg-base-100 shadow-2xl">
           <div class="card-body">
             <h2 class="card-title text-4xl font-display justify-center mb-6">
-              Choose Your Adventure
+              Chọn chế độ chơi
             </h2>
             <p class="text-center text-base-content/70 mb-8">
-              Race against friends in real-time multiplayer!
+              Đua cùng bạn bè trong chế độ nhiều người chơi thời gian thực!
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <!-- Create Room Card -->
               <div
-                class="card bg-primary text-primary-content hover:shadow-xl transition-all cursor-pointer"
+                class="card bg-[#084D9A] text-primary-content hover:shadow-xl transition-all cursor-pointer"
                 onclick="showCreateRoom()"
               >
                 <div class="card-body items-center text-center">
@@ -119,14 +116,14 @@
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  <h3 class="card-title text-xl">Create Room</h3>
-                  <p class="text-sm">Start a new race</p>
+                  <h3 class="card-title text-xl">Tạo phòng</h3>
+                  <p class="text-sm">Bắt đầu trò chơi</p>
                 </div>
               </div>
 
               <!-- Join Room Card -->
               <div
-                class="card bg-secondary text-secondary-content hover:shadow-xl transition-all cursor-pointer"
+                class="card bg-[#F2721E] text-secondary-content hover:shadow-xl transition-all cursor-pointer"
                 onclick="showJoinRoom()"
               >
                 <div class="card-body items-center text-center">
@@ -143,14 +140,14 @@
                       d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                     />
                   </svg>
-                  <h3 class="card-title text-xl">Join Room</h3>
-                  <p class="text-sm">Enter room code</p>
+                  <h3 class="card-title text-xl">Tham gia phòng</h3>
+                  <p class="text-sm">Nhập mã phòng</p>
                 </div>
               </div>
 
               <!-- Browse Rooms Card -->
               <div
-                class="card bg-accent text-accent-content hover:shadow-xl transition-all cursor-pointer"
+                class="card bg-[#50B846] text-secondary-content hover:shadow-xl transition-all cursor-pointer"
                 onclick="showBrowseRooms()"
               >
                 <div class="card-body items-center text-center">
@@ -167,8 +164,8 @@
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
-                  <h3 class="card-title text-xl">Browse Rooms</h3>
-                  <p class="text-sm">Find active games</p>
+                  <h3 class="card-title text-xl">Tìm phòng</h3>
+                  <p class="text-sm">Tìm các phòng đang mở</p>
                 </div>
               </div>
             </div>
@@ -182,23 +179,22 @@
         class="hidden flex items-center justify-center min-h-[calc(100vh-200px)]"
       >
         <div class="card w-full max-w-md bg-base-100 shadow-2xl">
-          <div class="card-body">
+          <div class="card-body items-center text-center">
             <h2 class="card-title text-3xl font-display justify-center mb-4">
-              Create a Room
+              Tạo phòng chơi
             </h2>
 
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Your Name</span>
+            <div class="form-control d-flex">
+              <label class="input">
+                <span class="label">Tên người chơi</span>
+                <input
+                  type="text"
+                  id="createPlayerName"
+                  placeholder="Nhập tên của bạn"
+                  maxlength="20"
+                  required
+                />
               </label>
-              <input
-                type="text"
-                id="createPlayerName"
-                placeholder="Enter your name"
-                class="input input-bordered input-primary"
-                maxlength="20"
-                value="Player"
-              />
             </div>
 
             <div class="card-actions justify-center mt-6">
@@ -216,13 +212,13 @@
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Create Room
+                Tạo phòng
               </button>
               <button
                 class="btn btn-ghost btn-lg"
                 onclick="backToModeSelection()"
               >
-                Cancel
+                Hủy
               </button>
             </div>
           </div>
@@ -235,36 +231,36 @@
         class="hidden flex items-center justify-center min-h-[calc(100vh-200px)]"
       >
         <div class="card w-full max-w-md bg-base-100 shadow-2xl">
-          <div class="card-body">
+          <div class="card-body items-center text-center">
             <h2 class="card-title text-3xl font-display justify-center mb-4">
-              Join a Room
+              Tham gia phòng
             </h2>
 
             <div class="form-control">
-              <label class="label">
-                <span class="label-text">Your Name</span>
+              <label class="input">
+                <span class="label">Tên người chơi</span>
+                <input
+                  type="text"
+                  id="joinPlayerName"
+                  placeholder="Nhập tên của bạn"
+                  maxlength="20"
+                  required
+                />
               </label>
-              <input
-                type="text"
-                id="joinPlayerName"
-                placeholder="Enter your name"
-                class="input input-bordered input-primary"
-                maxlength="20"
-                value="Player"
-              />
             </div>
 
             <div class="form-control mt-4">
-              <label class="label">
-                <span class="label-text">Room Code</span>
+              <label class="input">
+                <!-- <button class="btn btn-primary">Neutral</button> -->
+                <span class="label">Mã phòng</span>
+                <input
+                  type="text"
+                  id="roomCode"
+                  placeholder="Nhập mã phòng"
+                  maxlength="6"
+                  required
+                />
               </label>
-              <input
-                type="text"
-                id="roomCode"
-                placeholder="Enter 6-digit code"
-                class="input input-bordered input-secondary font-mono text-center text-2xl tracking-widest uppercase"
-                maxlength="6"
-              />
             </div>
 
             <div class="card-actions justify-center mt-6">
@@ -282,13 +278,13 @@
                     d="M11 16l-4-4m0 0l4-4m-4 4h14"
                   />
                 </svg>
-                Join Room
+                Tham gia
               </button>
               <button
                 class="btn btn-ghost btn-lg"
                 onclick="backToModeSelection()"
               >
-                Cancel
+                Hủy
               </button>
             </div>
           </div>
@@ -301,23 +297,22 @@
         class="hidden flex items-center justify-center min-h-[calc(100vh-200px)]"
       >
         <div class="card w-full max-w-2xl bg-base-100 shadow-2xl">
-          <div class="card-body">
+          <div class="card-body items-center text-center">
             <h2 class="card-title text-3xl font-display justify-center mb-4">
-              Available Rooms
+              Các phòng đang mở
             </h2>
 
             <div class="form-control mb-4">
-              <label class="label">
-                <span class="label-text">Your Name</span>
+              <label class="input">
+                <span class="label">Tên người chơi</span>
+                <input
+                  type="text"
+                  id="browsePlayerName"
+                  placeholder="Nhập tên của bạn"
+                  maxlength="20"
+                  required
+                />
               </label>
-              <input
-                type="text"
-                id="browsePlayerName"
-                placeholder="Enter your name"
-                class="input input-bordered input-primary"
-                maxlength="20"
-                value="Player"
-              />
             </div>
 
             <div id="roomList" class="space-y-2 max-h-96 overflow-y-auto">
@@ -343,10 +338,10 @@
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Refresh
+                Tải lại
               </button>
               <button class="btn btn-ghost" onclick="backToModeSelection()">
-                Back
+                Hủy
               </button>
             </div>
           </div>
@@ -732,18 +727,28 @@
 
       network.on("roomList", (rooms) => {
         const roomList = document.getElementById("roomList");
+        const browsePlayerNameInput =
+          document.getElementById("browsePlayerName");
+        const playerNameContainer =
+          browsePlayerNameInput.closest(".form-control");
         roomList.innerHTML = "";
 
         if (rooms.length === 0) {
+          // Hide player name input when no rooms available
+          playerNameContainer.classList.add("hidden");
+
           roomList.innerHTML = `
             <div class="alert alert-info">
               <svg class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>No rooms available. Create one!</span>
+              <span class="text-base-content color-[#FFFFFF]"> Hiện không có phòng nào đang mở. Tạo phòng mới nào!</span>
             </div>
           `;
         } else {
+          // Show player name input when rooms are available
+          playerNameContainer.classList.remove("hidden");
+
           rooms.forEach((room) => {
             const roomDiv = document.createElement("div");
             roomDiv.className =

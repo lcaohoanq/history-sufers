@@ -1,5 +1,5 @@
 /**
- * BOXY RUN - MULTIPLAYER SERVER
+ * HISTORY SUFERS - MULTIPLAYER SERVER
  *
  * Node.js + Socket.IO server for real-time multiplayer racing
  */
@@ -612,7 +612,7 @@ http.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║                                                        ║
-║   🎮  BOXY RUN - MULTIPLAYER SERVER                   ║
+║   🎮  HISTORY SUFERS - MULTIPLAYER SERVER                   ║
 ║                                                        ║
 ║   🚀  Server running on port ${PORT}                      ║
 ║   🌐  URL: http://localhost:${PORT}                     ║

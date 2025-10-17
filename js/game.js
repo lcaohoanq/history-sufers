@@ -1,6 +1,6 @@
 /**
  *
- * BOXY RUN
+ * HISTORY SUFERS
  * ----
  * Simple Temple-Run-esque game, created with love by lcaohoanq.
  *

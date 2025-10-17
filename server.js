@@ -21,6 +21,29 @@ const MAX_PLAYERS_PER_ROOM = parseInt(process.env.MAX_PLAYERS) || 50;
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 
+// Health check endpoint for Docker
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    rooms: rooms.size,
+    activePlayers: playerRooms.size,
+    maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM,
+  });
+});
+
+// API endpoint for server info
+app.get("/api/info", (req, res) => {
+  res.json({
+    name: "Boxy Run Multiplayer Server",
+    version: "2.0.0",
+    maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM,
+    activeRooms: rooms.size,
+    activePlayers: playerRooms.size,
+  });
+});
+
 // Game rooms and players
 const rooms = new Map();
 const playerRooms = new Map();

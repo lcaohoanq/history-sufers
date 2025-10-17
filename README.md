@@ -76,6 +76,42 @@ For development with auto-reload:
 npm run dev
 ```
 
+## 🐳 Docker Deployment
+
+### Quick Docker Setup
+
+```bash
+# Using Docker Compose (Recommended)
+docker-compose up -d
+
+# Or using Docker directly
+docker run -d -p 3000:3000 --name boxy-run lcaohoanq/boxy-run:latest
+```
+
+### Self-Hosted Server Deployment
+
+```bash
+# Clone repository
+git clone https://github.com/lcaohoanq/historical-run.git
+cd historical-run
+
+# Deploy with automated script
+chmod +x deploy.sh
+./deploy.sh
+
+# Access your game
+open http://your-server-ip:3000
+```
+
+**For complete Docker deployment instructions, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)**
+
+### Docker Hub
+
+Pre-built images are available on Docker Hub:
+
+- **Latest**: `docker pull lcaohoanq/boxy-run:latest`
+- **Versioned**: `docker pull lcaohoanq/boxy-run:v2.0.0`
+
 ## ⚙️ Configuration
 
 You can customize the server settings using environment variables:

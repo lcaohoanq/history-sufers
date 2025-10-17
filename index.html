@@ -3,445 +3,127 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>History Sufers | Main Menu</title>
+    <title>History Surfers | Main Menu</title>
     <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@5"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              display: ['"Playfair Display"', "serif"],
-              sans: ["Inter", "sans-serif"],
-            },
-            animation: {
-              float: "float 3s ease-in-out infinite",
-              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-            },
-            keyframes: {
-              float: {
-                "0%, 100%": { transform: "translateY(0px)" },
-                "50%": { transform: "translateY(-20px)" },
-              },
-            },
-          },
-        },
-        daisyui: {
-          themes: ["dark", "luxury"],
-        },
-      };
-    </script>
-    <style>
-      .menu-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        text-align: center;
-      }
-
-      .menu-title {
-        font-family: "Playfair Display", serif;
-        font-size: 5em;
-        font-weight: 700;
-        color: white;
-        text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4);
-        margin-bottom: 0.3em;
-      }
-
-      .menu-subtitle {
-        font-family: "Playfair Display", serif;
-        font-size: 1.5em;
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        margin-bottom: 3em;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-      }
-
-      .menu-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5em;
-      }
-
-      .menu-btn {
-        font-family: "Playfair Display", serif;
-        font-size: 1.5em;
-        font-weight: 600;
-        padding: 1em 3em;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        min-width: 350px;
-      }
-
-      .menu-btn-primary {
-        background: linear-gradient(135deg, #1560bd 0%, #0d4080 100%);
-        color: white;
-      }
-
-      .menu-btn-primary:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(21, 96, 189, 0.5);
-      }
-
-      .menu-btn-secondary {
-        background: linear-gradient(135deg, #e35d6a 0%, #c5424f 100%);
-        color: white;
-      }
-
-      .menu-btn-secondary:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(227, 93, 106, 0.5);
-      }
-
-      .menu-btn-info {
-        background: linear-gradient(135deg, #669900 0%, #4d7300 100%);
-        color: white;
-        font-size: 1.2em;
-      }
-
-      .menu-btn-info:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(102, 153, 0, 0.5);
-      }
-
-      .menu-footer {
-        position: absolute;
-        bottom: 2em;
-        text-align: center;
-        color: white;
-        font-family: "Playfair Display", serif;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-      }
-
-      .menu-footer a {
-        color: white;
-        text-decoration: none;
-        font-weight: 600;
-      }
-
-      .menu-footer a:hover {
-        text-decoration: underline;
-      }
-
-      .new-badge {
-        display: inline-block;
-        background: #ff0000;
-        color: white;
-        font-size: 0.5em;
-        padding: 0.3em 0.6em;
-        border-radius: 5px;
-        margin-left: 0.5em;
-        vertical-align: super;
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.7;
-        }
-      }
-
-      body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        font-family: "Inter", sans-serif;
-      }
-      .menu-card {
-        backdrop-filter: blur(20px);
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-      }
-      .btn-glow {
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        transition: all 0.3s ease;
-      }
-      .btn-glow:hover {
-        box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
-        transform: translateY(-3px);
-      }
-    </style>
+    <link rel="stylesheet" href="styles/index.css" />
   </head>
-  <body class="overflow-hidden">
-    <!-- Background Animation -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-      <div
-        class="absolute w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
-        style="top: 10%; left: 10%"
-      ></div>
-      <div
-        class="absolute w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float animation-delay-2000"
-        style="top: 50%; right: 10%"
-      ></div>
-      <div
-        class="absolute w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float animation-delay-4000"
-        style="bottom: 10%; left: 50%"
-      ></div>
+  <body>
+    <!-- Animated Background Orbs -->
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="orb orb4"></div>
+
+    <!-- Snake Decorations -->
+    <div class="snake-decoration snake1">
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
     </div>
+    <div class="snake-decoration snake2">
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
+      <div class="snake-segment"></div>
+    </div>
+
+    <!-- Food Pellets -->
+    <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
+    <div
+      class="pellet"
+      style="top: 25%; right: 15%; animation-delay: 0.5s"
+    ></div>
+    <div
+      class="pellet"
+      style="bottom: 20%; left: 20%; animation-delay: 1s"
+    ></div>
+    <div
+      class="pellet"
+      style="top: 60%; right: 25%; animation-delay: 1.5s"
+    ></div>
+    <div
+      class="pellet"
+      style="bottom: 30%; right: 10%; animation-delay: 2s"
+    ></div>
+    <div
+      class="pellet"
+      style="top: 40%; left: 15%; animation-delay: 0.7s"
+    ></div>
 
     <!-- Main Container -->
-    <div class="relative min-h-screen flex items-center justify-center p-4">
-      <div
-        class="menu-card rounded-3xl p-12 max-w-2xl w-full text-white shadow-2xl"
-      >
-        <!-- Title -->
-        <div class="text-center mb-12">
-          <h1
-            class="font-display text-7xl font-black mb-4 text-white drop-shadow-lg animate-pulse-slow"
-          >
-            HISTORY SUFERS
-          </h1>
-        </div>
+    <div class="container">
+      <div class="title-container">
+        <h1 class="game-title">HISTORY SURFERS</h1>
+        <p class="game-subtitle">Surf Through Time!</p>
+      </div>
 
-        <!-- Menu Buttons -->
-        <div class="space-y-6 mb-8">
-          <button
-            onclick="window.location.href='singleplayer.html'"
-            class="w-full btn-glow bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-6 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300"
-          >
-            <div class="flex items-center justify-center space-x-3">
-              <svg
-                class="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              <span class="text-2xl tracking-wider">CHƠI ĐƠN</span>
-            </div>
-          </button>
-
-          <button
-            onclick="window.location.href='lobby.html'"
-            class="w-full btn-glow bg-gradient-to-r from-pink-500 to-red-600 hover:from-pink-600 hover:to-red-700 text-white font-bold py-6 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-pink-300 relative"
-          >
-            <div class="flex items-center justify-center space-x-3">
-              <svg
-                class="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <span class="text-2xl tracking-wider">NHIỀU NGƯỜI CHƠI</span>
-              <span
-                class="absolute top-2 right-4 bg-yellow-400 text-red-900 text-xs font-black px-3 py-1 rounded-full animate-bounce"
-                >NEW!</span
-              >
-            </div>
-          </button>
-
-          <!-- <button
-            onclick="showInstructions()"
-            class="w-full btn-glow bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-5 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
-          >
-            <div class="flex items-center justify-center space-x-3">
-              <svg
-                class="w-7 h-7"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span class="text-xl tracking-wider">HOW TO PLAY</span>
-            </div>
-          </button> -->
-        </div>
-
-        <!-- Footer -->
-        <!-- <div class="text-center text-purple-100 space-y-2">
-          <p class="text-sm font-light">
-            Original by
-            <a
-              href="https://wanfungchui.github.io/"
-              target="_blank"
-              class="font-semibold hover:text-white underline"
-              >lcaohoanq</a
+      <div class="menu-buttons">
+        <button
+          onclick="window.location.href='singleplayer.html'"
+          class="menu-btn btn-primary"
+        >
+          <div class="btn-content">
+            <svg
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
             >
-          </p>
-        </div> -->
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+              />
+            </svg>
+            <span>CHƠI ĐƠN</span>
+          </div>
+        </button>
+
+        <button
+          onclick="window.location.href='lobby.html'"
+          class="menu-btn btn-secondary"
+        >
+          <span class="new-badge">NEW!</span>
+          <div class="btn-content">
+            <svg
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+              />
+            </svg>
+            <span>NHIỀU NGƯỜI CHƠI</span>
+          </div>
+        </button>
       </div>
     </div>
 
-    <!-- Instructions Modal -->
-    <!-- <div
-      id="instructionsModal"
-      class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50"
-    >
-      <div
-        class="bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl p-8 max-w-2xl w-full text-white shadow-2xl max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="font-display text-4xl font-bold">How to Play</h2>
-          <button
-            onclick="closeInstructions()"
-            class="text-white hover:text-gray-200 transition-colors"
-          >
-            <svg
-              class="w-8 h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div class="space-y-6">
-          <div class="bg-white bg-opacity-10 rounded-xl p-6">
-            <h3 class="font-bold text-2xl mb-4 flex items-center">
-              <svg
-                class="w-6 h-6 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
-              </svg>
-              Controls
-            </h3>
-            <div class="space-y-3 text-purple-100">
-              <div class="flex items-center justify-between">
-                <span class="font-semibold">↑ Arrow Key</span>
-                <span>Jump over obstacles</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="font-semibold">← Arrow Key</span>
-                <span>Move to left lane</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="font-semibold">→ Arrow Key</span>
-                <span>Move to right lane</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="font-semibold">P</span>
-                <span>Pause game (single player)</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white bg-opacity-10 rounded-xl p-6">
-            <h3 class="font-bold text-2xl mb-4 flex items-center">
-              <svg
-                class="w-6 h-6 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              Single Player
-            </h3>
-            <p class="text-purple-100">
-              Avoid trees and survive as long as possible! Score increases as
-              you run further. Challenge yourself to beat your high score and
-              unlock new ranks!
-            </p>
-          </div>
-
-          <div class="bg-white bg-opacity-10 rounded-xl p-6">
-            <h3 class="font-bold text-2xl mb-4 flex items-center">
-              <svg
-                class="w-6 h-6 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              Multiplayer
-            </h3>
-            <ul class="text-purple-100 space-y-2 list-disc list-inside">
-              <li>Create or join a room with friends</li>
-              <li>Race against up to 6 players!</li>
-              <li>Real-time leaderboard</li>
-              <li>Highest score wins!</li>
-            </ul>
-          </div>
-        </div>
-
-        <button
-          onclick="closeInstructions()"
-          class="mt-8 w-full bg-white text-purple-600 font-bold py-4 px-6 rounded-xl hover:bg-gray-100 transition-all transform hover:scale-105"
-        >
-          Got it!
-        </button>
-      </div>
-    </div> -->
-
     <script>
-      function showInstructions() {
-        document.getElementById("instructionsModal").classList.remove("hidden");
-      }
+      // Add subtle floating animation to pellets
+      const pellets = document.querySelectorAll(".pellet");
+      pellets.forEach((pellet, index) => {
+        const randomX = Math.random() * 20 - 10;
+        const randomY = Math.random() * 20 - 10;
+        const randomDuration = 3 + Math.random() * 2;
 
-      function closeInstructions() {
-        document.getElementById("instructionsModal").classList.add("hidden");
-      }
-
-      // Close modal on ESC key
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-          closeInstructions();
-        }
+        pellet.style.animation += `, floatPellet ${randomDuration}s infinite ease-in-out`;
+        pellet.style.setProperty("--x", randomX + "px");
+        pellet.style.setProperty("--y", randomY + "px");
       });
+
+      // Add floating animation
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes floatPellet {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(var(--x, 10px), var(--y, 10px)); }
+        }
+      `;
+      document.head.appendChild(style);
     </script>
   </body>
 </html>

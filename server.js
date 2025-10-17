@@ -36,7 +36,7 @@ app.get("/health", (req, res) => {
 // API endpoint for server info
 app.get("/api/info", (req, res) => {
   res.json({
-    name: "Boxy Run Multiplayer Server",
+    name: "History Sufers Multiplayer Server",
     version: "2.0.0",
     maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM,
     activeRooms: rooms.size,

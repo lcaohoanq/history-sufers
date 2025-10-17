@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Boxy Run - Deployment Script for Self-Hosted Server
+# History Sufers - Deployment Script for Self-Hosted Server
 # This script pulls the latest Docker image and restarts the container
 
 set -e
@@ -19,7 +19,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}======================================${NC}"
-echo -e "${GREEN}  Boxy Run - Deployment Script${NC}"
+echo -e "${GREEN}  History Sufers - Deployment Script${NC}"
 echo -e "${GREEN}======================================${NC}"
 echo ""
 

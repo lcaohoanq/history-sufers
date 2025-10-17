@@ -1,4 +1,4 @@
-# Boxy Run - Development Dockerfile
+# History Sufers - Development Dockerfile
 # Optimized for local development with hot-reloading
 
 FROM node:18-alpine

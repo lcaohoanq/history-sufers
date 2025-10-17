@@ -26,7 +26,7 @@ services:
       retries: 3
       start_period: 10s
     labels:
-      - "com.boxy-run.description=Boxy Run Multiplayer Game Server"
+      - "com.boxy-run.description=History Sufers Multiplayer Game Server"
       - "com.boxy-run.version=${VERSION:-latest}"
     # Resource limits (adjust based on your server)
     deploy:

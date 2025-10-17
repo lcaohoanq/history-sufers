@@ -1,4 +1,4 @@
-# Boxy Run Multiplayer - Update Summary
+# History Sufers Multiplayer - Update Summary
 
 ## ✅ What's Been Updated
 
@@ -189,7 +189,7 @@ The game can be deployed to:
 
 ### 🎉 Conclusion
 
-The 7-year-old Boxy Run game has been successfully modernized with a complete multiplayer racing system while preserving all original functionality. Players can now compete with friends in real-time races!
+The 7-year-old History Sufers game has been successfully modernized with a complete multiplayer racing system while preserving all original functionality. Players can now compete with friends in real-time races!
 
 **Status:** ✅ Ready to play!
 

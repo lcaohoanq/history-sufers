@@ -1,6 +1,6 @@
 # 🐳 Docker Deployment Guide
 
-This guide explains how to deploy Boxy Run Multiplayer Server using Docker and Docker Compose.
+This guide explains how to deploy History Sufers Multiplayer Server using Docker and Docker Compose.
 
 ## Table of Contents
 

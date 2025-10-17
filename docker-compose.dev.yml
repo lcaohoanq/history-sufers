@@ -29,7 +29,7 @@ services:
       retries: 3
       start_period: 10s
     labels:
-      - "com.boxy-run.description=Boxy Run Development Server"
+      - "com.boxy-run.description=History Sufers Development Server"
       - "com.boxy-run.environment=development"
     # Development doesn't need strict resource limits
     stdin_open: true

@@ -1,4 +1,4 @@
-# Boxy Run - Multiplayer Quick Setup Guide
+# History Sufers - Multiplayer Quick Setup Guide
 
 ## 🚀 Get Started in 3 Steps
 
@@ -22,7 +22,7 @@ npm start
 You should see:
 
 ```
-🎮 Boxy Run Multiplayer Server running on port 3000
+🎮 History Sufers Multiplayer Server running on port 3000
 🌐 Open http://localhost:3000 to play
 ```
 

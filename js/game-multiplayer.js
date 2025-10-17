@@ -46,7 +46,7 @@ window.addEventListener("load", function () {
  *
  * THE WORLD
  *
- * The world in which Boxy Run takes place with multiplayer support.
+ * The world in which History Sufers takes place with multiplayer support.
  *
  */
 

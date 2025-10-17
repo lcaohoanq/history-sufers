@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME || 'lcaohoanq' }}/boxy-run
+  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME || 'lcaohoanq' }}/historical-run
   PLATFORMS: linux/amd64,linux/arm64
 
 jobs:

@@ -1,18 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <title>Boxy Run | Multiplayer Race</title>
+    <title>History Sufers | Multiplayer Race</title>
     <link
       href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700"
       rel="stylesheet"
     />
-    <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@5"
-      rel="stylesheet"
-      type="text/css"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="js/three.min.js"></script>
     <script type="text/javascript" src="js/network.js"></script>
@@ -35,7 +30,7 @@
 
       .multiplayer-hud h3 {
         margin: 0 0 0.5em 0;
-        font-family: "Playfair Display", serif;
+        font-family: 'Playfair Display', serif;
         font-size: 1.2em;
         text-align: center;
         color: #333;
@@ -134,9 +129,7 @@
         </tr>
       </table>
       <table id="ranks"></table>
-      <div class="animate-flicker" id="variable-content">
-        Waiting for race to start...
-      </div>
+      <div class="animate-flicker" id="variable-content">Waiting for race to start...</div>
     </div>
 
     <div class="multiplayer-hud" id="multiplayerHud">
@@ -152,25 +145,25 @@
     <script>
       // Toast notification system
       function showToast(notification) {
-        const container = document.getElementById("toast-container");
-        const toast = document.createElement("div");
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
 
         const typeClasses = {
-          success: "alert-success",
-          error: "alert-error",
-          warning: "alert-warning",
-          info: "alert-info",
+          success: 'alert-success',
+          error: 'alert-error',
+          warning: 'alert-warning',
+          info: 'alert-info'
         };
 
         const icons = {
           success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
           error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
           warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`,
-          info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+          info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`
         };
 
         toast.className = `alert ${
-          typeClasses[notification.type] || "alert-info"
+          typeClasses[notification.type] || 'alert-info'
         } shadow-lg animate-slide-in-right`;
         toast.innerHTML = `
           <div>
@@ -189,15 +182,15 @@
         // Auto remove after duration
         const duration = notification.duration || 3000;
         setTimeout(() => {
-          toast.style.opacity = "0";
-          toast.style.transform = "translateX(100%)";
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(100%)';
           setTimeout(() => toast.remove(), 300);
         }, duration);
       }
 
       // Listen for notifications from server
       if (window.networkManager && window.networkManager.socket) {
-        window.networkManager.socket.on("notification", (notification) => {
+        window.networkManager.socket.on('notification', (notification) => {
           showToast(notification);
         });
       }
@@ -206,19 +199,13 @@
     <script>
       // Initialize multiplayer standings display
       function updateMultiplayerStandings() {
-        const scoresDiv = document.getElementById("playerScores");
-        if (
-          !scoresDiv ||
-          !window.networkManager ||
-          !window.networkManager.isInMultiplayer()
-        ) {
+        const scoresDiv = document.getElementById('playerScores');
+        if (!scoresDiv || !window.networkManager || !window.networkManager.isInMultiplayer()) {
           return;
         }
 
         // Get current score
-        const myScore = parseInt(
-          document.getElementById("score")?.textContent || 0
-        );
+        const myScore = parseInt(document.getElementById('score')?.textContent || 0);
 
         // Collect all player scores
         const players = [];
@@ -228,17 +215,17 @@
           name: window.networkManager.playerName,
           score: myScore,
           isSelf: true,
-          id: window.networkManager.playerId,
+          id: window.networkManager.playerId
         });
 
         // Add opponents
         const opponents = window.networkManager.getAllOpponents();
         opponents.forEach((opp) => {
           players.push({
-            name: opp.playerName || "Opponent",
+            name: opp.playerName || 'Opponent',
             score: opp.score || 0,
             isSelf: false,
-            id: opp.id,
+            id: opp.id
           });
         });
 
@@ -246,27 +233,25 @@
         players.sort((a, b) => b.score - a.score);
 
         // Render
-        scoresDiv.innerHTML = "";
+        scoresDiv.innerHTML = '';
         players.forEach((player, index) => {
-          const div = document.createElement("div");
-          div.className = "player-score-item" + (player.isSelf ? " self" : "");
+          const div = document.createElement('div');
+          div.className = 'player-score-item' + (player.isSelf ? ' self' : '');
 
           // Generate Dicebear avatar URL using player name as seed
           const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
             player.name
           )}`;
 
-          const nameSpan = document.createElement("span");
-          nameSpan.className = "player-score-name";
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'player-score-name';
           nameSpan.innerHTML = `
-            <img src="${avatarUrl}" alt="${
-            player.name
-          } avatar" class="player-score-avatar" />
+            <img src="${avatarUrl}" alt="${player.name} avatar" class="player-score-avatar" />
             <span>${index + 1}. ${player.name}</span>
           `;
 
-          const scoreSpan = document.createElement("span");
-          scoreSpan.className = "player-score-value";
+          const scoreSpan = document.createElement('span');
+          scoreSpan.className = 'player-score-value';
           scoreSpan.textContent = player.score;
 
           div.appendChild(nameSpan);

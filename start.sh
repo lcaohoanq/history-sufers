@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Boxy Run Multiplayer - Quick Start Script
+# History Sufers Multiplayer - Quick Start Script
 
-echo "🎮 Boxy Run - Multiplayer Edition"
+echo "🎮 History Sufers - Multiplayer Edition"
 echo "=================================="
 echo ""
 
@@ -24,7 +24,7 @@ if [ ! -d "node_modules" ]; then
     echo ""
 fi
 
-echo "🚀 Starting Boxy Run Multiplayer Server..."
+echo "🚀 Starting History Sufers Multiplayer Server..."
 echo ""
 echo "Once started, open your browser and go to:"
 echo "👉 http://localhost:3000"

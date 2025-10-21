@@ -1,478 +1,293 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="luxury">
+<!doctype html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Boxy Run | Multiplayer Lobby</title>
+    <title>History Surfers | Multiplayer Lobby</title>
     <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@5"
-      rel="stylesheet"
-      type="text/css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="js/network.js"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              display: ['"Playfair Display"', "serif"],
-              sans: ["Inter", "sans-serif"],
-            },
-          },
-        },
-        daisyui: {
-          themes: ["luxury", "dark"],
-        },
-      };
-    </script>
-    <style>
-      body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        font-family: "Inter", sans-serif;
-      }
-    </style>
-    <style>
-      /* Toast animations */
-      @keyframes slideInRight {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-
-      .animate-slide-in-right {
-        animation: slideInRight 0.3s ease-out;
-      }
-
-      .toast .alert {
-        transition: all 0.3s ease-out;
-      }
-
-      #toast-container {
-        max-width: 400px;
-        padding: 1rem;
-      }
-    </style>
+    <link rel="stylesheet" href="styles/lobby.style.css" />
   </head>
-  <body class="min-h-screen">
-    <!-- Navbar -->
-    <div class="navbar bg-base-100 bg-opacity-80 backdrop-blur-lg shadow-xl">
-      <div class="flex-1">
-        <a
-          href="index.html"
-          class="btn btn-ghost normal-case text-xl font-display"
-        >
-          ← Boxy Run
-        </a>
-      </div>
-      <div class="flex-none">
-        <div class="badge badge-primary badge-lg font-bold">
-          MULTIPLAYER LOBBY
-        </div>
-      </div>
-    </div>
+  <body>
+    <!-- Animated Background Orbs -->
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+
+    <!-- Food Pellets -->
+    <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
+    <div class="pellet" style="top: 25%; right: 15%; animation-delay: 0.5s"></div>
+    <div class="pellet" style="bottom: 20%; left: 20%; animation-delay: 1s"></div>
+    <div class="pellet" style="top: 60%; right: 25%; animation-delay: 1.5s"></div>
+    <div class="pellet" style="bottom: 30%; right: 10%; animation-delay: 2s"></div>
+    <div class="pellet" style="top: 40%; left: 15%; animation-delay: 0.7s"></div>
+    <div class="pellet" style="top: 70%; left: 40%; animation-delay: 1.2s"></div>
+    <div class="pellet" style="bottom: 40%; right: 40%; animation-delay: 1.8s"></div>
 
     <!-- Main Container -->
-    <div class="container mx-auto px-4 py-8">
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <a href="index.html" class="back-btn">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+          </svg>
+          History Surfers
+        </a>
+        <div class="badge">Sảnh chờ</div>
+      </div>
+
       <!-- Mode Selection -->
-      <div
-        id="modeSelection"
-        class="flex items-center justify-center min-h-[calc(100vh-200px)]"
-      >
-        <div class="card w-full max-w-2xl bg-base-100 shadow-2xl">
-          <div class="card-body">
-            <h2 class="card-title text-4xl font-display justify-center mb-6">
-              Choose Your Adventure
-            </h2>
-            <p class="text-center text-base-content/70 mb-8">
-              Race against friends in real-time multiplayer!
-            </p>
+      <div id="modeSelection">
+        <div class="card">
+          <h1 class="card-title">Chọn chế độ chơi</h1>
+          <p class="card-subtitle">Đua cùng bạn bè trong chế độ nhiều người chơi thời gian thực!</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- Create Room Card -->
-              <div
-                class="card bg-primary text-primary-content hover:shadow-xl transition-all cursor-pointer"
-                onclick="showCreateRoom()"
+          <div class="mode-grid">
+            <div class="mode-card create" onclick="showCreateRoom()">
+              <svg
+                style="width: 50px; height: 50px; margin-bottom: 15px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div class="card-body items-center text-center">
-                  <svg
-                    class="w-16 h-16 mb-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  <h3 class="card-title text-xl">Create Room</h3>
-                  <p class="text-sm">Start a new race</p>
-                </div>
-              </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <div class="mode-title">Tạo phòng</div>
+              <div class="mode-desc">Bắt đầu trò chơi</div>
+            </div>
 
-              <!-- Join Room Card -->
-              <div
-                class="card bg-secondary text-secondary-content hover:shadow-xl transition-all cursor-pointer"
-                onclick="showJoinRoom()"
+            <div class="mode-card join" onclick="showJoinRoom()">
+              <svg
+                style="width: 50px; height: 50px; margin-bottom: 15px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div class="card-body items-center text-center">
-                  <svg
-                    class="w-16 h-16 mb-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  <h3 class="card-title text-xl">Join Room</h3>
-                  <p class="text-sm">Enter room code</p>
-                </div>
-              </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                />
+              </svg>
+              <div class="mode-title">Tham gia phòng</div>
+              <div class="mode-desc">Nhập mã phòng</div>
+            </div>
 
-              <!-- Browse Rooms Card -->
-              <div
-                class="card bg-accent text-accent-content hover:shadow-xl transition-all cursor-pointer"
-                onclick="showBrowseRooms()"
+            <div class="mode-card browse" onclick="showBrowseRooms()">
+              <svg
+                style="width: 50px; height: 50px; margin-bottom: 15px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <div class="card-body items-center text-center">
-                  <svg
-                    class="w-16 h-16 mb-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                  <h3 class="card-title text-xl">Browse Rooms</h3>
-                  <p class="text-sm">Find active games</p>
-                </div>
-              </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <div class="mode-title">Tìm phòng</div>
+              <div class="mode-desc">Tìm các phòng đang mở</div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Create Room Section -->
-      <div
-        id="createRoomSection"
-        class="hidden flex items-center justify-center min-h-[calc(100vh-200px)]"
-      >
-        <div class="card w-full max-w-md bg-base-100 shadow-2xl">
-          <div class="card-body">
-            <h2 class="card-title text-3xl font-display justify-center mb-4">
-              Create a Room
-            </h2>
+      <div id="createRoomSection" class="hidden">
+        <div class="card" style="max-width: 600px; margin: 0 auto">
+          <h2 class="card-title">Tạo phòng chơi</h2>
 
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Your Name</span>
-              </label>
-              <input
-                type="text"
-                id="createPlayerName"
-                placeholder="Enter your name"
-                class="input input-bordered input-primary"
-                maxlength="20"
-                value="Player"
-              />
-            </div>
+          <div class="form-group">
+            <label class="form-label">Tên người chơi</label>
+            <input
+              type="text"
+              id="createPlayerName"
+              class="form-input"
+              placeholder="Nhập tên của bạn"
+              maxlength="20"
+            />
+          </div>
 
-            <div class="card-actions justify-center mt-6">
-              <button class="btn btn-primary btn-lg" onclick="createRoom()">
-                <svg
-                  class="w-6 h-6 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Create Room
-              </button>
-              <button
-                class="btn btn-ghost btn-lg"
-                onclick="backToModeSelection()"
+          <div class="btn-actions">
+            <button class="btn btn-primary" onclick="createRoom()">
+              <svg
+                style="width: 50px; height: 50px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Cancel
-              </button>
-            </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Tạo phòng
+            </button>
+            <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
           </div>
         </div>
       </div>
 
       <!-- Join Room Section -->
-      <div
-        id="joinRoomSection"
-        class="hidden flex items-center justify-center min-h-[calc(100vh-200px)]"
-      >
-        <div class="card w-full max-w-md bg-base-100 shadow-2xl">
-          <div class="card-body">
-            <h2 class="card-title text-3xl font-display justify-center mb-4">
-              Join a Room
-            </h2>
+      <div id="joinRoomSection" class="hidden">
+        <div class="card" style="max-width: 600px; margin: 0 auto">
+          <h2 class="card-title">Tham gia phòng</h2>
 
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Your Name</span>
-              </label>
-              <input
-                type="text"
-                id="joinPlayerName"
-                placeholder="Enter your name"
-                class="input input-bordered input-primary"
-                maxlength="20"
-                value="Player"
-              />
-            </div>
+          <div class="form-group">
+            <label class="form-label">Tên người chơi</label>
+            <input
+              type="text"
+              id="joinPlayerName"
+              class="form-input"
+              placeholder="Nhập tên của bạn"
+              maxlength="20"
+            />
+          </div>
 
-            <div class="form-control mt-4">
-              <label class="label">
-                <span class="label-text">Room Code</span>
-              </label>
-              <input
-                type="text"
-                id="roomCode"
-                placeholder="Enter 6-digit code"
-                class="input input-bordered input-secondary font-mono text-center text-2xl tracking-widest uppercase"
-                maxlength="6"
-              />
-            </div>
+          <div class="form-group">
+            <label class="form-label">Mã phòng</label>
+            <input
+              type="text"
+              id="roomCode"
+              class="form-input"
+              placeholder="Nhập mã phòng"
+              maxlength="6"
+              style="text-transform: uppercase"
+            />
+          </div>
 
-            <div class="card-actions justify-center mt-6">
-              <button class="btn btn-secondary btn-lg" onclick="joinRoom()">
-                <svg
-                  class="w-6 h-6 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14"
-                  />
-                </svg>
-                Join Room
-              </button>
-              <button
-                class="btn btn-ghost btn-lg"
-                onclick="backToModeSelection()"
+          <div class="btn-actions">
+            <button class="btn btn-secondary" onclick="joinRoom()">
+              <svg
+                style="width: 50px; height: 50px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Cancel
-              </button>
-            </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                />
+              </svg>
+              Tham gia
+            </button>
+            <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
           </div>
         </div>
       </div>
 
       <!-- Browse Rooms Section -->
-      <div
-        id="browseRoomsSection"
-        class="hidden flex items-center justify-center min-h-[calc(100vh-200px)]"
-      >
-        <div class="card w-full max-w-2xl bg-base-100 shadow-2xl">
-          <div class="card-body">
-            <h2 class="card-title text-3xl font-display justify-center mb-4">
-              Available Rooms
-            </h2>
+      <div id="browseRoomsSection" class="hidden">
+        <div class="card">
+          <h2 class="card-title">Các phòng đang mở</h2>
 
-            <div class="form-control mb-4">
-              <label class="label">
-                <span class="label-text">Your Name</span>
-              </label>
-              <input
-                type="text"
-                id="browsePlayerName"
-                placeholder="Enter your name"
-                class="input input-bordered input-primary"
-                maxlength="20"
-                value="Player"
-              />
-            </div>
+          <div class="form-group" id="browsePlayerNameGroup">
+            <label class="form-label">Tên người chơi</label>
+            <input
+              type="text"
+              id="browsePlayerName"
+              class="form-input"
+              placeholder="Nhập tên của bạn"
+              maxlength="20"
+            />
+          </div>
 
-            <div id="roomList" class="space-y-2 max-h-96 overflow-y-auto">
-              <div class="flex justify-center items-center p-8">
-                <span
-                  class="loading loading-spinner loading-lg text-primary"
-                ></span>
-              </div>
+          <div id="roomList" class="room-list">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p style="margin-top: 20px; color: #666">Đang tải...</p>
             </div>
+          </div>
 
-            <div class="card-actions justify-center mt-6">
-              <button class="btn btn-primary" onclick="refreshRooms()">
-                <svg
-                  class="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Refresh
-              </button>
-              <button class="btn btn-ghost" onclick="backToModeSelection()">
-                Back
-              </button>
-            </div>
+          <div class="btn-actions">
+            <button class="btn btn-primary" onclick="refreshRooms()">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Tải lại
+            </button>
+            <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
           </div>
         </div>
       </div>
 
-      <!-- Waiting Room (Lobby) -->
+      <!-- Waiting Room -->
       <div id="waitingRoom" class="hidden">
-        <div class="max-w-4xl mx-auto space-y-6">
-          <!-- Room Code Card -->
-          <div class="card bg-base-100 shadow-2xl">
-            <div class="card-body text-center">
-              <h2 class="card-title text-2xl font-display justify-center">
-                Room Code
-              </h2>
-              <div
-                class="bg-gradient-to-r from-primary to-secondary text-primary-content rounded-xl p-6 my-4"
-              >
-                <div
-                  id="displayRoomCode"
-                  class="font-mono text-5xl font-bold tracking-widest"
-                ></div>
-              </div>
-              <p class="text-base-content/70">
-                Share this code with friends to join!
-              </p>
+        <!-- Room Code Card -->
+        <div class="card">
+          <div class="room-code-display">
+            <div class="room-code-label">Mã phòng</div>
+            <div class="room-code-value" id="displayRoomCode">ABCD12</div>
+            <div class="room-code-hint">Chia sẻ mã này với bạn bè!</div>
+          </div>
+        </div>
+
+        <!-- Players Card -->
+        <div class="card">
+          <div class="player-header">
+            <h2 class="card-title" style="margin: 0">Người chơi</h2>
+            <div class="player-count">
+              <span id="playerCount">0</span>/<span id="maxPlayers">50</span>
             </div>
           </div>
 
-          <!-- Players Card -->
-          <div class="card bg-base-100 shadow-2xl">
-            <div class="card-body">
-              <h2 class="card-title text-2xl font-display">
-                Players
-                <div
-                  class="badge badge-primary badge-lg ml-2"
-                  id="playerCountBadge"
-                >
-                  <span id="playerCount">0</span>/<span id="maxPlayers"
-                    >50</span
-                  >
-                </div>
-              </h2>
+          <div id="playerList" class="player-list"></div>
 
-              <div id="playerList" class="space-y-3 mt-4"></div>
+          <div id="errorMessage" class="alert alert-error hidden">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="errorText"></span>
+          </div>
 
-              <div id="errorMessage" class="alert alert-error hidden mt-4">
-                <svg
-                  class="stroke-current shrink-0 h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span id="errorText"></span>
-              </div>
+          <div id="startingMessage" class="alert alert-success hidden">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="startingText">Waiting for all players to be ready...</span>
+          </div>
 
-              <div id="startingMessage" class="alert alert-info hidden mt-4">
-                <svg
-                  class="stroke-current shrink-0 h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span id="startingText"
-                  >Waiting for all players to be ready...</span
-                >
-              </div>
-
-              <div class="card-actions justify-center mt-6">
-                <button
-                  id="readyButton"
-                  class="btn btn-success btn-lg"
-                  onclick="toggleReady()"
-                >
-                  <svg
-                    class="w-6 h-6 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  Ready
-                </button>
-                <button class="btn btn-error btn-lg" onclick="leaveRoom()">
-                  <svg
-                    class="w-6 h-6 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  Leave Room
-                </button>
-              </div>
-            </div>
+          <div class="btn-actions">
+            <button id="readyButton" class="btn btn-success" onclick="toggleReady()">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+              Ready
+            </button>
+            <button class="btn btn-danger" onclick="leaveRoom()">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              Leave Room
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast toast-top toast-end z-50"></div>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script>
       const network = window.networkManager;
@@ -482,122 +297,107 @@
 
       // Toast notification system
       function showToast(notification) {
-        const container = document.getElementById("toast-container");
-        const toast = document.createElement("div");
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
 
         const typeClasses = {
-          success: "alert-success",
-          error: "alert-error",
-          warning: "alert-warning",
-          info: "alert-info",
+          success: 'toast-success',
+          error: 'toast-error',
+          warning: 'toast-warning',
+          info: 'toast-info'
         };
 
         const icons = {
-          success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
-          error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
-          warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`,
-          info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+          success: `<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+          error: `<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+          warning: `<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
+          info: `<path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
         };
 
-        toast.className = `alert ${
-          typeClasses[notification.type] || "alert-info"
-        } shadow-lg animate-slide-in-right`;
+        toast.className = `toast ${typeClasses[notification.type] || 'toast-info'}`;
         toast.innerHTML = `
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            ${icons[notification.type] || icons.info}
+          </svg>
           <div>
-            <svg class="stroke-current flex-shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
-              ${icons[notification.type] || icons.info}
-            </svg>
-            <div>
-              <div class="font-bold">${notification.title}</div>
-              <div class="text-sm">${notification.message}</div>
-            </div>
+            <div style="font-weight: 700; margin-bottom: 5px;">${notification.title}</div>
+            <div style="font-size: 0.9em;">${notification.message}</div>
           </div>
         `;
 
         container.appendChild(toast);
 
-        // Auto remove after duration
         const duration = notification.duration || 3000;
         setTimeout(() => {
-          toast.style.opacity = "0";
-          toast.style.transform = "translateX(100%)";
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(100%)';
           setTimeout(() => toast.remove(), 300);
         }, duration);
       }
 
       // Connect to server on load
-      window.addEventListener("load", async () => {
+      window.addEventListener('load', async () => {
         try {
           await network.connect();
-          console.log("Connected to server");
+          console.log('Connected to server');
 
-          // Listen for server configuration
-          network.socket.on("serverConfig", (config) => {
+          network.socket.on('serverConfig', (config) => {
             maxPlayersPerRoom = config.maxPlayersPerRoom;
-            document.getElementById("maxPlayers").textContent =
-              config.maxPlayersPerRoom;
-            console.log("Server config received:", config);
+            document.getElementById('maxPlayers').textContent = config.maxPlayersPerRoom;
+            console.log('Server config received:', config);
           });
 
-          // Listen for notifications from server
-          network.socket.on("notification", (notification) => {
+          network.socket.on('notification', (notification) => {
             showToast(notification);
           });
         } catch (error) {
-          console.error("Failed to connect:", error);
-          showError("Failed to connect to server. Please refresh the page.");
+          console.error('Failed to connect:', error);
+          showError('Failed to connect to server. Please refresh the page.');
         }
       });
 
       function showCreateRoom() {
         hideAllSections();
-        document.getElementById("createRoomSection").classList.remove("hidden");
+        document.getElementById('createRoomSection').classList.remove('hidden');
       }
 
       function showJoinRoom() {
         hideAllSections();
-        document.getElementById("joinRoomSection").classList.remove("hidden");
+        document.getElementById('joinRoomSection').classList.remove('hidden');
       }
 
       function showBrowseRooms() {
         hideAllSections();
-        document
-          .getElementById("browseRoomsSection")
-          .classList.remove("hidden");
+        document.getElementById('browseRoomsSection').classList.remove('hidden');
         refreshRooms();
       }
 
       function backToModeSelection() {
         hideAllSections();
-        document.getElementById("modeSelection").classList.remove("hidden");
+        document.getElementById('modeSelection').classList.remove('hidden');
       }
 
       function hideAllSections() {
-        document.getElementById("modeSelection").classList.add("hidden");
-        document.getElementById("createRoomSection").classList.add("hidden");
-        document.getElementById("joinRoomSection").classList.add("hidden");
-        document.getElementById("browseRoomsSection").classList.add("hidden");
-        document.getElementById("waitingRoom").classList.add("hidden");
+        document.getElementById('modeSelection').classList.add('hidden');
+        document.getElementById('createRoomSection').classList.add('hidden');
+        document.getElementById('joinRoomSection').classList.add('hidden');
+        document.getElementById('browseRoomsSection').classList.add('hidden');
+        document.getElementById('waitingRoom').classList.add('hidden');
       }
 
       function createRoom() {
-        const playerName =
-          document.getElementById("createPlayerName").value.trim() || "Player";
+        const playerName = document.getElementById('createPlayerName').value.trim() || 'Player';
         network.createRoom(playerName);
       }
 
       function joinRoom(roomId) {
         if (!roomId) {
-          roomId = document
-            .getElementById("roomCode")
-            .value.trim()
-            .toUpperCase();
+          roomId = document.getElementById('roomCode').value.trim().toUpperCase();
         }
-        const playerName =
-          document.getElementById("joinPlayerName").value.trim() || "Player";
+        const playerName = document.getElementById('joinPlayerName').value.trim() || 'Player';
 
         if (!roomId) {
-          showError("Please enter a room code");
+          showError('Please enter a room code');
           return;
         }
 
@@ -605,8 +405,7 @@
       }
 
       function joinRoomFromBrowse(roomId) {
-        const playerName =
-          document.getElementById("browsePlayerName").value.trim() || "Player";
+        const playerName = document.getElementById('browsePlayerName').value.trim() || 'Player';
         network.joinRoom(roomId, playerName);
       }
 
@@ -618,25 +417,23 @@
         isReady = !isReady;
         network.setReady(isReady);
 
-        const btn = document.getElementById("readyButton");
+        const btn = document.getElementById('readyButton');
         if (isReady) {
           btn.innerHTML = `
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12"/>
             </svg>
             Not Ready
           `;
-          btn.classList.remove("btn-success");
-          btn.classList.add("btn-warning");
+          btn.className = 'btn btn-warning';
         } else {
           btn.innerHTML = `
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7"/>
             </svg>
             Ready
           `;
-          btn.classList.remove("btn-warning");
-          btn.classList.add("btn-success");
+          btn.className = 'btn btn-success';
         }
       }
 
@@ -646,13 +443,13 @@
       }
 
       function showError(message) {
-        const errorDiv = document.getElementById("errorMessage");
-        const errorText = document.getElementById("errorText");
+        const errorDiv = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
         if (errorDiv && errorText) {
           errorText.textContent = message;
-          errorDiv.classList.remove("hidden");
+          errorDiv.classList.remove('hidden');
           setTimeout(() => {
-            errorDiv.classList.add("hidden");
+            errorDiv.classList.add('hidden');
           }, 5000);
         } else {
           alert(message);
@@ -661,121 +458,102 @@
 
       function updatePlayerList(players) {
         currentPlayers = players;
-        const playerList = document.getElementById("playerList");
-        const playerCount = document.getElementById("playerCount");
+        const playerList = document.getElementById('playerList');
+        const playerCount = document.getElementById('playerCount');
 
-        playerList.innerHTML = "";
+        playerList.innerHTML = '';
         playerCount.textContent = players.length;
 
-        players.forEach((player, index) => {
-          const playerDiv = document.createElement("div");
-          playerDiv.className = "card bg-base-200 shadow-md";
+        players.forEach((player) => {
+          const playerDiv = document.createElement('div');
+          playerDiv.className = 'player-item';
 
-          // Generate Dicebear avatar URL using player name as seed
           const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
             player.name
           )}`;
 
           playerDiv.innerHTML = `
-            <div class="card-body p-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="avatar">
-                    <div class="w-12 h-12 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                      <img src="${avatarUrl}" alt="${player.name} avatar" />
-                    </div>
-                  </div>
-                  <div>
-                    <div class="font-bold text-lg">${player.name}</div>
-                    <div class="text-sm opacity-70">${
-                      player.id === network.socket?.id ? "(You)" : ""
-                    }</div>
-                  </div>
-                </div>
-                <div class="badge ${
-                  player.ready ? "badge-success" : "badge-ghost"
-                } badge-lg gap-2">
-                  ${player.ready ? "✓ Ready" : "Not Ready"}
+            <div class="player-info">
+              <img src="${avatarUrl}" alt="${player.name}" class="player-avatar" />
+              <div>
+                <div class="player-name">
+                  ${player.name}
+                  ${player.id === network.socket?.id ? '<span class="player-you">(You)</span>' : ''}
                 </div>
               </div>
+            </div>
+            <div class="player-status ${player.ready ? 'status-ready' : 'status-not-ready'}">
+              ${player.ready ? '✓ Ready' : 'Not Ready'}
             </div>
           `;
           playerList.appendChild(playerDiv);
         });
 
-        // Check if all ready
         const allReady = players.length >= 2 && players.every((p) => p.ready);
-        const startMsg = document.getElementById("startingMessage");
-        const startText = document.getElementById("startingText");
+        const startMsg = document.getElementById('startingMessage');
+        const startText = document.getElementById('startingText');
         if (allReady) {
-          startText.textContent = "All players ready! Starting race...";
-          startMsg.classList.remove("hidden");
+          startText.textContent = 'All players ready! Starting race...';
+          startMsg.classList.remove('hidden');
         } else {
-          startMsg.classList.add("hidden");
+          startMsg.classList.add('hidden');
         }
       }
 
       // Network event handlers
-      network.on("roomCreated", (data) => {
+      network.on('roomCreated', (data) => {
         hideAllSections();
-        document.getElementById("displayRoomCode").textContent = data.roomId;
-        document.getElementById("waitingRoom").classList.remove("hidden");
+        document.getElementById('displayRoomCode').textContent = data.roomId;
+        document.getElementById('waitingRoom').classList.remove('hidden');
         updatePlayerList(data.players);
       });
 
-      network.on("roomJoined", (data) => {
+      network.on('roomJoined', (data) => {
         hideAllSections();
-        document.getElementById("displayRoomCode").textContent = data.roomId;
-        document.getElementById("waitingRoom").classList.remove("hidden");
+        document.getElementById('displayRoomCode').textContent = data.roomId;
+        document.getElementById('waitingRoom').classList.remove('hidden');
         updatePlayerList(data.players);
       });
 
-      network.on("roomList", (rooms) => {
-        const roomList = document.getElementById("roomList");
-        roomList.innerHTML = "";
+      network.on('roomList', (rooms) => {
+        const roomList = document.getElementById('roomList');
+        const browsePlayerNameGroup = document.getElementById('browsePlayerNameGroup');
+        roomList.innerHTML = '';
 
         if (rooms.length === 0) {
+          browsePlayerNameGroup.classList.add('hidden');
           roomList.innerHTML = `
             <div class="alert alert-info">
-              <svg class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              <span>No rooms available. Create one!</span>
+              <span>Hiện không có phòng nào đang mở. Tạo phòng mới nào!</span>
             </div>
           `;
         } else {
+          browsePlayerNameGroup.classList.remove('hidden');
           rooms.forEach((room) => {
-            const roomDiv = document.createElement("div");
-            roomDiv.className =
-              "card bg-base-200 hover:bg-base-300 cursor-pointer transition-all shadow-md hover:shadow-lg";
+            const roomDiv = document.createElement('div');
+            roomDiv.className = 'room-item';
             roomDiv.onclick = () => joinRoomFromBrowse(room.id);
 
-            // Generate Dicebear avatar URL for host
             const hostAvatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
-              room.hostName || "Unknown"
+              room.hostName || 'Unknown'
             )}`;
 
             roomDiv.innerHTML = `
-              <div class="card-body p-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-4">
-                    <div class="avatar">
-                      <div class="w-10 h-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                        <img src="${hostAvatarUrl}" alt="${room.hostName} avatar" />
-                      </div>
-                    </div>
-                    <div>
-                      <div class="badge badge-primary badge-lg font-mono mb-1">${room.id}</div>
-                      <div class="text-sm opacity-70">Host: ${room.hostName}</div>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <div class="badge badge-outline">${room.playerCount}/${room.maxPlayers} Players</div>
-                    <svg class="w-5 h-5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </div>
+              <div class="room-info">
+                <img src="${hostAvatarUrl}" alt="${room.hostName}" class="player-avatar" />
+                <div>
+                  <div class="room-code">${room.id}</div>
+                  <div class="room-host">Host: ${room.hostName}</div>
                 </div>
+              </div>
+              <div class="room-players">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                ${room.playerCount}/${room.maxPlayers}
               </div>
             `;
             roomList.appendChild(roomDiv);
@@ -783,32 +561,51 @@
         }
       });
 
-      network.on("playerJoined", (data) => {
+      network.on('playerJoined', (data) => {
         updatePlayerList(data.players);
       });
 
-      network.on("playerLeft", (data) => {
+      network.on('playerLeft', (data) => {
         updatePlayerList(data.players);
       });
 
-      network.on("playersUpdated", (data) => {
+      network.on('playersUpdated', (data) => {
         updatePlayerList(data.players);
       });
 
-      network.on("raceCountdown", (data) => {
-        document.getElementById(
-          "startingText"
-        ).textContent = `Race starting in ${data.countdown}...`;
+      network.on('raceCountdown', (data) => {
+        document.getElementById('startingText').textContent =
+          `Race starting in ${data.countdown}...`;
       });
 
-      network.on("raceStart", (data) => {
-        // Redirect to game
-        window.location.href = "multiplayer.html";
+      network.on('raceStart', (data) => {
+        window.location.href = 'multiplayer.html';
       });
 
-      network.on("error", (data) => {
+      network.on('error', (data) => {
         showError(data.message);
       });
+
+      // Add floating animation to pellets
+      const pellets = document.querySelectorAll('.pellet');
+      pellets.forEach((pellet) => {
+        const randomX = Math.random() * 20 - 10;
+        const randomY = Math.random() * 20 - 10;
+        const randomDuration = 3 + Math.random() * 2;
+
+        pellet.style.animation += `, floatPellet ${randomDuration}s infinite ease-in-out`;
+        pellet.style.setProperty('--x', randomX + 'px');
+        pellet.style.setProperty('--y', randomY + 'px');
+      });
+
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes floatPellet {
+          0%, 100% { transform: translate(0, 0); }
+          50% { transform: translate(var(--x, 10px), var(--y, 10px)); }
+        }
+      `;
+      document.head.appendChild(style);
     </script>
   </body>
 </html>

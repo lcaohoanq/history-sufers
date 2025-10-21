@@ -1,4 +1,4 @@
-# Boxy Run - Multiplayer Game Server Dockerfile
+# History Sufers - Multiplayer Game Server Dockerfile
 # Multi-stage build for optimized production image
 
 # Stage 1: Build stage
@@ -10,8 +10,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (including dev dependencies for build)
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies
+# Use npm ci for faster, reproducible builds (requires package-lock.json)
+# Falls back to npm install if package-lock.json doesn't exist
+RUN if [ -f package-lock.json ]; then \
+    npm ci && npm cache clean --force; \
+    else \
+    npm install && npm cache clean --force; \
+    fi
 
 # Stage 2: Production stage
 FROM node:18-alpine AS production

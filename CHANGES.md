@@ -1,4 +1,4 @@
-# Boxy Run Multiplayer - Update Summary
+# History Sufers Multiplayer - Update Summary
 
 ## ✅ What's Been Updated
 
@@ -7,14 +7,12 @@ This 7-year-old repository has been enhanced with modern multiplayer racing capa
 ### 🎮 New Features Added
 
 1. **Real-time Multiplayer Racing**
-
    - Up to 6 players can race simultaneously
    - Real-time position synchronization
    - Live leaderboard during races
    - Synchronized race starts with countdown
 
 2. **Complete Lobby System**
-
    - Create private rooms with shareable codes
    - Join rooms via code or browsing
    - Player ready system
@@ -116,18 +114,15 @@ http://localhost:3000
 ### 🌟 Key Improvements
 
 1. **Backward Compatible**
-
    - Original single-player mode fully preserved
    - All original features still work
 
 2. **Scalable Architecture**
-
    - Supports multiple concurrent races
    - Room-based isolation
    - Easy to add more features
 
 3. **Modern Tech Stack**
-
    - Socket.IO for reliable real-time communication
    - Express for efficient static serving
    - Event-driven design patterns
@@ -189,7 +184,7 @@ The game can be deployed to:
 
 ### 🎉 Conclusion
 
-The 7-year-old Boxy Run game has been successfully modernized with a complete multiplayer racing system while preserving all original functionality. Players can now compete with friends in real-time races!
+The 7-year-old History Sufers game has been successfully modernized with a complete multiplayer racing system while preserving all original functionality. Players can now compete with friends in real-time races!
 
 **Status:** ✅ Ready to play!
 

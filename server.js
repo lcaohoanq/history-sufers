@@ -1,19 +1,19 @@
 /**
- * BOXY RUN - MULTIPLAYER SERVER
+ * HISTORY SUFERS - MULTIPLAYER SERVER
  *
  * Node.js + Socket.IO server for real-time multiplayer racing
  */
 
-const express = require("express");
+const express = require('express');
 const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http, {
+const http = require('http').createServer(app);
+const io = require('socket.io')(http, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
 });
-const path = require("path");
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS_PER_ROOM = parseInt(process.env.MAX_PLAYERS) || 50;
@@ -22,25 +22,25 @@ const MAX_PLAYERS_PER_ROOM = parseInt(process.env.MAX_PLAYERS) || 50;
 app.use(express.static(path.join(__dirname)));
 
 // Health check endpoint for Docker
-app.get("/health", (req, res) => {
+app.get('/health', (req, res) => {
   res.status(200).json({
-    status: "ok",
+    status: 'ok',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     rooms: rooms.size,
     activePlayers: playerRooms.size,
-    maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM,
+    maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM
   });
 });
 
 // API endpoint for server info
-app.get("/api/info", (req, res) => {
+app.get('/api/info', (req, res) => {
   res.json({
-    name: "Boxy Run Multiplayer Server",
-    version: "2.0.0",
+    name: 'History Sufers Multiplayer Server',
+    version: '2.0.0',
     maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM,
     activeRooms: rooms.size,
-    activePlayers: playerRooms.size,
+    activePlayers: playerRooms.size
   });
 });
 
@@ -74,7 +74,7 @@ const PLAYER_COLORS = [
   { shirt: 0xba55d3, shorts: 0x9370db }, // Medium Orchid
   { shirt: 0x1e90ff, shorts: 0x4169e1 }, // Dodger Blue
   { shirt: 0xda70d6, shorts: 0x9370db }, // Orchid
-  { shirt: 0x00ff7f, shorts: 0x2e8b57 }, // Spring Green
+  { shirt: 0x00ff7f, shorts: 0x2e8b57 } // Spring Green
 ];
 
 /**
@@ -127,7 +127,7 @@ class Room {
     this.hostId = hostId;
     this.players = new Map();
     this.maxPlayers = MAX_PLAYERS_PER_ROOM;
-    this.state = "waiting"; // waiting, racing, finished
+    this.state = 'waiting'; // waiting, racing, finished
     this.startTime = null;
     this.readyPlayers = new Set();
     this.createdAt = Date.now();
@@ -135,7 +135,7 @@ class Room {
 
   addPlayer(socketId, playerName) {
     if (this.players.size >= this.maxPlayers) {
-      return { success: false, reason: "room_full" };
+      return { success: false, reason: 'room_full' };
     }
 
     const colorIndex = this.players.size;
@@ -152,7 +152,7 @@ class Room {
       ready: false,
       finished: false,
       finishTime: null,
-      joinedAt: Date.now(),
+      joinedAt: Date.now()
     });
 
     return { success: true, playerCount: this.players.size };
@@ -179,7 +179,7 @@ class Room {
     return (
       this.players.size >= 2 &&
       this.readyPlayers.size === this.players.size &&
-      this.state === "waiting"
+      this.state === 'waiting'
     );
   }
 
@@ -199,146 +199,142 @@ class Room {
   }
 }
 
-io.on("connection", (socket) => {
+io.on('connection', (socket) => {
   console.log(`✅ Player connected: ${socket.id}`);
 
   // Send server configuration to client
-  socket.emit("serverConfig", {
+  socket.emit('serverConfig', {
     maxPlayersPerRoom: MAX_PLAYERS_PER_ROOM,
-    serverVersion: "2.0.0",
+    serverVersion: '2.0.0'
   });
 
   // Create a new room
-  socket.on("createRoom", (data) => {
+  socket.on('createRoom', (data) => {
     const roomId = generateRoomId();
     const room = new Room(roomId, socket.id);
-    const result = room.addPlayer(socket.id, data.playerName || "Player");
+    const result = room.addPlayer(socket.id, data.playerName || 'Player');
 
     if (result.success) {
       rooms.set(roomId, room);
       playerRooms.set(socket.id, roomId);
 
       socket.join(roomId);
-      socket.emit("roomCreated", {
+      socket.emit('roomCreated', {
         roomId: roomId,
         playerId: socket.id,
         players: room.getPlayersArray(),
-        maxPlayers: room.maxPlayers,
+        maxPlayers: room.maxPlayers
       });
 
       // Send notification
-      socket.emit("notification", {
-        type: "success",
-        title: "Room Created!",
+      socket.emit('notification', {
+        type: 'success',
+        title: 'Room Created!',
         message: `Room ${roomId} is ready. Share the code with friends!`,
-        duration: 5000,
+        duration: 5000
       });
 
       console.log(`🎮 Room created: ${roomId} by ${socket.id}`);
     } else {
-      socket.emit("error", { message: "Failed to create room" });
+      socket.emit('error', { message: 'Failed to create room' });
     }
   });
 
   // Join an existing room
-  socket.on("joinRoom", (data) => {
+  socket.on('joinRoom', (data) => {
     const { roomId, playerName } = data;
     const room = rooms.get(roomId);
 
     if (!room) {
-      socket.emit("error", { message: "Room not found" });
-      socket.emit("notification", {
-        type: "error",
-        title: "Room Not Found",
+      socket.emit('error', { message: 'Room not found' });
+      socket.emit('notification', {
+        type: 'error',
+        title: 'Room Not Found',
         message: `Room ${roomId} doesn't exist or has been closed.`,
-        duration: 5000,
+        duration: 5000
       });
       return;
     }
 
-    if (room.state !== "waiting") {
-      socket.emit("error", { message: "Race already in progress" });
-      socket.emit("notification", {
-        type: "warning",
-        title: "Race In Progress",
-        message:
-          "This room is currently racing. Please wait or try another room.",
-        duration: 5000,
+    if (room.state !== 'waiting') {
+      socket.emit('error', { message: 'Race already in progress' });
+      socket.emit('notification', {
+        type: 'warning',
+        title: 'Race In Progress',
+        message: 'This room is currently racing. Please wait or try another room.',
+        duration: 5000
       });
       return;
     }
 
-    const result = room.addPlayer(socket.id, playerName || "Player");
+    const result = room.addPlayer(socket.id, playerName || 'Player');
 
     if (result.success) {
       playerRooms.set(socket.id, roomId);
       socket.join(roomId);
 
-      socket.emit("roomJoined", {
+      socket.emit('roomJoined', {
         roomId: roomId,
         playerId: socket.id,
         players: room.getPlayersArray(),
-        maxPlayers: room.maxPlayers,
+        maxPlayers: room.maxPlayers
       });
 
       // Notify the player who joined
-      socket.emit("notification", {
-        type: "success",
-        title: "Joined Room!",
+      socket.emit('notification', {
+        type: 'success',
+        title: 'Joined Room!',
         message: `Welcome to room ${roomId}! ${result.playerCount}/${room.maxPlayers} players ready.`,
-        duration: 4000,
+        duration: 4000
       });
 
       // Notify other players in the room
-      socket.to(roomId).emit("playerJoined", {
-        players: room.getPlayersArray(),
+      socket.to(roomId).emit('playerJoined', {
+        players: room.getPlayersArray()
       });
 
-      socket.to(roomId).emit("notification", {
-        type: "info",
-        title: "New Player Joined",
+      socket.to(roomId).emit('notification', {
+        type: 'info',
+        title: 'New Player Joined',
         message: `${playerName} joined the room! (${result.playerCount}/${room.maxPlayers})`,
-        duration: 3000,
+        duration: 3000
       });
 
       console.log(
         `👥 Player ${socket.id} (${playerName}) joined room ${roomId} (${result.playerCount}/${room.maxPlayers})`
       );
     } else {
-      socket.emit("error", {
-        message: `Room is full (${room.maxPlayers}/${room.maxPlayers})`,
+      socket.emit('error', {
+        message: `Room is full (${room.maxPlayers}/${room.maxPlayers})`
       });
-      socket.emit("notification", {
-        type: "error",
-        title: "Room Full",
+      socket.emit('notification', {
+        type: 'error',
+        title: 'Room Full',
         message: `This room is full! Maximum ${room.maxPlayers} players allowed.`,
-        duration: 5000,
+        duration: 5000
       });
     }
   });
 
   // Get list of available rooms
-  socket.on("listRooms", () => {
+  socket.on('listRooms', () => {
     const roomList = Array.from(rooms.values())
-      .filter(
-        (room) =>
-          room.state === "waiting" && room.players.size < room.maxPlayers
-      )
+      .filter((room) => room.state === 'waiting' && room.players.size < room.maxPlayers)
       .map((room) => {
         const hostPlayer = room.players.get(room.hostId);
         return {
           id: room.id,
           playerCount: room.players.size,
           maxPlayers: room.maxPlayers,
-          hostName: hostPlayer ? hostPlayer.name : "Unknown",
+          hostName: hostPlayer ? hostPlayer.name : 'Unknown'
         };
       });
 
-    socket.emit("roomList", roomList);
+    socket.emit('roomList', roomList);
   });
 
   // Player ready toggle
-  socket.on("playerReady", (data) => {
+  socket.on('playerReady', (data) => {
     const roomId = playerRooms.get(socket.id);
     if (!roomId) return;
 
@@ -346,13 +342,13 @@ io.on("connection", (socket) => {
     if (!room) return;
 
     const player = room.players.get(socket.id);
-    const playerName = player ? player.name : "Player";
+    const playerName = player ? player.name : 'Player';
 
     room.setPlayerReady(socket.id, data.ready);
 
     // Broadcast to all players in room
-    io.to(roomId).emit("playersUpdated", {
-      players: room.getPlayersArray(),
+    io.to(roomId).emit('playersUpdated', {
+      players: room.getPlayersArray()
     });
 
     // Notify all players about ready status change
@@ -360,58 +356,56 @@ io.on("connection", (socket) => {
     const totalPlayers = room.players.size;
 
     if (data.ready) {
-      socket.to(roomId).emit("notification", {
-        type: "info",
-        title: "Player Ready",
+      socket.to(roomId).emit('notification', {
+        type: 'info',
+        title: 'Player Ready',
         message: `${playerName} is ready! (${readyCount}/${totalPlayers})`,
-        duration: 2000,
+        duration: 2000
       });
     }
 
     // Check if race can start
     if (room.canStart()) {
-      io.to(roomId).emit("notification", {
-        type: "success",
-        title: "All Players Ready!",
+      io.to(roomId).emit('notification', {
+        type: 'success',
+        title: 'All Players Ready!',
         message: `Starting race with ${totalPlayers} players...`,
-        duration: 3000,
+        duration: 3000
       });
       startRace(roomId, room);
     } else if (readyCount > 0) {
       // Show how many more players need to be ready
       const waitingCount = totalPlayers - readyCount;
       if (waitingCount > 0) {
-        io.to(roomId).emit("notification", {
-          type: "info",
-          title: "Waiting for Players",
-          message: `${waitingCount} player${
-            waitingCount > 1 ? "s" : ""
-          } need to ready up!`,
-          duration: 2000,
+        io.to(roomId).emit('notification', {
+          type: 'info',
+          title: 'Waiting for Players',
+          message: `${waitingCount} player${waitingCount > 1 ? 's' : ''} need to ready up!`,
+          duration: 2000
         });
       }
     }
   });
 
   // Update player position and state during race
-  socket.on("playerUpdate", (data) => {
+  socket.on('playerUpdate', (data) => {
     const roomId = playerRooms.get(socket.id);
     if (!roomId) return;
 
     const room = rooms.get(roomId);
-    if (!room || room.state !== "racing") return;
+    if (!room || room.state !== 'racing') return;
 
     room.updatePlayerState(socket.id, data);
 
     // Broadcast to other players (not self)
-    socket.to(roomId).emit("opponentUpdate", {
+    socket.to(roomId).emit('opponentUpdate', {
       playerId: socket.id,
-      data: data,
+      data: data
     });
   });
 
   // Player finished race
-  socket.on("playerFinished", (data) => {
+  socket.on('playerFinished', (data) => {
     const roomId = playerRooms.get(socket.id);
     if (!roomId) return;
 
@@ -425,18 +419,16 @@ io.on("connection", (socket) => {
       player.score = data.score || 0;
 
       // Broadcast finish to all players
-      io.to(roomId).emit("playerFinishedRace", {
+      io.to(roomId).emit('playerFinishedRace', {
         playerId: socket.id,
         playerName: player.name,
         score: player.score,
         time: player.finishTime,
-        players: room.getPlayersArray(),
+        players: room.getPlayersArray()
       });
 
       // Check if all players finished
-      const allFinished = Array.from(room.players.values()).every(
-        (p) => p.finished
-      );
+      const allFinished = Array.from(room.players.values()).every((p) => p.finished);
       if (allFinished) {
         endRace(roomId, room);
       }
@@ -444,19 +436,19 @@ io.on("connection", (socket) => {
   });
 
   // Leave room
-  socket.on("leaveRoom", () => {
+  socket.on('leaveRoom', () => {
     handlePlayerLeave(socket.id);
   });
 
   // Handle disconnect
-  socket.on("disconnect", () => {
+  socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`);
     handlePlayerLeave(socket.id);
   });
 });
 
 function startRace(roomId, room) {
-  room.state = "racing";
+  room.state = 'racing';
   room.startTime = Date.now();
 
   const playerCount = room.players.size;
@@ -469,35 +461,33 @@ function startRace(roomId, room) {
   });
 
   // Countdown notifications
-  io.to(roomId).emit("raceCountdown", { countdown: 3 });
-  io.to(roomId).emit("notification", {
-    type: "warning",
-    title: "Race Starting!",
+  io.to(roomId).emit('raceCountdown', { countdown: 3 });
+  io.to(roomId).emit('notification', {
+    type: 'warning',
+    title: 'Race Starting!',
     message: `Get ready! ${playerCount} racers competing...`,
-    duration: 3000,
+    duration: 3000
   });
 
   setTimeout(() => {
-    io.to(roomId).emit("raceStart", {
+    io.to(roomId).emit('raceStart', {
       startTime: room.startTime,
-      players: room.getPlayersArray(),
+      players: room.getPlayersArray()
     });
 
-    io.to(roomId).emit("notification", {
-      type: "success",
-      title: "GO! 🏁",
-      message: "Race has started! Good luck!",
-      duration: 2000,
+    io.to(roomId).emit('notification', {
+      type: 'success',
+      title: 'GO! 🏁',
+      message: 'Race has started! Good luck!',
+      duration: 2000
     });
 
-    console.log(
-      `🏁 Race started in room ${roomId} with ${playerCount} players`
-    );
+    console.log(`🏁 Race started in room ${roomId} with ${playerCount} players`);
   }, 3000);
 }
 
 function endRace(roomId, room) {
-  room.state = "finished";
+  room.state = 'finished';
 
   // Calculate rankings
   const rankings = Array.from(room.players.values())
@@ -507,16 +497,16 @@ function endRace(roomId, room) {
       playerId: player.id,
       playerName: player.name,
       score: player.score,
-      time: player.finishTime,
+      time: player.finishTime
     }));
 
-  io.to(roomId).emit("raceEnded", { rankings });
+  io.to(roomId).emit('raceEnded', { rankings });
 
   console.log(`Race ended in room ${roomId}`);
 
   // Reset room after 10 seconds
   setTimeout(() => {
-    room.state = "waiting";
+    room.state = 'waiting';
     room.readyPlayers.clear();
     room.players.forEach((player) => {
       player.ready = false;
@@ -525,8 +515,8 @@ function endRace(roomId, room) {
       player.score = 0;
     });
 
-    io.to(roomId).emit("raceReset", {
-      players: room.getPlayersArray(),
+    io.to(roomId).emit('raceReset', {
+      players: room.getPlayersArray()
     });
   }, 10000);
 }
@@ -539,7 +529,7 @@ function handlePlayerLeave(socketId) {
   if (!room) return;
 
   const player = room.players.get(socketId);
-  const playerName = player ? player.name : "A player";
+  const playerName = player ? player.name : 'A player';
   const wasReady = player ? player.ready : false;
 
   room.removePlayer(socketId);
@@ -548,17 +538,17 @@ function handlePlayerLeave(socketId) {
   const remainingPlayers = room.players.size;
 
   // Notify other players
-  io.to(roomId).emit("playerLeft", {
+  io.to(roomId).emit('playerLeft', {
     playerId: socketId,
-    players: room.getPlayersArray(),
+    players: room.getPlayersArray()
   });
 
   if (remainingPlayers > 0) {
-    io.to(roomId).emit("notification", {
-      type: "warning",
-      title: "Player Left",
+    io.to(roomId).emit('notification', {
+      type: 'warning',
+      title: 'Player Left',
       message: `${playerName} left the room. (${remainingPlayers} remaining)`,
-      duration: 3000,
+      duration: 3000
     });
   }
 
@@ -572,12 +562,12 @@ function handlePlayerLeave(socketId) {
     const newHost = room.players.get(newHostId);
     room.hostId = newHostId;
 
-    io.to(roomId).emit("newHost", { hostId: newHostId });
-    io.to(roomId).emit("notification", {
-      type: "info",
-      title: "New Host",
+    io.to(roomId).emit('newHost', { hostId: newHostId });
+    io.to(roomId).emit('notification', {
+      type: 'info',
+      title: 'New Host',
       message: `${newHost.name} is now the room host.`,
-      duration: 3000,
+      duration: 3000
     });
 
     console.log(`👑 New host assigned in room ${roomId}: ${newHostId}`);
@@ -612,7 +602,7 @@ http.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║                                                        ║
-║   🎮  BOXY RUN - MULTIPLAYER SERVER                   ║
+║   🎮  HISTORY SUFERS - MULTIPLAYER SERVER                   ║
 ║                                                        ║
 ║   🚀  Server running on port ${PORT}                      ║
 ║   🌐  URL: http://localhost:${PORT}                     ║

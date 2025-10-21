@@ -122,8 +122,6 @@ function World() {
     // Initialize obstacle weights
     window.obstacleWeights = {
       tree: 1,          // Regular tree (common in early levels)
-      rock: 0.05,       // Rock (very rare in early levels)
-      mushroom: 0.05,   // Mushroom (very rare in early levels)
       hammerandsickle: 0.5 // Hammer and Sickle collectible
     };
     
@@ -369,7 +367,6 @@ function World() {
         // Update obstacle type weights with all types
         window.obstacleWeights = {
           hammerandsickle: 0.3,  // 30% chance for HammerAndSickle
-          mushroom: 0.25,        // 25% chance for mushrooms
         };
         
         if (difficulty % levelLength == 0) {
@@ -453,7 +450,7 @@ function World() {
         }
       }
 
-      // Check deadly collisions (trees, mushrooms, rocks)
+      // Check deadly collisions (trees, rocks)
       if (!gameOver && checkDeadlyCollisions()) {
         gameOver = true;
         paused = true;
@@ -587,7 +584,6 @@ function World() {
         var weights = window.obstacleWeights || {
           tree: 1,
           rock: 0.05,
-          mushroom: 0.05
         };
         
         // Choose a weighted random obstacle type
@@ -601,9 +597,6 @@ function World() {
             break;
           case 'rock':
             obstacle = new Rock(lane * 800, -400, position, scale * 0.7);
-            break;
-          case 'mushroom':
-            obstacle = new Mushroom(lane * 800, -400, position, scale * 1.3);
             break;
           case 'hammerandsickle':
             obstacle = new HammerAndSickle(lane * 800, -100, position, scale * 1.2);
@@ -1061,56 +1054,6 @@ function HammerAndSickle(x, y, z, s) {
       this.mesh.add(spark);
       this.particles.push(spark);
     }
-  };
-}
-
-// Mushroom obstacle inspired by asset/Mushroom_*.gltf
-function Mushroom(x, y, z, s) {
-  var self = this;
-
-  this.mesh = new THREE.Object3D();
-  
-  // Create mushroom stem
-  var stem = createCylinder(80, 100, 200, 16, Colors.white, 0, 100, 0);
-  
-  // Create mushroom cap
-  var cap = createCylinder(10, 300, 300, 32, Colors.cherry, 0, 300, 0);
-  cap.rotation.x = Math.PI;
-  
-  // Create spots on the mushroom cap
-  var spot1 = createCylinder(10, 50, 50, 16, Colors.white, 80, 300, 80);
-  spot1.rotation.x = Math.PI;
-  var spot2 = createCylinder(10, 40, 40, 16, Colors.white, -60, 300, 100);
-  spot2.rotation.x = Math.PI;
-  var spot3 = createCylinder(10, 60, 60, 16, Colors.white, 20, 300, -90);
-  spot3.rotation.x = Math.PI;
-  
-  this.mesh.add(stem);
-  this.mesh.add(cap);
-  this.mesh.add(spot1);
-  this.mesh.add(spot2);
-  this.mesh.add(spot3);
-  
-  this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
-  this.scale = s;
-  this.type = "mushroom";
-
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 200;
-    var obstMaxX = self.mesh.position.x + this.scale * 200;
-    var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 400;
-    var obstMinZ = self.mesh.position.z - this.scale * 200;
-    var obstMaxZ = self.mesh.position.z + this.scale * 200;
-    return (
-      obstMinX <= maxX &&
-      obstMaxX >= minX &&
-      obstMinY <= maxY &&
-      obstMaxY >= minY &&
-      obstMinZ <= maxZ &&
-      obstMaxZ >= minZ
-    );
   };
 }
 

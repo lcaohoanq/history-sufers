@@ -28,8 +28,45 @@ var deg2Rad = Math.PI / 180;
 
 // Make a new world when the page is loaded.
 window.addEventListener('load', function () {
+  // Initialize audio manager
+  AudioManager.init();
+
+  // Set up sound toggle button
+  var soundToggleBtn = document.getElementById('sound-toggle');
+  if (soundToggleBtn) {
+    // Set initial state based on saved preference
+    updateSoundButtonUI();
+
+    soundToggleBtn.addEventListener('click', function() {
+      var isMuted = AudioManager.toggleMute();
+      updateSoundButtonUI();
+
+      // If unmuted and game is playing, start the music
+      if (!isMuted && AudioManager.isPlaying()) {
+        AudioManager.play();
+      }
+    });
+  }
+
   new World();
 });
+
+/**
+ * Update the sound toggle button UI
+ */
+function updateSoundButtonUI() {
+  var soundToggleBtn = document.getElementById('sound-toggle');
+  if (!soundToggleBtn) return;
+
+  var isMuted = AudioManager.getMuteState();
+  soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
+
+  if (isMuted) {
+    soundToggleBtn.classList.add('muted');
+  } else {
+    soundToggleBtn.classList.remove('muted');
+  }
+}
 
 /**
  *
@@ -139,6 +176,9 @@ function World() {
           character.onUnpause();
           document.getElementById('variable-content').style.visibility = 'hidden';
           document.getElementById('controls').style.display = 'none';
+
+          // Start playing background music when game starts
+          AudioManager.play();
         } else {
           if (key == p) {
             paused = true;
@@ -146,6 +186,9 @@ function World() {
             document.getElementById('variable-content').style.visibility = 'visible';
             document.getElementById('variable-content').innerHTML =
               'Game is paused. Press any key to resume.';
+
+            // Pause music when game is paused
+            AudioManager.pause();
           }
           if (key == up && !paused) {
             character.onUpKeyPressed();
@@ -243,6 +286,10 @@ function World() {
       if (collisionsDetected()) {
         gameOver = true;
         paused = true;
+
+        // Stop music on game over
+        AudioManager.stop();
+
         document.addEventListener('keydown', function (e) {
           if (e.keyCode == 40) document.location.reload(true);
         });

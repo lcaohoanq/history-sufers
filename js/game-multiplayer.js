@@ -31,6 +31,26 @@ var networkManager = null;
 
 // Make a new world when the page is loaded.
 window.addEventListener('load', function () {
+  // Initialize audio manager
+  AudioManager.init();
+
+  // Set up sound toggle button
+  var soundToggleBtn = document.getElementById('sound-toggle');
+  if (soundToggleBtn) {
+    // Set initial state based on saved preference
+    updateSoundButtonUI();
+
+    soundToggleBtn.addEventListener('click', function() {
+      var isMuted = AudioManager.toggleMute();
+      updateSoundButtonUI();
+
+      // If unmuted and game is playing, start the music
+      if (!isMuted && AudioManager.isPlaying()) {
+        AudioManager.play();
+      }
+    });
+  }
+
   // Check if in multiplayer mode
   const urlParams = new URLSearchParams(window.location.search);
   const mode = urlParams.get('mode');
@@ -41,6 +61,23 @@ window.addEventListener('load', function () {
 
   new World();
 });
+
+/**
+ * Update the sound toggle button UI
+ */
+function updateSoundButtonUI() {
+  var soundToggleBtn = document.getElementById('sound-toggle');
+  if (!soundToggleBtn) return;
+
+  var isMuted = AudioManager.getMuteState();
+  soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
+
+  if (isMuted) {
+    soundToggleBtn.classList.add('muted');
+  } else {
+    soundToggleBtn.classList.remove('muted');
+  }
+}
 
 /**
  *
@@ -160,6 +197,9 @@ function World() {
           if (document.getElementById('controls')) {
             document.getElementById('controls').style.display = 'none';
           }
+
+          // Start playing background music when game starts
+          AudioManager.play();
         } else {
           if (key == p) {
             paused = true;
@@ -167,6 +207,9 @@ function World() {
             document.getElementById('variable-content').style.visibility = 'visible';
             document.getElementById('variable-content').innerHTML =
               'Game is paused. Press any key to resume.';
+
+            // Pause music when game is paused
+            AudioManager.pause();
           }
           if (key == up && !paused) {
             character.onUpKeyPressed();
@@ -224,6 +267,9 @@ function World() {
       paused = false;
       character.onUnpause();
 
+      // Start playing background music when race starts
+      AudioManager.play();
+
       // Initialize opponents
       data.players.forEach(function (player) {
         if (player.id !== networkManager.playerId) {
@@ -234,6 +280,8 @@ function World() {
 
     // Handle race end
     networkManager.on('raceEnded', function (data) {
+      // Stop music when race ends
+      AudioManager.stop();
       displayRaceResults(data.rankings);
     });
 
@@ -441,6 +489,9 @@ function World() {
         gameOver = true;
         paused = true;
         console.log("Game over: Collision with deadly obstacle");
+
+        // Stop music on game over
+        AudioManager.stop();
 
         // Notify server in multiplayer
         if (isMultiplayer && networkManager) {

@@ -71,12 +71,14 @@ function HammerAndSickle(x, y, z, s) {
 
   // ===== COLLISION =====
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 100;
-    var obstMaxX = self.mesh.position.x + this.scale * 100;
+    // Use square root scaling to keep collision reasonable for large objects
+    var scaleFactor = Math.sqrt(this.scale) * 1.2;
+    var obstMinX = self.mesh.position.x - scaleFactor * 100;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 200;
-    var obstMinZ = self.mesh.position.z - this.scale * 100;
-    var obstMaxZ = self.mesh.position.z + this.scale * 100;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
       obstMinX <= maxX &&
       obstMaxX >= minX &&
@@ -218,12 +220,14 @@ function BribeEnvelope(x, y, z, s) {
 
   // ===== COLLISION =====
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 80;
-    var obstMaxX = self.mesh.position.x + this.scale * 80;
+    // Use square root scaling to keep collision reasonable for large objects
+    var scaleFactor = Math.sqrt(this.scale) * 1.2;
+    var obstMinX = self.mesh.position.x - scaleFactor * 80;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 80;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 50;
-    var obstMinZ = self.mesh.position.z - this.scale * 20;
-    var obstMaxZ = self.mesh.position.z + this.scale * 20;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 50;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 20;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 20;
     return (
       obstMinX <= maxX && obstMaxX >= minX &&
       obstMinY <= maxY && obstMaxY >= minY &&
@@ -300,12 +304,14 @@ function BallotBox(x, y, z, s) {
 
   // ===== COLLISION =====
   this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 100;
-    var obstMaxX = self.mesh.position.x + this.scale * 100;
+    // Use square root scaling to keep collision reasonable for large objects
+    var scaleFactor = Math.sqrt(this.scale) * 1.2;
+    var obstMinX = self.mesh.position.x - scaleFactor * 100;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 200;
-    var obstMinZ = self.mesh.position.z - this.scale * 100;
-    var obstMaxZ = self.mesh.position.z + this.scale * 100;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
       obstMinX <= maxX &&
       obstMaxX >= minX &&
@@ -432,13 +438,15 @@ function RuleOfLawState(x, y, z, s) {
 
   // ===== Collision =====
   this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 110;
-    var obstMaxX = self.mesh.position.x + this.scale * 110;
+    // Use square root scaling to keep collision reasonable for large objects
+    var scaleFactor = Math.sqrt(this.scale) * 1.2;
+    var obstMinX = self.mesh.position.x - scaleFactor * 110;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 110;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 300; // Height includes the star
-    var obstMinZ = self.mesh.position.z - this.scale * 60;
-    var obstMaxZ = self.mesh.position.z + this.scale * 60;
-    
+    var obstMaxY = self.mesh.position.y + scaleFactor * 300; // Height includes the star
+    var obstMinZ = self.mesh.position.z - scaleFactor * 60;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 60;
+
     return (
       obstMinX <= maxX &&
       obstMaxX >= minX &&
@@ -483,7 +491,7 @@ function ReformGears(x, y, z, s) {
   // Helper to create gear (simple cylinder + box "teeth")
   function createGear(radius, thickness, teeth, colorMat) {
     var g = new THREE.Group();
-    
+
     // Main disc
     var disc = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, thickness, 64), colorMat);
     g.add(disc);
@@ -553,12 +561,14 @@ function ReformGears(x, y, z, s) {
 
   // ===== Simple collision box =====
   this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 200;
-    var obstMaxX = self.mesh.position.x + this.scale * 200;
+    // Use square root scaling to keep collision reasonable for large objects
+    var scaleFactor = Math.sqrt(this.scale) * 1.2;
+    var obstMinX = self.mesh.position.x - scaleFactor * 200;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 200;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 260;
-    var obstMinZ = self.mesh.position.z - this.scale * 150;
-    var obstMaxZ = self.mesh.position.z + this.scale * 150;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 260;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 150;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 150;
 
     return (
       obstMinX <= maxX &&
@@ -661,7 +671,7 @@ function UnityHands(x, y, z, s) {
   // cho mesh tổng chính diện user nhìn
   this.mesh.rotation.x = Math.PI / 4;
   this.mesh.rotation.y = Math.PI;
-  
+
   this.update = function() {
     // xoay toàn bộ theo trục y
     this.mesh.rotation.y += 0.004;
@@ -669,8 +679,9 @@ function UnityHands(x, y, z, s) {
 
   // ===== Collision =====
   this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
-    // Điều chỉnh vùng va chạm cho phù hợp với kích thước mới
-    var size = 150 * this.scale; // Tăng vùng va chạm
+    // Use square root scaling to keep collision reasonable for large objects
+    var scaleFactor = Math.sqrt(this.scale) * 1.2;
+    var size = 150 * scaleFactor; // Tăng vùng va chạm
     var cx = self.mesh.position.x;
     var cy = self.mesh.position.y;
     var cz = self.mesh.position.z;
@@ -742,10 +753,27 @@ function CorruptedThrone(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s); // game có thể scale thêm
   this.type = "corruptedThrone";
+  this.scale = s;
 
   // Optional: auto rotate
   this.update = function() {
     this.mesh.rotation.y += 0.003;
+  };
+
+  // ===== Collision Detection =====
+  this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
+    var self = this;
+    // Use square root scaling to keep collision reasonable for large objects
+    const scaleFactor = Math.sqrt(s) * 1.2;
+    const size = 80 * SCALE * scaleFactor;
+    const px = this.mesh.position.x;
+    const py = this.mesh.position.y;
+    const pz = this.mesh.position.z;
+    return (
+      px - size <= maxX && px + size >= minX &&
+      py <= maxY && py + size * 2 >= minY &&
+      pz - size <= maxZ && pz + size >= minZ
+    );
   };
 }
 
@@ -808,14 +836,18 @@ function ColonialRemnant(x, y, z, s) {
   };
 
   // ===== Collision box mở rộng theo scale =====
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    const size = 150 * SCALE * s;
+  // ===== Collision Detection =====
+  this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
+    var self = this;
+    // Use square root scaling to keep collision reasonable for large objects
+    const scaleFactor = Math.sqrt(s) * 1.2;
+    const size = 40 * SCALE * scaleFactor;
     const px = this.mesh.position.x;
     const py = this.mesh.position.y;
     const pz = this.mesh.position.z;
     return (
       px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size >= minY &&
+      py <= maxY && py + size * 2 >= minY &&
       pz - size <= maxZ && pz + size >= minZ
     );
   };
@@ -897,7 +929,9 @@ function PuppetManipulation(x, y, z, s) {
 
   // ===== Collision (nếu cần dùng cho game) =====
   this.collides = function(minX, maxX, minY, maxY, minZ, maxZ) {
-    let size = 150 * s;
+    // Use square root scaling to keep collision reasonable for large objects
+    let scaleFactor = Math.sqrt(s) * 1.2;
+    let size = 150 * scaleFactor;
     let px = this.mesh.position.x;
     let py = this.mesh.position.y;
     let pz = this.mesh.position.z;
@@ -1003,7 +1037,9 @@ function MisbalancedScale(x, y, z, s) {
     const px = this.mesh.position.x;
     const py = this.mesh.position.y;
     const pz = this.mesh.position.z;
-    const size = 200 * s; // mở rộng cho phù hợp scale object
+    // Use square root scaling to keep collision reasonable for large objects
+    const scaleFactor = Math.sqrt(s) * 1.2;
+    const size = 200 * scaleFactor;
 
     return (
       px - size <= maxX && px + size >= minX &&

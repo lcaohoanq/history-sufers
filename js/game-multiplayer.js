@@ -67,7 +67,8 @@ function World() {
     treePresenceProb,
     maxTreeSize,
     fogDistance,
-    gameOver;
+    gameOver,
+    collectedHammerAndSickles;
 
   // Multiplayer variables
   var isMultiplayer = false;
@@ -112,17 +113,33 @@ function World() {
     objects = [];
     treePresenceProb = 0.2;
     maxTreeSize = 0.5;
+
+    // Initialize obstacle weights
+    window.obstacleWeights = {
+      tree: 1,          // Regular tree (common in early levels)
+      hammerandsickle: 0.5 // Hammer and Sickle collectible
+    };
+
     for (var i = 10; i < 40; i++) {
       createRowOfTrees(i * -3000, treePresenceProb, 0.5, maxTreeSize);
     }
 
     gameOver = false;
     paused = true;
+    collectedHammerAndSickles = 0;
 
     // Set up multiplayer if network manager exists
     if (networkManager && networkManager.isInMultiplayer()) {
       setupMultiplayer();
+      paused = true; // In multiplayer, wait for race start
     }
+
+    // Create a UI element to display collected HammerAndSickles
+    var hammerSickleCounter = document.createElement('div');
+    hammerSickleCounter.id = 'hammer-sickle-counter';
+    hammerSickleCounter.style.cssText = 'position: absolute; top: 80px; right: 20px; font-size: 24px; color: #FFD700; text-shadow: 2px 2px 4px #000;';
+    hammerSickleCounter.innerHTML = '☭ 0';
+    document.body.appendChild(hammerSickleCounter);
 
     var left = 37;
     var up = 38;
@@ -173,6 +190,7 @@ function World() {
     });
 
     score = 0;
+    collectedHammerAndSickles = 0;
     difficulty = 0;
     document.getElementById('score').innerHTML = score;
 
@@ -331,9 +349,15 @@ function World() {
   function loop() {
     if (!paused) {
       // Add more trees and increase difficulty
-      if (objects[objects.length - 1].mesh.position.z % 3000 == 0) {
+      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z % 3000 == 0) {
         difficulty += 1;
         var levelLength = 30;
+
+        // Update obstacle type weights with all types
+        window.obstacleWeights = {
+          hammerandsickle: 0.3,  // 30% chance for HammerAndSickle
+        };
+
         if (difficulty % levelLength == 0) {
           var level = difficulty / levelLength;
           switch (level) {
@@ -366,6 +390,7 @@ function World() {
               maxTreeSize = 1.25;
           }
         }
+
         if (difficulty >= 5 * levelLength && difficulty < 6 * levelLength) {
           fogDistance -= 25000 / levelLength;
         } else if (difficulty >= 8 * levelLength && difficulty < 9 * levelLength) {
@@ -375,9 +400,14 @@ function World() {
         scene.fog.far = fogDistance;
       }
 
-      // Move trees
+      // Move trees and update collectible objects
       objects.forEach(function (object) {
-        object.mesh.position.z += 100;
+        if (object && object.mesh) {
+          object.mesh.position.z += 100;
+          if (object.type === 'hammerandsickle' && typeof object.update === 'function') {
+            object.update();
+          }
+        }
       });
 
       // Remove off-screen trees
@@ -406,10 +436,11 @@ function World() {
         }
       }
 
-      // Check collisions
-      if (collisionsDetected()) {
+      // Check deadly collisions (trees, rocks)
+      if (!gameOver && checkDeadlyCollisions()) {
         gameOver = true;
         paused = true;
+        console.log("Game over: Collision with deadly obstacle");
 
         // Notify server in multiplayer
         if (isMultiplayer && networkManager) {
@@ -426,7 +457,8 @@ function World() {
         variableContent.style.visibility = 'visible';
         variableContent.innerHTML = 'Game over! Press the down arrow to try again.';
 
-        var table = document.getElementById('ranks');
+        // Display score and rank
+        var table = document.getElementById("ranks");
         var rankNames = [
           'Typical Engineer',
           'Couch Potato',
@@ -461,26 +493,59 @@ function World() {
           rankIndex <= 6
             ? "Congrats! You're a ".concat(rankNames[rankIndex], '!').bold()
             : score < 124000
-              ? "Congrats! You're a ".concat(rankNames[7], '!').bold()
-              : "Congrats! You exceeded the creator's high score of 123790 and beat the game!".bold();
+            ? "Congrats! You're a ".concat(rankNames[7], "!").bold()
+            : "Congrats! You exceeded the creator's high score of 123790 and beat the game!".bold();
+      }
 
-        if (score >= 120000) {
-          rankIndex = 7;
-        }
-        for (var i = 0; i < rankIndex; i++) {
-          var row = table.insertRow(i);
-          row.insertCell(0).innerHTML = ''.concat(i * 15, 'k-', (i + 1) * 15, 'k');
-          row.insertCell(1).innerHTML = rankNames[i];
-        }
-        if (score > 124000) {
-          var row = table.insertRow(7);
-          row.insertCell(0).innerHTML = '105k-124k';
-          row.insertCell(1).innerHTML = rankNames[7];
+      // Check collectible collisions (HammerAndSickle)
+      if (!gameOver) {
+        var collidedObjects = checkCollisions();
+        if (collidedObjects.length > 0) {
+          // For each collided object, collect it and increase the counter
+          collidedObjects.forEach(function(objectIndex) {
+            var object = objects[objectIndex];
+            if (object && object.type === 'hammerandsickle' && !object.isCollected) {
+              // Mark as collected
+              object.isCollected = true;
+
+              // Increase counter
+              collectedHammerAndSickles++;
+
+              console.log("Collected HammerAndSickle: " + collectedHammerAndSickles);
+
+              // Update the UI
+              var counterElement = document.getElementById('hammer-sickle-counter');
+              if (counterElement) {
+                counterElement.innerHTML = '☭ ' + collectedHammerAndSickles;
+              }
+
+              // Play collection sound/animation
+              if (typeof object.collect === 'function') {
+                object.collect();
+              }
+
+              // Add points
+              score += 1000;
+            }
+          });
         }
       }
 
       score += 10;
-      document.getElementById('score').innerHTML = score;
+      document.getElementById("score").innerHTML = score;
+
+      // Make sure the counter exists
+      if (!document.getElementById("hammer-sickle-counter")) {
+        var counterElement = document.createElement("div");
+        counterElement.id = "hammer-sickle-counter";
+        counterElement.style.position = "absolute";
+        counterElement.style.top = "60px";
+        counterElement.style.right = "20px";
+        counterElement.style.color = "#fff";
+        counterElement.style.fontSize = "24px";
+        counterElement.innerHTML = "☭ 0";
+        document.body.appendChild(counterElement);
+      }
     }
 
     renderer.render(scene, camera);
@@ -498,26 +563,126 @@ function World() {
       var randomNumber = Math.random();
       if (randomNumber < probability) {
         var scale = minScale + (maxScale - minScale) * Math.random();
-        var tree = new Tree(lane * 800, -400, position, scale);
-        objects.push(tree);
-        scene.add(tree.mesh);
+
+        // Get obstacle weights (or use default if not set)
+        var weights = window.obstacleWeights || {
+          tree: 1,
+          rock: 0.05,
+        };
+
+        // Choose a weighted random obstacle type
+        var obstacleType = weightedRandomObstacle(weights);
+        var obstacle;
+
+        // Create the selected obstacle type
+        switch(obstacleType) {
+          case 'tree':
+            obstacle = new Tree(lane * 800, -400, position, scale);
+            break;
+          case 'rock':
+            obstacle = new Rock(lane * 800, -400, position, scale * 0.7);
+            break;
+          case 'hammerandsickle':
+            obstacle = new HammerAndSickle(lane * 800, -100, position, scale * 1.2);
+            break;
+          default:
+            obstacle = new Tree(lane * 800, -400, position, scale);
+        }
+
+
+        objects.push(obstacle);
+        scene.add(obstacle.mesh);
       }
     }
   }
 
-  function collisionsDetected() {
+  // Helper function for weighted random selection
+  function weightedRandomObstacle(weights) {
+    // Calculate the sum of all weights
+    var totalWeight = 0;
+    for (var type in weights) {
+      totalWeight += weights[type];
+    }
+
+    // Get a random value between 0 and the total weight
+    var random = Math.random() * totalWeight;
+    var weightSum = 0;
+
+    // Find which obstacle was selected based on weights
+    for (var type in weights) {
+      weightSum += weights[type];
+      if (random <= weightSum) {
+        return type;
+      }
+    }
+
+    // Default to tree if something goes wrong
+    return 'tree';
+  }
+
+  function checkCollisions() {
+    if (!character || !character.element || objects.length === 0) return [];
+
     var charMinX = character.element.position.x - 115;
     var charMaxX = character.element.position.x + 115;
     var charMinY = character.element.position.y - 310;
     var charMaxY = character.element.position.y + 320;
     var charMinZ = character.element.position.z - 40;
     var charMaxZ = character.element.position.z + 40;
+    var collidedObjects = [];
+
     for (var i = 0; i < objects.length; i++) {
-      if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ)) {
-        return true;
+      if (objects[i] && typeof objects[i].collides === 'function') {
+        if (
+          objects[i].collides(
+            charMinX,
+            charMaxX,
+            charMinY,
+            charMaxY,
+            charMinZ,
+            charMaxZ
+          ) &&
+          (objects[i].type === 'hammerandsickle' ? !objects[i].isCollected : true)
+        ) {
+          collidedObjects.push(i);
+        }
+      }
+    }
+    return collidedObjects;
+  }
+
+  function checkDeadlyCollisions() {
+    if (!character || !character.element || objects.length === 0) return false;
+
+    var charMinX = character.element.position.x - 115;
+    var charMaxX = character.element.position.x + 115;
+    var charMinY = character.element.position.y - 310;
+    var charMaxY = character.element.position.y + 320;
+    var charMinZ = character.element.position.z - 40;
+    var charMaxZ = character.element.position.z + 40;
+
+    for (var i = 0; i < objects.length; i++) {
+      if (objects[i] && typeof objects[i].collides === 'function') {
+        if (
+          objects[i].collides(
+            charMinX,
+            charMaxX,
+            charMinY,
+            charMaxY,
+            charMinZ,
+            charMaxZ
+          ) &&
+          objects[i].type !== 'hammerandsickle'
+        ) {
+          return true;
+        }
       }
     }
     return false;
+  }
+
+  function collisionsDetected() {
+    return checkCollisions().length > 0;
   }
 }
 
@@ -711,6 +876,7 @@ function Tree(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
+  this.type = "tree";
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var treeMinX = self.mesh.position.x - this.scale * 250;
@@ -727,6 +893,128 @@ function Tree(x, y, z, s) {
       treeMinZ <= maxZ &&
       treeMaxZ >= minZ
     );
+  };
+}
+
+function HammerAndSickle(x, y, z, s) {
+  var self = this;
+
+  this.mesh = new THREE.Object3D();
+
+  // ===== MATERIAL VÀ MÀU VÀNG KIM =====
+  var goldMaterial = new THREE.MeshStandardMaterial({
+    color: 0xFFD700,
+    metalness: 0.8,
+    roughness: 0.2,
+  });
+
+  // ===== TẠO CÁI BÚA =====
+  // Tay cầm
+  var handleGeom = new THREE.CylinderGeometry(5, 5, 120, 16);
+  var handle = new THREE.Mesh(handleGeom, goldMaterial);
+  handle.position.set(0, 0, 0);
+  handle.rotation.z = Math.PI * 0.2; // nghiêng nhẹ
+
+  // Đầu búa
+  var headGeom = new THREE.BoxGeometry(60, 20, 20);
+  var head = new THREE.Mesh(headGeom, goldMaterial);
+  head.position.set(40, 40, 0);
+  head.rotation.z = Math.PI * 0.2;
+
+  // ===== TẠO CÁI LIỀM =====
+  // Hình trăng khuyết = Torus + cắt bớt
+  var sickleGeom = new THREE.TorusGeometry(90, 10, 16, 100, Math.PI * 1.4);
+  var sickle = new THREE.Mesh(sickleGeom, goldMaterial);
+  sickle.rotation.set(Math.PI / 2, 0, Math.PI * 0.4);
+  sickle.position.set(-10, 30, 0);
+
+  // Phần lưỡi nhọn cuối liềm
+  var bladeGeom = new THREE.ConeGeometry(15, 60, 16);
+  var blade = new THREE.Mesh(bladeGeom, goldMaterial);
+  blade.position.set(-80, 70, 0);
+  blade.rotation.set(0, 0, -Math.PI / 2);
+
+  // ===== GOM LẠI THÀNH 1 OBJECT =====
+  this.mesh.add(handle);
+  this.mesh.add(head);
+  this.mesh.add(sickle);
+  this.mesh.add(blade);
+
+  // ===== POSITION & SCALE =====
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(s, s, s);
+  this.scale = s;
+  this.type = "hammerandsickle";
+  this.isCollected = false;
+  this.particles = [];
+
+  // ===== COLLISION (Box Collider đơn giản) =====
+  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
+    var obstMinX = self.mesh.position.x - this.scale * 100;
+    var obstMaxX = self.mesh.position.x + this.scale * 100;
+    var obstMinY = self.mesh.position.y;
+    var obstMaxY = self.mesh.position.y + this.scale * 200;
+    var obstMinZ = self.mesh.position.z - this.scale * 100;
+    var obstMaxZ = self.mesh.position.z + this.scale * 100;
+    return (
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
+    );
+  };
+
+  // ====== ANIMATION UPDATE ======
+  this.update = function () {
+    // Xoay nhẹ liên tục
+    this.mesh.rotation.y += 0.01;
+
+    // Nếu đang được nhặt -> bay lên xoay nhanh hơn
+    if (this.isCollected) {
+      this.mesh.position.y += 0.5;
+      this.mesh.rotation.y += 0.05;
+    }
+
+    // Particle: cho mỗi spark trôi dần lên và biến mất
+    if (this.particles && this.particles.length > 0) {
+      for (var i = this.particles.length - 1; i >= 0; i--) {
+        var p = this.particles[i];
+        p.position.y += 0.3;
+        p.material.opacity -= 0.01;
+        if (p.material.opacity <= 0) {
+          this.mesh.remove(p);
+          this.particles.splice(i, 1);
+        }
+      }
+    }
+  };
+
+  // ====== KHI NHẶT VẬT PHẨM ======
+  this.collect = function () {
+    this.isCollected = true;
+    this.spawnParticles();
+  };
+
+  // ====== PARTICLE EFFECT (ánh sáng lấp lánh) ======
+  this.spawnParticles = function () {
+    for (var i = 0; i < 15; i++) {
+      var geom = new THREE.SphereGeometry(5, 8, 8);
+      var mat = new THREE.MeshBasicMaterial({
+        color: 0xFFD700,
+        transparent: true,
+        opacity: 1
+      });
+      var spark = new THREE.Mesh(geom, mat);
+      spark.position.set(
+        (Math.random() - 0.5) * 50,
+        Math.random() * 50,
+        (Math.random() - 0.5) * 50
+      );
+      this.mesh.add(spark);
+      this.particles.push(spark);
+    }
   };
 }
 

@@ -1,60 +1,39 @@
 /**
  *
- * HISTORY SUFERS - MULTIPLAYER EDITION
+ * HISTORY SURFERS - BUFF SYSTEM EDITION
  * ----
- * Enhanced Temple-Run-esque game with multiplayer racing support
+ * Enhanced game with trust/justice/unity mechanics
  *
  */
 
-/**
- * Constants used in this game.
- */
 var Colors = {
-  cherry: 0xe35d6a,
-  blue: 0x1560bd,
-  white: 0xd8d0d1,
   black: 0x000000,
   brown: 0x59332e,
-  peach: 0xffdab9,
   yellow: 0xffff00,
   olive: 0x556b2f,
-  grey: 0x696969,
   sand: 0xc2b280,
-  brownDark: 0x23190f,
-  green: 0x669900
 };
 
 var deg2Rad = Math.PI / 180;
-
-// Global network manager reference
 var networkManager = null;
 
-// Make a new world when the page is loaded.
 window.addEventListener('load', function () {
-  // Initialize audio manager
   AudioManager.init();
 
-  // Set up sound toggle button
   var soundToggleBtn = document.getElementById('sound-toggle');
   if (soundToggleBtn) {
-    // Set initial state based on saved preference
     updateSoundButtonUI();
-
-    soundToggleBtn.addEventListener('click', function() {
+    soundToggleBtn.addEventListener('click', function () {
       var isMuted = AudioManager.toggleMute();
       updateSoundButtonUI();
-
-      // If unmuted and game is playing, start the music
       if (!isMuted && AudioManager.isPlaying()) {
         AudioManager.play();
       }
     });
   }
 
-  // Check if in multiplayer mode
   const urlParams = new URLSearchParams(window.location.search);
   const mode = urlParams.get('mode');
-
   if (mode === 'multiplayer' && typeof window.networkManager !== 'undefined') {
     networkManager = window.networkManager;
   }
@@ -62,16 +41,11 @@ window.addEventListener('load', function () {
   new World();
 });
 
-/**
- * Update the sound toggle button UI
- */
 function updateSoundButtonUI() {
   var soundToggleBtn = document.getElementById('sound-toggle');
   if (!soundToggleBtn) return;
-
   var isMuted = AudioManager.getMuteState();
   soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
-
   if (isMuted) {
     soundToggleBtn.classList.add('muted');
   } else {
@@ -80,38 +54,35 @@ function updateSoundButtonUI() {
 }
 
 /**
- *
- * THE WORLD
- *
- * The world in which History Sufers takes place with multiplayer support.
- *
+ * THE WORLD WITH BUFF SYSTEM
  */
-
 function World() {
   var self = this;
 
-  var element,
-    scene,
-    camera,
-    character,
-    renderer,
-    light,
-    objects,
-    paused,
-    keysAllowed,
-    score,
-    difficulty,
-    treePresenceProb,
-    maxTreeSize,
-    fogDistance,
-    gameOver,
-    collectedHammerAndSickles;
+  var element, scene, camera, character, renderer, light, objects,
+    paused, keysAllowed, score, difficulty, gameOver;
+
+  // ===== BUFF STATS =====
+  var playerStats = {
+    trust: 50,
+    justice: 50,
+    unity: 50
+  };
 
   // Multiplayer variables
   var isMultiplayer = false;
   var opponents = new Map();
   var lastUpdateTime = 0;
-  var updateInterval = 50; // Send updates every 50ms
+  var updateInterval = 50;
+
+  // ===== SPAWN CONTROL =====
+  var rowCounter = 0;
+  var lastDeadlySpawn = 0;
+  var lastBuffSpawn = 0;
+  var minRowsBetweenDeadly = 5; // Tối thiểu 5 hàng giữa các deadly
+  var maxRowsBetweenDeadly = 10; // Tối đa 10 hàng
+  var minRowsBetweenBuff = 3; // Tối thiểu 3 hàng giữa các buff/debuff
+  var maxRowsBetweenBuff = 6; // Tối đa 6 hàng
 
   init();
 
@@ -127,7 +98,7 @@ function World() {
     element.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
-    fogDistance = 40000;
+    var fogDistance = 40000;
     scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
 
     camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
@@ -140,7 +111,6 @@ function World() {
     light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
     scene.add(light);
 
-    // Initialize main character
     character = new Character();
     scene.add(character.element);
 
@@ -148,42 +118,23 @@ function World() {
     scene.add(ground);
 
     objects = [];
-    treePresenceProb = 0.2;
-    maxTreeSize = 0.5;
 
-    // Initialize obstacle weights
-    window.obstacleWeights = {
-      tree: 1,          // Regular tree (common in early levels)
-      hammerandsickle: 0.5 // Hammer and Sickle collectible
-    };
-
+    // Tạo vài hàng đầu
     for (var i = 10; i < 40; i++) {
-      createRowOfTrees(i * -3000, treePresenceProb, 0.5, maxTreeSize);
+      createRowOfObjects(i * -3000);
     }
 
     gameOver = false;
     paused = true;
-    collectedHammerAndSickles = 0;
 
-    // Set up multiplayer if network manager exists
     if (networkManager && networkManager.isInMultiplayer()) {
       setupMultiplayer();
-      paused = true; // In multiplayer, wait for race start
+      paused = true;
     }
 
-    // Create a UI element to display collected HammerAndSickles
-    var hammerSickleCounter = document.createElement('div');
-    hammerSickleCounter.id = 'hammer-sickle-counter';
-    hammerSickleCounter.style.cssText = 'position: absolute; top: 80px; right: 20px; font-size: 24px; color: #FFD700; text-shadow: 2px 2px 4px #000;';
-    hammerSickleCounter.innerHTML = '☭ 0';
-    document.body.appendChild(hammerSickleCounter);
-
-    var left = 37;
-    var up = 38;
-    var right = 39;
-    var p = 80;
-
+    var left = 37, up = 38, right = 39, p = 80;
     keysAllowed = {};
+
     document.addEventListener('keydown', function (e) {
       if (!gameOver) {
         var key = e.keyCode;
@@ -193,33 +144,37 @@ function World() {
         if (paused && !collisionsDetected() && key > 18) {
           paused = false;
           character.onUnpause();
-          document.getElementById('variable-content').style.visibility = 'hidden';
-          if (document.getElementById('controls')) {
-            document.getElementById('controls').style.display = 'none';
+
+          // Hide the entire game panel
+          if (typeof window.hideGamePanel === 'function') {
+            window.hideGamePanel();
+          } else {
+            // Fallback if function doesn't exist
+            var panel = document.getElementById('gamePanel');
+            if (panel) panel.style.display = 'none';
           }
 
-          // Start playing background music when game starts
           AudioManager.play();
         } else {
           if (key == p) {
             paused = true;
             character.onPause();
-            document.getElementById('variable-content').style.visibility = 'visible';
-            document.getElementById('variable-content').innerHTML =
-              'Game is paused. Press any key to resume.';
 
-            // Pause music when game is paused
+            // Show game panel when paused
+            if (typeof window.showGamePanel === 'function') {
+              window.showGamePanel();
+            } else {
+              var panel = document.getElementById('gamePanel');
+              if (panel) panel.style.display = 'block';
+            }
+
+            document.getElementById('variable-content').style.visibility = 'visible';
+            document.getElementById('variable-content').innerHTML = 'Game is paused. Press any key to resume.';
             AudioManager.pause();
           }
-          if (key == up && !paused) {
-            character.onUpKeyPressed();
-          }
-          if (key == left && !paused) {
-            character.onLeftKeyPressed();
-          }
-          if (key == right && !paused) {
-            character.onRightKeyPressed();
-          }
+          if (key == up && !paused) character.onUpKeyPressed();
+          if (key == left && !paused) character.onLeftKeyPressed();
+          if (key == right && !paused) character.onRightKeyPressed();
         }
       }
     });
@@ -233,7 +188,6 @@ function World() {
     });
 
     score = 0;
-    collectedHammerAndSickles = 0;
     difficulty = 0;
     document.getElementById('score').innerHTML = score;
 
@@ -241,235 +195,249 @@ function World() {
   }
 
   /**
-   * Set up multiplayer networking
+   * Update stat bars in UI
+   */
+  function updateStatsUI() {
+    updateStatBar('trust', playerStats.trust);
+    updateStatBar('justice', playerStats.justice);
+    updateStatBar('unity', playerStats.unity);
+  }
+
+  function updateStatBar(statName, value) {
+    // Use window function if available, otherwise do it directly
+    if (typeof window.updateStatBar === 'function') {
+      window.updateStatBar(statName, value);
+      return;
+    }
+
+    // Fallback implementation
+    var clampedValue = Math.max(0, Math.min(100, value));
+    var valueElement = document.getElementById(statName + '-value');
+    var barElement = document.getElementById(statName + '-bar');
+    var containerElement = document.getElementById(statName + '-container');
+
+    if (valueElement) {
+      valueElement.textContent = Math.round(clampedValue) + '/100';
+    }
+
+    if (barElement) {
+      barElement.style.width = clampedValue + '%';
+
+      barElement.classList.remove('low', 'medium');
+
+      if (clampedValue < 25) {
+        barElement.classList.add('low');
+        if (containerElement) containerElement.classList.add('critical');
+      } else if (clampedValue < 50) {
+        barElement.classList.add('medium');
+        if (containerElement) containerElement.classList.remove('critical');
+      } else {
+        if (containerElement) containerElement.classList.remove('critical');
+      }
+    }
+  }
+
+  /**
+   * Apply buffs from collected object
+   */
+  function applyBuffs(buffs) {
+    if (!buffs) return;
+
+    playerStats.trust += buffs.trust || 0;
+    playerStats.justice += buffs.justice || 0;
+    playerStats.unity += buffs.unity || 0;
+
+    // Clamp values between 0 and 100
+    playerStats.trust = Math.max(0, Math.min(100, playerStats.trust));
+    playerStats.justice = Math.max(0, Math.min(100, playerStats.justice));
+    playerStats.unity = Math.max(0, Math.min(100, playerStats.unity));
+
+    updateStatsUI();
+
+    // Show buff notification
+    showBuffNotification(buffs);
+
+    // Check for game over conditions
+    checkGameOverConditions();
+  }
+
+  function showBuffNotification(buffs) {
+    var notification = document.createElement('div');
+    notification.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 2s;';
+
+    var messages = [];
+    if (buffs.trust !== 0) messages.push('🤝 Niềm Tin ' + (buffs.trust > 0 ? '+' : '') + buffs.trust);
+    if (buffs.justice !== 0) messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
+    if (buffs.unity !== 0) messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
+
+    notification.innerHTML = messages.join('<br>');
+    document.body.appendChild(notification);
+
+    setTimeout(function () {
+      notification.remove();
+    }, 2000);
+
+    // Add CSS animation
+    if (!document.getElementById('buff-animation-style')) {
+      var style = document.createElement('style');
+      style.id = 'buff-animation-style';
+      style.innerHTML = '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
+      document.head.appendChild(style);
+    }
+  }
+
+  function checkGameOverConditions() {
+    if (playerStats.trust <= 0) {
+      triggerGameOver('Dân nổi dậy → Chính quyền sụp đổ!', 'trust');
+    } else if (playerStats.justice <= 0) {
+      triggerGameOver('Tham nhũng tuyệt đối → Hệ thống vô pháp!', 'justice');
+    } else if (playerStats.unity <= 0) {
+      triggerGameOver('Xã hội chia rẽ → Khủng hoảng xã hội!', 'unity');
+    }
+  }
+
+  function triggerGameOver(message, reason) {
+    gameOver = true;
+    paused = true;
+    AudioManager.stop();
+
+    // Show game panel
+    if (typeof window.showGamePanel === 'function') {
+      window.showGamePanel();
+    } else {
+      var panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'block';
+    }
+
+    if (isMultiplayer && networkManager) {
+      networkManager.sendPlayerFinished(score);
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.keyCode == 40) {
+        document.location.reload(true);
+      }
+    });
+
+    var variableContent = document.getElementById('variable-content');
+    variableContent.style.visibility = 'visible';
+    variableContent.innerHTML = '<h2 style="color: #F44336;">GAME OVER</h2><p style="font-size: 20px;">' + message + '</p><p>Score: ' + score + '</p><p>Press down arrow to try again.</p>';
+  }
+
+  /**
+   * Setup multiplayer (unchanged)
    */
   function setupMultiplayer() {
     isMultiplayer = true;
-
-    // Handle opponent updates
     networkManager.on('opponentUpdate', function (data) {
       updateOpponent(data.playerId, data.data);
     });
-
-    // Handle player joined
     networkManager.on('playerJoined', function (data) {
       console.log('Player joined:', data);
     });
-
-    // Handle player left
     networkManager.on('playerLeft', function (data) {
       removeOpponent(data.playerId);
     });
-
-    // Handle race start
     networkManager.on('raceStart', function (data) {
       console.log('Race started!');
       paused = false;
       character.onUnpause();
-
-      // Start playing background music when race starts
       AudioManager.play();
-
-      // Initialize opponents
       data.players.forEach(function (player) {
         if (player.id !== networkManager.playerId) {
           addOpponent(player);
         }
       });
     });
-
-    // Handle race end
     networkManager.on('raceEnded', function (data) {
-      // Stop music when race ends
       AudioManager.stop();
       displayRaceResults(data.rankings);
     });
-
-    // Handle countdown
     networkManager.on('raceCountdown', function (data) {
       displayCountdown(data.countdown);
     });
   }
 
-  /**
-   * Add an opponent character
-   */
   function addOpponent(playerData) {
     if (opponents.has(playerData.id)) return;
-
     var opponent = new Character(playerData.colors);
     opponent.playerName = playerData.name;
     scene.add(opponent.element);
-
     opponents.set(playerData.id, opponent);
-    console.log('Added opponent:', playerData.name);
   }
 
-  /**
-   * Update opponent position and state
-   */
   function updateOpponent(playerId, data) {
     var opponent = opponents.get(playerId);
     if (!opponent) return;
-
-    // Update position
     if (data.position) {
       opponent.element.position.set(data.position.x, data.position.y, data.position.z);
     }
-
-    // Update lane
-    if (data.lane !== undefined) {
-      opponent.currentLane = data.lane;
-    }
-
-    // Update jumping state
-    if (data.isJumping !== undefined) {
-      opponent.isJumping = data.isJumping;
-    }
+    if (data.lane !== undefined) opponent.currentLane = data.lane;
+    if (data.isJumping !== undefined) opponent.isJumping = data.isJumping;
   }
 
-  /**
-   * Remove an opponent character
-   */
   function removeOpponent(playerId) {
     var opponent = opponents.get(playerId);
     if (opponent) {
       scene.remove(opponent.element);
       opponents.delete(playerId);
-      console.log('Removed opponent:', playerId);
     }
   }
 
-  /**
-   * Display countdown before race
-   */
   function displayCountdown(count) {
     var countdownElement = document.getElementById('countdown');
     if (!countdownElement) {
       countdownElement = document.createElement('div');
       countdownElement.id = 'countdown';
-      countdownElement.style.cssText =
-        'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
+      countdownElement.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
       document.body.appendChild(countdownElement);
     }
-
     countdownElement.innerHTML = count;
-
-    var countdown = count;
-    var interval = setInterval(function () {
-      countdown--;
-      if (countdown > 0) {
-        countdownElement.innerHTML = countdown;
-      } else {
-        countdownElement.innerHTML = 'GO!';
-        setTimeout(function () {
-          countdownElement.remove();
-        }, 1000);
-        clearInterval(interval);
-      }
-    }, 1000);
   }
 
-  /**
-   * Display race results
-   */
   function displayRaceResults(rankings) {
     var resultsHtml = '<h2>Race Results</h2><table>';
     rankings.forEach(function (rank) {
-      resultsHtml +=
-        '<tr><td>' +
-        rank.rank +
-        '</td><td>' +
-        rank.playerName +
-        '</td><td>' +
-        rank.score +
-        '</td></tr>';
+      resultsHtml += '<tr><td>' + rank.rank + '</td><td>' + rank.playerName + '</td><td>' + rank.score + '</td></tr>';
     });
     resultsHtml += '</table>';
-
     document.getElementById('variable-content').innerHTML = resultsHtml;
     document.getElementById('variable-content').style.visibility = 'visible';
   }
 
   /**
-   * The main animation loop.
+   * MAIN ANIMATION LOOP
    */
   function loop() {
     if (!paused) {
-      // Add more trees and increase difficulty
+      // Add more rows (throttle to prevent excessive object creation)
       if (objects.length > 0 && objects[objects.length - 1].mesh.position.z % 3000 == 0) {
         difficulty += 1;
-        var levelLength = 30;
-
-        // Update obstacle type weights with all types
-        window.obstacleWeights = {
-          hammerandsickle: 0.3,  // 30% chance for HammerAndSickle
-          bribeEnvelope: 0.05,   // 5% chance for BribeEnvelope
-          ballotBox: 0.05,       // 5% chance for BallotBox
-          corruptedThrone: 0.15, // 15% chance for CorruptedThrone
-          colonialRemnant: 0.15, // 15% chance for ColonialRemnant
-          puppetManipulation: 0.15, // 15% chance for PuppetManipulation
-          misbalancedScale: 0.15, // 15% chance for MisbalancedScale
-        };
-
-        if (difficulty % levelLength == 0) {
-          var level = difficulty / levelLength;
-          switch (level) {
-            case 1:
-              treePresenceProb = 0.35;
-              maxTreeSize = 0.5;
-              break;
-            case 2:
-              treePresenceProb = 0.35;
-              maxTreeSize = 0.85;
-              break;
-            case 3:
-              treePresenceProb = 0.5;
-              maxTreeSize = 0.85;
-              break;
-            case 4:
-              treePresenceProb = 0.5;
-              maxTreeSize = 1.1;
-              break;
-            case 5:
-              treePresenceProb = 0.5;
-              maxTreeSize = 1.1;
-              break;
-            case 6:
-              treePresenceProb = 0.55;
-              maxTreeSize = 1.1;
-              break;
-            default:
-              treePresenceProb = 0.55;
-              maxTreeSize = 1.25;
-          }
-        }
-
-        if (difficulty >= 5 * levelLength && difficulty < 6 * levelLength) {
-          fogDistance -= 25000 / levelLength;
-        } else if (difficulty >= 8 * levelLength && difficulty < 9 * levelLength) {
-          fogDistance -= 5000 / levelLength;
-        }
-        createRowOfTrees(-120000, treePresenceProb, 1, maxTreeSize);
-        scene.fog.far = fogDistance;
+        createRowOfObjects(-120000);
       }
 
-      // Move objects and update their animations
-      objects.forEach(function (object) {
+      // Batch update objects for better performance
+      var objectsToUpdate = objects.length;
+      for (var i = 0; i < objectsToUpdate; i++) {
+        var object = objects[i];
         if (object && object.mesh) {
           object.mesh.position.z += 100;
           if (typeof object.update === 'function') {
             object.update();
           }
         }
-      });
+      }
 
-      // Remove off-screen trees
+      // Remove off-screen objects with proper disposal
       objects = objects.filter(function (object) {
-        return object.mesh.position.z < 0;
+        if (object.mesh.position.z >= 0) {
+          // Object is off-screen, need to dispose it
+          disposeObject(object);
+          return false;
+        }
+        return true;
       });
 
-      // Update character
       character.update();
 
       // Send multiplayer updates
@@ -490,102 +458,25 @@ function World() {
         }
       }
 
-      // Check deadly collisions (trees, rocks)
+      // Check deadly collisions
       if (!gameOver && checkDeadlyCollisions()) {
-        gameOver = true;
-        paused = true;
-        console.log("Game over: Collision with deadly obstacle");
-
-        // Stop music on game over
-        AudioManager.stop();
-
-        // Notify server in multiplayer
-        if (isMultiplayer && networkManager) {
-          networkManager.sendPlayerFinished(score);
-        }
-
-        document.addEventListener('keydown', function (e) {
-          if (e.keyCode == 40) {
-            document.location.reload(true);
-          }
-        });
-
-        var variableContent = document.getElementById('variable-content');
-        variableContent.style.visibility = 'visible';
-        variableContent.innerHTML = 'Game over! Press the down arrow to try again.';
-
-        // Display score and rank
-        var table = document.getElementById("ranks");
-        var rankNames = [
-          'Typical Engineer',
-          'Couch Potato',
-          'Weekend Jogger',
-          'Daily Runner',
-          'Local Prospect',
-          'Regional Star',
-          'National Champ',
-          'Second Mo Farah'
-        ];
-        var rankIndex = Math.floor(score / 15000);
-
-        if (score < 124000) {
-          var nextRankRow = table.insertRow(0);
-          nextRankRow.insertCell(0).innerHTML =
-            rankIndex <= 5
-              ? ''.concat((rankIndex + 1) * 15, 'k-', (rankIndex + 2) * 15, 'k')
-              : rankIndex == 6
-                ? '105k-124k'
-                : '124k+';
-          nextRankRow.insertCell(1).innerHTML = '*Score within this range to earn the next rank*';
-        }
-
-        var achievedRankRow = table.insertRow(0);
-        achievedRankRow.insertCell(0).innerHTML =
-          rankIndex <= 6
-            ? ''.concat(rankIndex * 15, 'k-', (rankIndex + 1) * 15, 'k').bold()
-            : score < 124000
-              ? '105k-124k'.bold()
-              : '124k+'.bold();
-        achievedRankRow.insertCell(1).innerHTML =
-          rankIndex <= 6
-            ? "Congrats! You're a ".concat(rankNames[rankIndex], '!').bold()
-            : score < 124000
-            ? "Congrats! You're a ".concat(rankNames[7], "!").bold()
-            : "Congrats! You exceeded the creator's high score of 123790 and beat the game!".bold();
+        triggerGameOver('Va chạm với chướng ngại vật!', 'collision');
       }
 
-      // Check collectible collisions (HammerAndSickle)
+      // Check collectible collisions
       if (!gameOver) {
         var collidedObjects = checkCollisions();
         if (collidedObjects.length > 0) {
-          // For each collided object, collect it and increase the counter
-          collidedObjects.forEach(function(objectIndex) {
+          collidedObjects.forEach(function (objectIndex) {
             var object = objects[objectIndex];
-            if (object && (object.type === 'hammerandsickle' ||
-                           object.type === 'bribeEnvelope' ||
-                           object.type === 'ballotBox') &&
-                           !object.isCollected) {
-
-              // Mark as collected
+            if (object && object.buffs && !object.isCollected) {
               object.isCollected = true;
+              applyBuffs(object.buffs);
 
-              // Increase counter
-              collectedHammerAndSickles++;
-
-              console.log("Collected item: " + object.type + ", Total: " + collectedHammerAndSickles);
-
-              // Update the UI
-              var counterElement = document.getElementById('hammer-sickle-counter');
-              if (counterElement) {
-                counterElement.innerHTML = '☭ ' + collectedHammerAndSickles;
-              }
-
-              // Play collection sound/animation
               if (typeof object.collect === 'function') {
                 object.collect();
               }
 
-              // Add points
               score += 1000;
             }
           });
@@ -594,19 +485,6 @@ function World() {
 
       score += 10;
       document.getElementById("score").innerHTML = score;
-
-      // Make sure the counter exists
-      if (!document.getElementById("hammer-sickle-counter")) {
-        var counterElement = document.createElement("div");
-        counterElement.id = "hammer-sickle-counter";
-        counterElement.style.position = "absolute";
-        counterElement.style.top = "60px";
-        counterElement.style.right = "20px";
-        counterElement.style.color = "#fff";
-        counterElement.style.fontSize = "24px";
-        counterElement.innerHTML = "☭ 0";
-        document.body.appendChild(counterElement);
-      }
     }
 
     renderer.render(scene, camera);
@@ -619,80 +497,131 @@ function World() {
     camera.updateProjectionMatrix();
   }
 
-  function createRowOfTrees(position, probability, minScale, maxScale) {
-    for (var lane = -1; lane < 2; lane++) {
-      var randomNumber = Math.random();
-      if (randomNumber < probability) {
-        var scale = minScale + (maxScale - minScale) * Math.random();
+  /**
+   * CREATE ROW OF OBJECTS (Subway Surfer style)
+   */
+  function createRowOfObjects(position) {
+    rowCounter++;
 
-        // Get obstacle weights (or use default if not set)
-        var weights = window.obstacleWeights || {
-          corruptedThrone: 0.4,
-          colonialRemnant: 0.3,
-          puppetManipulation: 0.2,
-          misbalancedScale: 0.1,
-        };
+    var rowsSinceDeadly = rowCounter - lastDeadlySpawn;
+    var rowsSinceBuff = rowCounter - lastBuffSpawn;
 
-        // Choose a weighted random obstacle type
-        var obstacleType = weightedRandomObstacle(weights);
-        var obstacle;
+    // Random chance to spawn deadly obstacle (like train/barrier in Subway Surfer)
+    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly &&
+      Math.random() < 0.3; // 30% chance after min rows
 
-        // Create the selected obstacle type
-        switch(obstacleType) {
-          case 'corruptedThrone':
-            obstacle = new CorruptedThrone(lane * 800, -400, position, scale);
-            break;
-          case 'colonialRemnant':
-            obstacle = new ColonialRemnant(lane * 800, -400, position, scale * 0.7);
-            break;
-          case 'puppetManipulation':
-            obstacle = new PuppetManipulation(lane * 800, -400, position, scale * 0.8);
-            break;
-          case 'misbalancedScale':
-            obstacle = new MisbalancedScale(lane * 800, -400, position, scale * 0.7);
-            break;
-          case 'hammerandsickle':
-            obstacle = new HammerAndSickle(lane * 800, -100, position, scale * 1.2);
-            break;
-          case 'bribeEnvelope':
-            obstacle = new BribeEnvelope(lane * 800, -100, position, scale * 1.2);
-            break;
-          case 'ballotBox':
-            obstacle = new BallotBox(lane * 800, -100, position, scale * 0.8);
-            break;
-          default:
-            obstacle = new CorruptedThrone(lane * 800, -400, position, scale);
+    if (shouldSpawnDeadly) {
+      var deadlyType = Math.random() < 0.5 ? 'gate' : 'remnant';
+
+      if (deadlyType === 'gate') {
+        // Spawn gate (blocks one or two lanes)
+        var gateCount = Math.random() < 0.5 ? 1 : 2;
+        var lanes = [-1, 0, 1];
+        shuffleArray(lanes);
+
+        for (var i = 0; i < gateCount; i++) {
+          var gate = new ColonialGate(lanes[i] * 800, -300, position, 30);
+          gate.mesh.userData = { deadly: true };
+          objects.push(gate);
+          scene.add(gate.mesh);
         }
+      } else {
+        // Spawn remnant (single lane block)
+        var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
+        var remnant = new ColonialRemnant(lane * 800, -400, position, 10);
+        remnant.mesh.userData = { deadly: true };
+        objects.push(remnant);
+        scene.add(remnant.mesh);
+      }
 
+      lastDeadlySpawn = rowCounter;
+      return; // Skip buff spawning this row
+    }
 
-        objects.push(obstacle);
-        scene.add(obstacle.mesh);
+    // Random chance to spawn buff/debuff objects
+    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff &&
+      Math.random() < 0.4; // 40% chance after min rows
+
+    if (shouldSpawnBuff) {
+      // Define buff object weights
+      var buffWeights = {
+        hammerandsickle: 0.1,
+        ruleOfLawState: 0.15,
+        unityHands: 0.15,
+        reformGears: 0.1,
+        ballotBox: 0.1,
+        bribeEnvelope: 0.1,
+        corruptedThrone: 0.1,
+        puppetManipulation: 0.1,
+        misbalancedScale: 0.1
+      };
+
+      var objectType = weightedRandomObstacle(buffWeights);
+      var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
+      var scale = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+      var buffObject;
+
+      switch (objectType) {
+        case 'hammerandsickle':
+          buffObject = new HammerAndSickle(lane * 800, -400, position, scale);
+          break;
+        case 'ruleOfLawState':
+          buffObject = new RuleOfLawState(lane * 800, -400, position, scale);
+          break;
+        case 'unityHands':
+          buffObject = new UnityHands(lane * 800, -400, position, scale);
+          break;
+        case 'reformGears':
+          buffObject = new ReformGears(lane * 800, -400, position, scale);
+          break;
+        case 'ballotBox':
+          buffObject = new BallotBox(lane * 800, -400, position, scale);
+          break;
+        case 'bribeEnvelope':
+          buffObject = new BribeEnvelope(lane * 800, -400, position, scale);
+          break;
+        case 'corruptedThrone':
+          buffObject = new CorruptedThrone(lane * 800, -400, position, scale);
+          break;
+        case 'puppetManipulation':
+          buffObject = new PuppetManipulation(lane * 800, -400, position, scale);
+          break;
+        case 'misbalancedScale':
+          buffObject = new MisbalancedScale(lane * 800, -400, position, scale);
+          break;
+      }
+
+      if (buffObject) {
+        objects.push(buffObject);
+        scene.add(buffObject.mesh);
+        lastBuffSpawn = rowCounter;
       }
     }
   }
 
-  // Helper function for weighted random selection
+  function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = array[i];
+      array[i] = array[j];
+      array[j] = temp;
+    }
+  }
+
   function weightedRandomObstacle(weights) {
-    // Calculate the sum of all weights
     var totalWeight = 0;
     for (var type in weights) {
       totalWeight += weights[type];
     }
-
-    // Get a random value between 0 and the total weight
     var random = Math.random() * totalWeight;
     var weightSum = 0;
-
-    // Find which obstacle was selected based on weights
     for (var type in weights) {
       weightSum += weights[type];
       if (random <= weightSum) {
         return type;
       }
     }
-
-    // Default to tree if something goes wrong
-    return 'tree';
+    return 'hammerandsickle';
   }
 
   function checkCollisions() {
@@ -708,18 +637,12 @@ function World() {
 
     for (var i = 0; i < objects.length; i++) {
       if (objects[i] && typeof objects[i].collides === 'function') {
-        if (
-          objects[i].collides(
-            charMinX,
-            charMaxX,
-            charMinY,
-            charMaxY,
-            charMinZ,
-            charMaxZ
-          ) &&
-          (objects[i].type === 'hammerandsickle' ? !objects[i].isCollected : true)
-        ) {
-          collidedObjects.push(i);
+        // Only check non-deadly objects with buffs
+        if (objects[i].buffs && !objects[i].mesh.userData.deadly) {
+          if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ) &&
+            !objects[i].isCollected) {
+            collidedObjects.push(i);
+          }
         }
       }
     }
@@ -738,20 +661,11 @@ function World() {
 
     for (var i = 0; i < objects.length; i++) {
       if (objects[i] && typeof objects[i].collides === 'function') {
-        if (
-          objects[i].collides(
-            charMinX,
-            charMaxX,
-            charMinY,
-            charMaxY,
-            charMinZ,
-            charMaxZ
-          ) &&
-          (objects[i].type !== 'hammerandsickle' &&
-           objects[i].type !== 'bribeEnvelope' &&
-           objects[i].type !== 'ballotBox')
-        ) {
-          return true;
+        // Only check deadly objects
+        if (objects[i].mesh.userData.deadly) {
+          if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ)) {
+            return true;
+          }
         }
       }
     }
@@ -759,20 +673,92 @@ function World() {
   }
 
   function collisionsDetected() {
-    return checkCollisions().length > 0;
+    return checkCollisions().length > 0 || checkDeadlyCollisions();
+  }
+
+  /**
+   * Properly dispose Three.js objects to prevent memory leaks
+   */
+  function disposeObject(object) {
+    if (!object || !object.mesh) return;
+
+    // Remove from scene
+    scene.remove(object.mesh);
+
+    // Dispose particles if they exist
+    if (object.particles && object.particles.length > 0) {
+      object.particles.forEach(function (particle) {
+        if (particle.geometry) particle.geometry.dispose();
+        if (particle.material) particle.material.dispose();
+        object.mesh.remove(particle);
+      });
+      object.particles = [];
+    }
+
+    // Recursively dispose all children
+    function disposeNode(node) {
+      if (!node) return;
+
+      // Dispose geometry
+      if (node.geometry) {
+        node.geometry.dispose();
+      }
+
+      // Dispose material(s)
+      if (node.material) {
+        if (Array.isArray(node.material)) {
+          node.material.forEach(function (mat) {
+            disposeMaterial(mat);
+          });
+        } else {
+          disposeMaterial(node.material);
+        }
+      }
+
+      // Dispose children recursively
+      if (node.children && node.children.length > 0) {
+        for (var i = node.children.length - 1; i >= 0; i--) {
+          disposeNode(node.children[i]);
+          node.remove(node.children[i]);
+        }
+      }
+    }
+
+    function disposeMaterial(material) {
+      if (!material) return;
+
+      // Dispose textures
+      if (material.map) material.map.dispose();
+      if (material.lightMap) material.lightMap.dispose();
+      if (material.bumpMap) material.bumpMap.dispose();
+      if (material.normalMap) material.normalMap.dispose();
+      if (material.specularMap) material.specularMap.dispose();
+      if (material.envMap) material.envMap.dispose();
+      if (material.alphaMap) material.alphaMap.dispose();
+      if (material.aoMap) material.aoMap.dispose();
+      if (material.displacementMap) material.displacementMap.dispose();
+      if (material.emissiveMap) material.emissiveMap.dispose();
+      if (material.gradientMap) material.gradientMap.dispose();
+      if (material.metalnessMap) material.metalnessMap.dispose();
+      if (material.roughnessMap) material.roughnessMap.dispose();
+
+      material.dispose();
+    }
+
+    // Start disposal from the root mesh
+    disposeNode(object.mesh);
+
+    // Clear references
+    object.mesh = null;
   }
 }
 
 /**
- *
- * IMPORTANT OBJECTS
- *
+ * CHARACTER (unchanged from original)
  */
-
 function Character(customColors) {
   var self = this;
 
-  // Allow custom colors for multiplayer opponents
   if (customColors) {
     this.skinColor = Colors.brown;
     this.hairColor = Colors.black;
@@ -938,136 +924,9 @@ function Character(customColors) {
   };
 }
 
-// Tree function has been replaced by objects from object.js
-
-function HammerAndSickle(x, y, z, s) {
-  var self = this;
-
-  this.mesh = new THREE.Object3D();
-
-  // ===== MATERIAL VÀ MÀU VÀNG KIM =====
-  var goldMaterial = new THREE.MeshStandardMaterial({
-    color: 0xFFD700,
-    metalness: 0.8,
-    roughness: 0.2,
-  });
-
-  // ===== TẠO CÁI BÚA =====
-  // Tay cầm
-  var handleGeom = new THREE.CylinderGeometry(5, 5, 120, 16);
-  var handle = new THREE.Mesh(handleGeom, goldMaterial);
-  handle.position.set(0, 0, 0);
-  handle.rotation.z = Math.PI * 0.2; // nghiêng nhẹ
-
-  // Đầu búa
-  var headGeom = new THREE.BoxGeometry(60, 20, 20);
-  var head = new THREE.Mesh(headGeom, goldMaterial);
-  head.position.set(40, 40, 0);
-  head.rotation.z = Math.PI * 0.2;
-
-  // ===== TẠO CÁI LIỀM =====
-  // Hình trăng khuyết = Torus + cắt bớt
-  var sickleGeom = new THREE.TorusGeometry(90, 10, 16, 100, Math.PI * 1.4);
-  var sickle = new THREE.Mesh(sickleGeom, goldMaterial);
-  sickle.rotation.set(Math.PI / 2, 0, Math.PI * 0.4);
-  sickle.position.set(-10, 30, 0);
-
-  // Phần lưỡi nhọn cuối liềm
-  var bladeGeom = new THREE.ConeGeometry(15, 60, 16);
-  var blade = new THREE.Mesh(bladeGeom, goldMaterial);
-  blade.position.set(-80, 70, 0);
-  blade.rotation.set(0, 0, -Math.PI / 2);
-
-  // ===== GOM LẠI THÀNH 1 OBJECT =====
-  this.mesh.add(handle);
-  this.mesh.add(head);
-  this.mesh.add(sickle);
-  this.mesh.add(blade);
-
-  // ===== POSITION & SCALE =====
-  this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
-  this.scale = s;
-  this.type = "hammerandsickle";
-  this.isCollected = false;
-  this.particles = [];
-
-  // ===== COLLISION (Box Collider đơn giản) =====
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var obstMinX = self.mesh.position.x - this.scale * 100;
-    var obstMaxX = self.mesh.position.x + this.scale * 100;
-    var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + this.scale * 200;
-    var obstMinZ = self.mesh.position.z - this.scale * 100;
-    var obstMaxZ = self.mesh.position.z + this.scale * 100;
-    return (
-      obstMinX <= maxX &&
-      obstMaxX >= minX &&
-      obstMinY <= maxY &&
-      obstMaxY >= minY &&
-      obstMinZ <= maxZ &&
-      obstMaxZ >= minZ
-    );
-  };
-
-  // ====== ANIMATION UPDATE ======
-  this.update = function () {
-    // Xoay nhẹ liên tục
-    this.mesh.rotation.y += 0.01;
-
-    // Nếu đang được nhặt -> bay lên xoay nhanh hơn
-    if (this.isCollected) {
-      this.mesh.position.y += 0.5;
-      this.mesh.rotation.y += 0.05;
-    }
-
-    // Particle: cho mỗi spark trôi dần lên và biến mất
-    if (this.particles && this.particles.length > 0) {
-      for (var i = this.particles.length - 1; i >= 0; i--) {
-        var p = this.particles[i];
-        p.position.y += 0.3;
-        p.material.opacity -= 0.01;
-        if (p.material.opacity <= 0) {
-          this.mesh.remove(p);
-          this.particles.splice(i, 1);
-        }
-      }
-    }
-  };
-
-  // ====== KHI NHẶT VẬT PHẨM ======
-  this.collect = function () {
-    this.isCollected = true;
-    this.spawnParticles();
-  };
-
-  // ====== PARTICLE EFFECT (ánh sáng lấp lánh) ======
-  this.spawnParticles = function () {
-    for (var i = 0; i < 15; i++) {
-      var geom = new THREE.SphereGeometry(5, 8, 8);
-      var mat = new THREE.MeshBasicMaterial({
-        color: 0xFFD700,
-        transparent: true,
-        opacity: 1
-      });
-      var spark = new THREE.Mesh(geom, mat);
-      spark.position.set(
-        (Math.random() - 0.5) * 50,
-        Math.random() * 50,
-        (Math.random() - 0.5) * 50
-      );
-      this.mesh.add(spark);
-      this.particles.push(spark);
-    }
-  };
-}
-
 /**
- *
  * UTILITY FUNCTIONS
- *
  */
-
 function sinusoid(frequency, minimum, maximum, phase, time) {
   var amplitude = 0.5 * (maximum - minimum);
   var angularFrequency = 2 * Math.PI * frequency;

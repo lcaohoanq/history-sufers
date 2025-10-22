@@ -8,7 +8,7 @@ function HammerAndSickle(x, y, z, s) {
     justice: 0,    // Không ảnh hưởng
     unity: 0       // Không ảnh hưởng
   };
-  this.buffValue = 0; // Điểm số chung (nếu cần)
+  this.buffValue = 100; // Điểm số chung (nếu cần)
 
   // ===== GOLD MATERIAL =====
   const goldMaterial = new THREE.MeshStandardMaterial({
@@ -58,6 +58,10 @@ function HammerAndSickle(x, y, z, s) {
   this.type = "hammerandsickle";
   this.isCollected = false;
   this.particles = [];
+
+  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
@@ -129,7 +133,7 @@ function BribeEnvelope(x, y, z, s) {
     justice: -20,   // Giảm công bằng
     unity: 0        // Không ảnh hưởng
   };
-  this.buffValue = -35; // Tổng điểm âm
+  this.buffValue = -2000; // Tổng điểm âm
 
   var paperMat = new THREE.MeshStandardMaterial({
     color: 0xE5D3B3,
@@ -196,12 +200,12 @@ function BribeEnvelope(x, y, z, s) {
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
-    var obstMinX = self.mesh.position.x - scaleFactor * 80;
-    var obstMaxX = self.mesh.position.x + scaleFactor * 80;
+    var obstMinX = self.mesh.position.x - scaleFactor * 100;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + scaleFactor * 50;
-    var obstMinZ = self.mesh.position.z - scaleFactor * 20;
-    var obstMaxZ = self.mesh.position.z + scaleFactor * 20;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
       obstMinX <= maxX && obstMaxX >= minX &&
       obstMinY <= maxY && obstMaxY >= minY &&
@@ -221,7 +225,7 @@ function BallotBox(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: 0        // Không ảnh hưởng
   };
-  this.buffValue = 25; // Điểm dương
+  this.buffValue = 500; // Điểm dương
 
   var boxMaterial = new THREE.MeshStandardMaterial({
     color: 0x278D3E,
@@ -275,6 +279,10 @@ function BallotBox(x, y, z, s) {
     }
   };
 
+  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
+
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
     var obstMinX = self.mesh.position.x - scaleFactor * 100;
@@ -302,7 +310,7 @@ function RuleOfLawState(x, y, z, s) {
     justice: 35,    // Tăng công bằng mạnh
     unity: 20       // Tăng đoàn kết
   };
-  this.buffValue = 85; // Điểm dương cao nhất
+  this.buffValue = 2000; // Điểm dương cao nhất
 
   var metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.2, roughness: 0.3 });
   var goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.4, roughness: 0.3 });
@@ -412,6 +420,10 @@ function RuleOfLawState(x, y, z, s) {
     star.position.y = 260 + Math.sin(Date.now() * 0.001) * 1.0;
   };
 
+  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
+
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
     var obstMinX = self.mesh.position.x - scaleFactor * 110;
@@ -490,6 +502,10 @@ function ReformGears(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
 
+  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
+
   this.scale = s;
   this.type = "reformgears";
   this._gearSpeed = 0.015;
@@ -532,7 +548,7 @@ function UnityHands(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: 35       // Tăng đoàn kết mạnh
   };
-  this.buffValue = 55; // Điểm dương
+  this.buffValue = 1000; // Điểm dương
 
   var skinMat = new THREE.MeshStandardMaterial({ color: 0xF2D2B6, roughness: 0.2 });
   var bookMat = new THREE.MeshStandardMaterial({ color: 0x3E2723 });
@@ -605,21 +621,30 @@ function UnityHands(x, y, z, s) {
   this.mesh.rotation.x = Math.PI / 4;
   this.mesh.rotation.y = Math.PI;
 
+  this.scale = s; // Thêm dòng này để scale hoạt động đúng
+  this.mesh.position.set(x, y, z); // Bỏ cộng +100 nếu muốn player chạm được
+  this.isCollected = false; // Giống BribeEnvelope
+
   this.update = function () {
     this.mesh.rotation.y += 0.004;
   };
 
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var scaleFactor = Math.sqrt(this.scale) * 1.2;
-    var size = 150 * scaleFactor;
-    var cx = self.mesh.position.x;
-    var cy = self.mesh.position.y;
-    var cz = self.mesh.position.z;
+  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
 
+  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
+    var scaleFactor = Math.sqrt(this.scale) * 2.5;
+    var obstMinX = self.mesh.position.x - scaleFactor * 100;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
+    var obstMinY = self.mesh.position.y;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      cx - size < maxX && cx + size > minX &&
-      cy < maxY && cy + size > minY &&
-      cz - size < maxZ && cz + size > minZ
+      obstMinX <= maxX && obstMaxX >= minX &&
+      obstMinY <= maxY && obstMaxY >= minY &&
+      obstMinZ <= maxZ && obstMaxZ >= minZ
     );
   };
 }
@@ -634,11 +659,11 @@ function CorruptedThrone(x, y, z, s) {
     justice: -25,   // Giảm công bằng
     unity: 0        // Không ảnh hưởng
   };
-  this.buffValue = -55; // Điểm âm cao
+  this.buffValue = -5500; // Điểm âm cao
 
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4b3621, roughness: 0.3, metalness: 0.5 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4b3621, roughness: 0.3, metalness: 0.1 });
   const webMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-  const vineMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.4 });
+  const vineMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.3, metalness: 0.2 });
 
   const SCALE = 1.5;
 
@@ -661,6 +686,10 @@ function CorruptedThrone(x, y, z, s) {
   seat.position.set(0, 25 * SCALE, 0);
 
   this.mesh.add(seat, back, armL, armR, leg1, leg2, leg3, leg4);
+
+  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
 
   function createWeb(size, pos, rot) {
     let web = new THREE.Mesh(new THREE.PlaneGeometry(size * SCALE, size * SCALE), webMat);
@@ -719,9 +748,9 @@ function ColonialRemnant(x, y, z, s) {
   };
   this.buffValue = 0; // Vật phẩm trang trí/lịch sử
 
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.5, roughness: 0.6 });
-  const rustMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3a, metalness: 0.2, roughness: 0.9 });
-  const flagMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 1, side: THREE.DoubleSide });
+  const ironMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.3 });
+  const rustMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3a, metalness: 0.2, roughness: 0.3 });
+  const flagMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.3, side: THREE.DoubleSide });
 
   const SCALE = 2.5;
 
@@ -790,7 +819,7 @@ function PuppetManipulation(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: -20      // Giảm đoàn kết
   };
-  this.buffValue = -45; // Điểm âm
+  this.buffValue = -4500; // Điểm âm
 
   const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6, metalness: 0.1 });
   const stringMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
@@ -855,6 +884,10 @@ function PuppetManipulation(x, y, z, s) {
     rightArm.rotation.z = -Math.sin(Date.now() * 0.0015) * 0.3 - Math.PI / 4;
   };
 
+  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
+
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     let scaleFactor = Math.sqrt(s) * 1.2;
     let size = 150 * scaleFactor;
@@ -878,7 +911,7 @@ function MisbalancedScale(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: -30      // Giảm đoàn kết mạnh (bất công xã hội)
   };
-  this.buffValue = -30; // Điểm âm
+  this.buffValue = -3000; // Điểm âm
 
   var metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.35 });
   var darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.25, roughness: 0.4 });
@@ -942,6 +975,10 @@ function MisbalancedScale(x, y, z, s) {
   this._tilt = -0.12;
   this._rotateEnabled = true;
   this._rotationSpeed = 0.004;
+
+  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
+  pointLight.position.set(50, 50, 50);
+  this.mesh.add(pointLight);
 
   this.update = function () {
     if (this._rotateEnabled) this.mesh.rotation.y += this._rotationSpeed;

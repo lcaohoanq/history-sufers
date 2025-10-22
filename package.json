@@ -8,7 +8,11 @@
     "dev": "nodemon server.js",
     "prettier:check": "prettier --check . --cache",
     "prettier:fix": "prettier --write . --cache",
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "mocha server.test.js --exit",
+    "test:watch": "mocha server.test.js --watch --exit",
+    "test:coverage": "nyc mocha server.test.js --exit",
+    "monitor": "node monitor-dashboard.js",
+    "load-test": "node load-test.js"
   },
   "keywords": [
     "game",
@@ -26,7 +30,11 @@
     "socket.io": "^4.6.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.7",
+    "socket.io-client": "^4.6.1",
+    "nyc": "^15.1.0"
   },
   "engines": {
     "node": ">=14.0.0"

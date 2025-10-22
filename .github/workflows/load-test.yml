@@ -1,0 +1,39 @@
+name: Load Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start server
+        run: |
+          npm run dev &
+          echo "Waiting for server to start..."
+          npx wait-on http://127.0.0.1:3000/health
+        env:
+          NODE_ENV: test
+
+      - name: Run load test
+        run: npm run load-test
+
+      - name: Stop server
+        if: always()
+        run: |
+          echo "Stopping server..."
+          pkill -f "node"

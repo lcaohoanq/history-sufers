@@ -4,6 +4,7 @@
   font-family: 'Avenir Next', Avenir, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+
 html,
 body {
   width: 100%;
@@ -17,7 +18,7 @@ body {
 
 #world {
   position: absolute;
-  width: 75%;
+  width: 100%;
   height: 100%;
   right: 0;
   overflow: hidden;
@@ -39,13 +40,13 @@ body {
 }
 
 .game-title .title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Luckiest Guy', serif;
   font-weight: 700;
   font-size: 3em;
 }
 
 .game-title .byline {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Luckiest Guy', serif;
   text-transform: uppercase;
   color: #333;
   letter-spacing: 0.2em;
@@ -55,7 +56,7 @@ body {
 }
 
 a {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Luckiest Guy', serif;
   letter-spacing: 0.2em;
   font-weight: 600;
   text-decoration: none;
@@ -94,8 +95,8 @@ td:nth-child(2) {
 .stat p {
   width: 100%;
   text-align: center;
-  font-family: 'Playfair Display';
-  font-size: 2em;
+  font-family: 'Roboto';
+  font-size: 5em;
 }
 
 .stat label {
@@ -109,7 +110,7 @@ td:nth-child(2) {
 
 #variable-content {
   margin-top: 2em;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   font-size: 1em;
   font-weight: 100;

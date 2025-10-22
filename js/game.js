@@ -13,7 +13,7 @@ var Colors = {
   cherry: 0xe35d6a,
   blue: 0x1560bd,
   white: 0xd8d0d1,
-  black: 0x000000,
+  black: 0x084D9A,
   brown: 0x59332e,
   peach: 0xffdab9,
   yellow: 0xffff00,
@@ -174,6 +174,7 @@ for (var i = 10; i < 40; i++) {
     var up = 38;
     var right = 39;
     var p = 80;
+    var esc = 27;
 
     keysAllowed = {};
     document.addEventListener('keydown', function (e) {
@@ -191,7 +192,7 @@ for (var i = 10; i < 40; i++) {
           // Start playing background music when game starts
           AudioManager.play();
         } else {
-          if (key == p) {
+          if (key == esc ) {
             paused = true;
             character.onPause();
             document.getElementById('variable-content').style.visibility = 'visible';
@@ -518,10 +519,10 @@ function Character() {
   var self = this;
 
   // Character defaults that don't change throughout the game.
-  this.skinColor = Colors.brown;
-  this.hairColor = Colors.black;
-  this.shirtColor = Colors.yellow;
-  this.shortsColor = Colors.olive;
+  this.skinColor = 0xEAD8C4;
+  this.hairColor = 0x084D9A;
+  this.shirtColor = 0xEA6D22;
+  this.shortsColor = 0x4EB146;
   this.jumpDuration = 0.6;
   this.jumpHeight = 2000;
 

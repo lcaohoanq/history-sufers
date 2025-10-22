@@ -10,12 +10,8 @@ function HammerAndSickle(x, y, z, s) {
   };
   this.buffValue = 100; // Điểm số chung (nếu cần)
 
-  // ===== GOLD MATERIAL =====
-  const goldMaterial = new THREE.MeshStandardMaterial({
-    color: 0xFFD700,
-    metalness: 0.5,
-    roughness: 0.5,
-  });
+  // ===== GOLD MATERIAL (flat 2D color) =====
+  const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
 
   // ===== BÚA (phía TRƯỚC liềm) =====
   const handleGeom = new THREE.CylinderGeometry(3.5, 3.5, 130, 12);
@@ -59,9 +55,7 @@ function HammerAndSickle(x, y, z, s) {
   this.isCollected = false;
   this.particles = [];
 
-  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // using flat materials; no point lights for 2D-style coloring
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
@@ -135,17 +129,9 @@ function BribeEnvelope(x, y, z, s) {
   };
   this.buffValue = -2000; // Tổng điểm âm
 
-  var paperMat = new THREE.MeshStandardMaterial({
-    color: 0xE5D3B3,
-    roughness: 0.75,
-    metalness: 0.05
-  });
+  var paperMat = new THREE.MeshBasicMaterial({ color: 0xE5D3B3 });
 
-  var moneyMat = new THREE.MeshStandardMaterial({
-    color: 0x2E8B57,
-    roughness: 0.4,
-    metalness: 0.15
-  });
+  var moneyMat = new THREE.MeshBasicMaterial({ color: 0x2E8B57 });
 
   var envelope = new THREE.Mesh(
     new THREE.BoxGeometry(120, 80, 6, 1, 1, 1),
@@ -172,16 +158,10 @@ function BribeEnvelope(x, y, z, s) {
   money.rotation.z = Math.PI * 0.02;
 
   var creaseGeom = new THREE.PlaneGeometry(120, 0.8);
-  var crease = new THREE.Mesh(creaseGeom, new THREE.MeshStandardMaterial({
-    color: 0xD0C1A2,
-    roughness: 0.85,
-    metalness: 0.01
-  }));
+  var crease = new THREE.Mesh(creaseGeom, new THREE.MeshBasicMaterial({ color: 0xD0C1A2 }));
   crease.position.set(0, 0, 3.2);
 
-  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // removed point light - flat colors
 
   this.mesh.add(envelope, money, flap, crease);
   this.mesh.position.set(x, y, z);
@@ -227,24 +207,11 @@ function BallotBox(x, y, z, s) {
   };
   this.buffValue = 500; // Điểm dương
 
-  var boxMaterial = new THREE.MeshStandardMaterial({
-    color: 0x278D3E,
-    metalness: 0.4,
-    roughness: 0.45
-  });
+  var boxMaterial = new THREE.MeshBasicMaterial({ color: 0x278D3E });
 
-  var slotMaterial = new THREE.MeshStandardMaterial({
-    color: 0x222222,
-    roughness: 0.3,
-    metalness: 0.2
-  });
+  var slotMaterial = new THREE.MeshBasicMaterial({ color: 0x222222 });
 
-  var ballotMaterial = new THREE.MeshStandardMaterial({
-    color: 0xFFFFFF,
-    roughness: 0.85,
-    metalness: 0.05,
-    side: THREE.DoubleSide
-  });
+  var ballotMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
 
   var boxGeometry = new THREE.BoxGeometry(200, 150, 200);
   var box = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -279,9 +246,7 @@ function BallotBox(x, y, z, s) {
     }
   };
 
-  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // removed point light - flat materials
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
@@ -312,10 +277,10 @@ function RuleOfLawState(x, y, z, s) {
   };
   this.buffValue = 2000; // Điểm dương cao nhất
 
-  var metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.2, roughness: 0.3 });
-  var goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.4, roughness: 0.3 });
-  var woodMat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, metalness: 0.2, roughness: 0.2 });
-  var bookMat = new THREE.MeshPhongMaterial({ color: 0xF3E5AB, shininess: 30 });
+  var metalMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
+  var goldMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+  var woodMat = new THREE.MeshBasicMaterial({ color: 0x8B5A2B });
+  var bookMat = new THREE.MeshBasicMaterial({ color: 0xF3E5AB });
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), woodMat);
   base.position.set(0, 10, 0);
@@ -420,9 +385,7 @@ function RuleOfLawState(x, y, z, s) {
     star.position.y = 260 + Math.sin(Date.now() * 0.001) * 1.0;
   };
 
-  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // removed point light - using flat MeshBasicMaterial
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
@@ -454,8 +417,8 @@ function ReformGears(x, y, z, s) {
   };
   this.buffValue = 30; // Điểm dương
 
-  var metalMat = new THREE.MeshStandardMaterial({ color: 0x707070, metalness: 0.2, roughness: 0.35 });
-  var goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.2, roughness: 0.2 });
+  var metalMat = new THREE.MeshBasicMaterial({ color: 0x707070 });
+  var goldMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
 
   var gearsGroup = new THREE.Group();
   gearsGroup.position.set(0, 120, 0);
@@ -502,9 +465,7 @@ function ReformGears(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
 
-  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // removed point light - flat materials
 
   this.scale = s;
   this.type = "reformgears";
@@ -550,10 +511,10 @@ function UnityHands(x, y, z, s) {
   };
   this.buffValue = 1000; // Điểm dương
 
-  var skinMat = new THREE.MeshStandardMaterial({ color: 0xF2D2B6, roughness: 0.2 });
-  var bookMat = new THREE.MeshStandardMaterial({ color: 0x3E2723 });
-  var gearMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.3, roughness: 0.4 });
-  var hoeMat = new THREE.MeshStandardMaterial({ color: 0x665544 });
+  var skinMat = new THREE.MeshBasicMaterial({ color: 0xF2D2B6 });
+  var bookMat = new THREE.MeshBasicMaterial({ color: 0x3E2723 });
+  var gearMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
+  var hoeMat = new THREE.MeshBasicMaterial({ color: 0x665544 });
 
   function createHand() {
     var hand = new THREE.Object3D();
@@ -629,9 +590,7 @@ function UnityHands(x, y, z, s) {
     this.mesh.rotation.y += 0.004;
   };
 
-  var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // removed point light
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 2.5;
@@ -661,9 +620,9 @@ function CorruptedThrone(x, y, z, s) {
   };
   this.buffValue = -5500; // Điểm âm cao
 
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4b3621, roughness: 0.3, metalness: 0.1 });
-  const webMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-  const vineMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.3, metalness: 0.2 });
+  const woodMat = new THREE.MeshBasicMaterial({ color: 0x4b3621 });
+  const webMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
+  const vineMat = new THREE.MeshBasicMaterial({ color: 0x556b2f });
 
   const SCALE = 1.5;
 
@@ -687,9 +646,7 @@ function CorruptedThrone(x, y, z, s) {
 
   this.mesh.add(seat, back, armL, armR, leg1, leg2, leg3, leg4);
 
-  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // removed point light
 
   function createWeb(size, pos, rot) {
     let web = new THREE.Mesh(new THREE.PlaneGeometry(size * SCALE, size * SCALE), webMat);
@@ -748,9 +705,9 @@ function ColonialRemnant(x, y, z, s) {
   };
   this.buffValue = 0; // Vật phẩm trang trí/lịch sử
 
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.3 });
-  const rustMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3a, metalness: 0.2, roughness: 0.3 });
-  const flagMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.3, side: THREE.DoubleSide });
+  const ironMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
+  const rustMat = new THREE.MeshBasicMaterial({ color: 0x7a5a3a });
+  const flagMat = new THREE.MeshBasicMaterial({ color: 0x8b0000, side: THREE.DoubleSide });
 
   const SCALE = 2.5;
 
@@ -821,8 +778,8 @@ function PuppetManipulation(x, y, z, s) {
   };
   this.buffValue = -4500; // Điểm âm
 
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6, metalness: 0.1 });
-  const stringMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+  const woodMat = new THREE.MeshBasicMaterial({ color: 0x8b5a2b });
+  const stringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
 
   const body = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 80, 16), woodMat);
   body.position.set(0, 80, 0);
@@ -884,9 +841,7 @@ function PuppetManipulation(x, y, z, s) {
     rightArm.rotation.z = -Math.sin(Date.now() * 0.0015) * 0.3 - Math.PI / 4;
   };
 
-  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // no point light - flat materials
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     let scaleFactor = Math.sqrt(s) * 1.2;
@@ -913,10 +868,10 @@ function MisbalancedScale(x, y, z, s) {
   };
   this.buffValue = -3000; // Điểm âm
 
-  var metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.35 });
-  var darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.25, roughness: 0.4 });
-  var goldMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.5, roughness: 0.3 });
-  var dullWoodMat = new THREE.MeshStandardMaterial({ color: 0x4b3a2a, metalness: 0.1, roughness: 0.6 });
+  var metalMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
+  var darkMetalMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  var goldMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37 });
+  var dullWoodMat = new THREE.MeshBasicMaterial({ color: 0x4b3a2a });
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), dullWoodMat);
   base.position.set(0, 10, 0);
@@ -956,7 +911,7 @@ function MisbalancedScale(x, y, z, s) {
   rightPan.position.set(80, 160, 0);
   this.mesh.add(leftPan, rightPan);
 
-  var person = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 40, 12), new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.7 }));
+  var person = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 40, 12), new THREE.MeshBasicMaterial({ color: 0xdddddd }));
   person.position.set(0, 22, 0);
   leftPan.add(person);
 
@@ -976,9 +931,7 @@ function MisbalancedScale(x, y, z, s) {
   this._rotateEnabled = true;
   this._rotationSpeed = 0.004;
 
-  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
-  pointLight.position.set(50, 50, 50);
-  this.mesh.add(pointLight);
+  // no point light - flat materials
 
   this.update = function () {
     if (this._rotateEnabled) this.mesh.rotation.y += this._rotationSpeed;

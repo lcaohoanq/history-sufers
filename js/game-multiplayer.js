@@ -356,6 +356,12 @@ function World() {
         // Update obstacle type weights with all types
         window.obstacleWeights = {
           hammerandsickle: 0.3,  // 30% chance for HammerAndSickle
+          bribeEnvelope: 0.05,   // 5% chance for BribeEnvelope
+          ballotBox: 0.05,       // 5% chance for BallotBox
+          corruptedThrone: 0.15, // 15% chance for CorruptedThrone
+          colonialRemnant: 0.15, // 15% chance for ColonialRemnant
+          puppetManipulation: 0.15, // 15% chance for PuppetManipulation
+          misbalancedScale: 0.15, // 15% chance for MisbalancedScale
         };
 
         if (difficulty % levelLength == 0) {
@@ -396,15 +402,15 @@ function World() {
         } else if (difficulty >= 8 * levelLength && difficulty < 9 * levelLength) {
           fogDistance -= 5000 / levelLength;
         }
-        createRowOfTrees(-120000, treePresenceProb, 0.5, maxTreeSize);
+        createRowOfTrees(-120000, treePresenceProb, 1, maxTreeSize);
         scene.fog.far = fogDistance;
       }
 
-      // Move trees and update collectible objects
+      // Move objects and update their animations
       objects.forEach(function (object) {
         if (object && object.mesh) {
           object.mesh.position.z += 100;
-          if (object.type === 'hammerandsickle' && typeof object.update === 'function') {
+          if (typeof object.update === 'function') {
             object.update();
           }
         }
@@ -504,14 +510,18 @@ function World() {
           // For each collided object, collect it and increase the counter
           collidedObjects.forEach(function(objectIndex) {
             var object = objects[objectIndex];
-            if (object && object.type === 'hammerandsickle' && !object.isCollected) {
+            if (object && (object.type === 'hammerandsickle' ||
+                           object.type === 'bribeEnvelope' ||
+                           object.type === 'ballotBox') &&
+                           !object.isCollected) {
+
               // Mark as collected
               object.isCollected = true;
 
               // Increase counter
               collectedHammerAndSickles++;
 
-              console.log("Collected HammerAndSickle: " + collectedHammerAndSickles);
+              console.log("Collected item: " + object.type + ", Total: " + collectedHammerAndSickles);
 
               // Update the UI
               var counterElement = document.getElementById('hammer-sickle-counter');
@@ -566,8 +576,10 @@ function World() {
 
         // Get obstacle weights (or use default if not set)
         var weights = window.obstacleWeights || {
-          tree: 1,
-          rock: 0.05,
+          corruptedThrone: 0.4,
+          colonialRemnant: 0.3,
+          puppetManipulation: 0.2,
+          misbalancedScale: 0.1,
         };
 
         // Choose a weighted random obstacle type
@@ -576,17 +588,29 @@ function World() {
 
         // Create the selected obstacle type
         switch(obstacleType) {
-          case 'tree':
-            obstacle = new Tree(lane * 800, -400, position, scale);
+          case 'corruptedThrone':
+            obstacle = new CorruptedThrone(lane * 800, -400, position, scale);
             break;
-          case 'rock':
-            obstacle = new Rock(lane * 800, -400, position, scale * 0.7);
+          case 'colonialRemnant':
+            obstacle = new ColonialRemnant(lane * 800, -400, position, scale * 0.7);
+            break;
+          case 'puppetManipulation':
+            obstacle = new PuppetManipulation(lane * 800, -400, position, scale * 0.8);
+            break;
+          case 'misbalancedScale':
+            obstacle = new MisbalancedScale(lane * 800, -400, position, scale * 0.7);
             break;
           case 'hammerandsickle':
             obstacle = new HammerAndSickle(lane * 800, -100, position, scale * 1.2);
             break;
+          case 'bribeEnvelope':
+            obstacle = new BribeEnvelope(lane * 800, -100, position, scale * 1.2);
+            break;
+          case 'ballotBox':
+            obstacle = new BallotBox(lane * 800, -100, position, scale * 0.8);
+            break;
           default:
-            obstacle = new Tree(lane * 800, -400, position, scale);
+            obstacle = new CorruptedThrone(lane * 800, -400, position, scale);
         }
 
 
@@ -672,7 +696,9 @@ function World() {
             charMinZ,
             charMaxZ
           ) &&
-          objects[i].type !== 'hammerandsickle'
+          (objects[i].type !== 'hammerandsickle' &&
+           objects[i].type !== 'bribeEnvelope' &&
+           objects[i].type !== 'ballotBox')
         ) {
           return true;
         }
@@ -861,40 +887,7 @@ function Character(customColors) {
   };
 }
 
-function Tree(x, y, z, s) {
-  var self = this;
-
-  this.mesh = new THREE.Object3D();
-  var top = createCylinder(1, 300, 300, 4, Colors.green, 0, 1000, 0);
-  var mid = createCylinder(1, 400, 400, 4, Colors.green, 0, 800, 0);
-  var bottom = createCylinder(1, 500, 500, 4, Colors.green, 0, 500, 0);
-  var trunk = createCylinder(100, 100, 250, 32, Colors.brownDark, 0, 125, 0);
-  this.mesh.add(top);
-  this.mesh.add(mid);
-  this.mesh.add(bottom);
-  this.mesh.add(trunk);
-  this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
-  this.scale = s;
-  this.type = "tree";
-
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var treeMinX = self.mesh.position.x - this.scale * 250;
-    var treeMaxX = self.mesh.position.x + this.scale * 250;
-    var treeMinY = self.mesh.position.y;
-    var treeMaxY = self.mesh.position.y + this.scale * 1150;
-    var treeMinZ = self.mesh.position.z - this.scale * 250;
-    var treeMaxZ = self.mesh.position.z + this.scale * 250;
-    return (
-      treeMinX <= maxX &&
-      treeMaxX >= minX &&
-      treeMinY <= maxY &&
-      treeMaxY >= minY &&
-      treeMinZ <= maxZ &&
-      treeMaxZ >= minZ
-    );
-  };
-}
+// Tree function has been replaced by objects from object.js
 
 function HammerAndSickle(x, y, z, s) {
   var self = this;

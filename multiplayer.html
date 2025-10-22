@@ -1,171 +1,171 @@
 <!doctype html>
 <html>
-  <head>
-    <title>History Sufers | Multiplayer Race</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700"
-      rel="stylesheet"
-    />
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="js/three.min.js"></script>
-    <script type="text/javascript" src="js/network.js"></script>
-    <script type="text/javascript" src="js/game-multiplayer.js"></script>
-    <link href="style.css" rel="stylesheet" />
-    <style>
-      .multiplayer-hud {
-        position: absolute;
-        top: 1em;
-        right: 1em;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 1em;
-        border-radius: 10px;
-        min-width: 200px;
-        max-width: 300px;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+<head>
+  <title>History Sufers | Multiplayer Race</title>
+  <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="js/three.min.js"></script>
+  <script type="text/javascript" src="js/network.js"></script>
+  <script type="text/javascript" src="js/object.js"></script>
+  <script type="text/javascript" src="js/game-multiplayer.js"></script>
+  <link href="style.css" rel="stylesheet" />
+  <style>
+    .multiplayer-hud {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 1em;
+      border-radius: 10px;
+      min-width: 200px;
+      max-width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .multiplayer-hud h3 {
+      margin: 0 0 0.5em 0;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2em;
+      text-align: center;
+      color: #333;
+    }
+
+    .player-score-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5em;
+      margin: 0.3em 0;
+      background: #f5f5f5;
+      border-radius: 5px;
+      font-size: 0.9em;
+      gap: 0.5em;
+    }
+
+    .player-score-item.self {
+      background: #e8f4ff;
+      border-left: 3px solid #1560bd;
+      font-weight: bold;
+    }
+
+    .player-score-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .player-score-name {
+      color: #333;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+
+    .player-score-value {
+      color: #1560bd;
+      font-weight: 600;
+    }
+
+    /* Toast animations */
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
       }
 
-      .multiplayer-hud h3 {
-        margin: 0 0 0.5em 0;
-        font-family: 'Playfair Display', serif;
-        font-size: 1.2em;
-        text-align: center;
-        color: #333;
+      to {
+        transform: translateX(0);
+        opacity: 1;
       }
+    }
 
-      .player-score-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.5em;
-        margin: 0.3em 0;
-        background: #f5f5f5;
-        border-radius: 5px;
-        font-size: 0.9em;
-        gap: 0.5em;
-      }
+    .animate-slide-in-right {
+      animation: slideInRight 0.3s ease-out;
+    }
 
-      .player-score-item.self {
-        background: #e8f4ff;
-        border-left: 3px solid #1560bd;
-        font-weight: bold;
-      }
+    .toast .alert {
+      transition: all 0.3s ease-out;
+    }
 
-      .player-score-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
+    #toast-container {
+      max-width: 400px;
+      padding: 1rem;
+    }
+  </style>
+</head>
 
-      .player-score-name {
-        color: #333;
-        flex: 1;
-        display: flex;
-        align-items: center;
-        gap: 0.5em;
-      }
-
-      .player-score-value {
-        color: #1560bd;
-        font-weight: 600;
-      }
-
-      /* Toast animations */
-      @keyframes slideInRight {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-
-      .animate-slide-in-right {
-        animation: slideInRight 0.3s ease-out;
-      }
-
-      .toast .alert {
-        transition: all 0.3s ease-out;
-      }
-
-      #toast-container {
-        max-width: 400px;
-        padding: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="panel">
-      <div class="game-title">
-        <div class="title">boxy run</div>
-        <div class="byline">multiplayer race</div>
-      </div>
-      <div class="stat">
-        <label>Score</label>
-        <p id="score">0</p>
-      </div>
-      <table id="controls">
-        <tr>
-          <td>Up:</td>
-          <td>Jump</td>
-        </tr>
-        <tr>
-          <td>Left:</td>
-          <td>Left lane switch</td>
-        </tr>
-        <tr>
-          <td>Right:</td>
-          <td>Right lane switch</td>
-        </tr>
-        <tr>
-          <td>p:</td>
-          <td>Pause</td>
-        </tr>
-      </table>
-      <table id="ranks"></table>
-      <div class="animate-flicker" id="variable-content">Waiting for race to start...</div>
+<body>
+  <div class="panel">
+    <div class="game-title">
+      <div class="title">boxy run</div>
+      <div class="byline">multiplayer race</div>
     </div>
-
-    <div class="multiplayer-hud" id="multiplayerHud">
-      <h3>Race Standings</h3>
-      <div id="playerScores"></div>
+    <div class="stat">
+      <label>Score</label>
+      <p id="score">0</p>
     </div>
+    <table id="controls">
+      <tr>
+        <td>Up:</td>
+        <td>Jump</td>
+      </tr>
+      <tr>
+        <td>Left:</td>
+        <td>Left lane switch</td>
+      </tr>
+      <tr>
+        <td>Right:</td>
+        <td>Right lane switch</td>
+      </tr>
+      <tr>
+        <td>p:</td>
+        <td>Pause</td>
+      </tr>
+    </table>
+    <table id="ranks"></table>
+    <div class="animate-flicker" id="variable-content">Waiting for race to start...</div>
+  </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast toast-top toast-end z-50"></div>
+  <div class="multiplayer-hud" id="multiplayerHud">
+    <h3>Race Standings</h3>
+    <div id="playerScores"></div>
+  </div>
 
-    <div id="world"></div>
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast toast-top toast-end z-50"></div>
 
-    <script>
-      // Toast notification system
-      function showToast(notification) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
+  <div id="world"></div>
 
-        const typeClasses = {
-          success: 'alert-success',
-          error: 'alert-error',
-          warning: 'alert-warning',
-          info: 'alert-info'
-        };
+  <script>
+    // Toast notification system
+    function showToast(notification) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
 
-        const icons = {
-          success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
-          error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
-          warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`,
-          info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`
-        };
+      const typeClasses = {
+        success: 'alert-success',
+        error: 'alert-error',
+        warning: 'alert-warning',
+        info: 'alert-info'
+      };
 
-        toast.className = `alert ${
-          typeClasses[notification.type] || 'alert-info'
+      const icons = {
+        success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+        error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+        warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`,
+        info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`
+      };
+
+      toast.className = `alert ${typeClasses[notification.type] || 'alert-info'
         } shadow-lg animate-slide-in-right`;
-        toast.innerHTML = `
+      toast.innerHTML = `
           <div>
             <svg class="stroke-current flex-shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
               ${icons[notification.type] || icons.info}
@@ -177,94 +177,95 @@
           </div>
         `;
 
-        container.appendChild(toast);
+      container.appendChild(toast);
 
-        // Auto remove after duration
-        const duration = notification.duration || 3000;
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transform = 'translateX(100%)';
-          setTimeout(() => toast.remove(), 300);
-        }, duration);
+      // Auto remove after duration
+      const duration = notification.duration || 3000;
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // Listen for notifications from server
+    if (window.networkManager && window.networkManager.socket) {
+      window.networkManager.socket.on('notification', (notification) => {
+        showToast(notification);
+      });
+    }
+  </script>
+
+  <script>
+    // Initialize multiplayer standings display
+    function updateMultiplayerStandings() {
+      const scoresDiv = document.getElementById('playerScores');
+      if (!scoresDiv || !window.networkManager || !window.networkManager.isInMultiplayer()) {
+        return;
       }
 
-      // Listen for notifications from server
-      if (window.networkManager && window.networkManager.socket) {
-        window.networkManager.socket.on('notification', (notification) => {
-          showToast(notification);
-        });
-      }
-    </script>
+      // Get current score
+      const myScore = parseInt(document.getElementById('score')?.textContent || 0);
 
-    <script>
-      // Initialize multiplayer standings display
-      function updateMultiplayerStandings() {
-        const scoresDiv = document.getElementById('playerScores');
-        if (!scoresDiv || !window.networkManager || !window.networkManager.isInMultiplayer()) {
-          return;
-        }
+      // Collect all player scores
+      const players = [];
 
-        // Get current score
-        const myScore = parseInt(document.getElementById('score')?.textContent || 0);
+      // Add self
+      players.push({
+        name: window.networkManager.playerName,
+        score: myScore,
+        isSelf: true,
+        id: window.networkManager.playerId
+      });
 
-        // Collect all player scores
-        const players = [];
-
-        // Add self
+      // Add opponents
+      const opponents = window.networkManager.getAllOpponents();
+      opponents.forEach((opp) => {
         players.push({
-          name: window.networkManager.playerName,
-          score: myScore,
-          isSelf: true,
-          id: window.networkManager.playerId
+          name: opp.playerName || 'Opponent',
+          score: opp.score || 0,
+          isSelf: false,
+          id: opp.id
         });
+      });
 
-        // Add opponents
-        const opponents = window.networkManager.getAllOpponents();
-        opponents.forEach((opp) => {
-          players.push({
-            name: opp.playerName || 'Opponent',
-            score: opp.score || 0,
-            isSelf: false,
-            id: opp.id
-          });
-        });
+      // Sort by score descending
+      players.sort((a, b) => b.score - a.score);
 
-        // Sort by score descending
-        players.sort((a, b) => b.score - a.score);
+      // Render
+      scoresDiv.innerHTML = '';
+      players.forEach((player, index) => {
+        const div = document.createElement('div');
+        div.className = 'player-score-item' + (player.isSelf ? ' self' : '');
 
-        // Render
-        scoresDiv.innerHTML = '';
-        players.forEach((player, index) => {
-          const div = document.createElement('div');
-          div.className = 'player-score-item' + (player.isSelf ? ' self' : '');
+        // Generate Dicebear avatar URL using player name as seed
+        const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
+          player.name
+        )}`;
 
-          // Generate Dicebear avatar URL using player name as seed
-          const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
-            player.name
-          )}`;
-
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'player-score-name';
-          nameSpan.innerHTML = `
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'player-score-name';
+        nameSpan.innerHTML = `
             <img src="${avatarUrl}" alt="${player.name} avatar" class="player-score-avatar" />
             <span>${index + 1}. ${player.name}</span>
           `;
 
-          const scoreSpan = document.createElement('span');
-          scoreSpan.className = 'player-score-value';
-          scoreSpan.textContent = player.score;
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'player-score-value';
+        scoreSpan.textContent = player.score;
 
-          div.appendChild(nameSpan);
-          div.appendChild(scoreSpan);
-          scoresDiv.appendChild(div);
-        });
-      }
+        div.appendChild(nameSpan);
+        div.appendChild(scoreSpan);
+        scoresDiv.appendChild(div);
+      });
+    }
 
-      // Update standings periodically
-      setInterval(updateMultiplayerStandings, 500);
+    // Update standings periodically
+    setInterval(updateMultiplayerStandings, 500);
 
-      // Initial update
-      setTimeout(updateMultiplayerStandings, 1000);
-    </script>
-  </body>
+    // Initial update
+    setTimeout(updateMultiplayerStandings, 1000);
+  </script>
+</body>
+
 </html>

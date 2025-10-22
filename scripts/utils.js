@@ -74,6 +74,59 @@ export function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
 }
 
 /**
+ * Create a plane mesh with a canvas texture containing text.
+ * Useful for labels on clothing without loading font assets.
+ *
+ * @param {string} text The text to draw.
+ * @param {number} planeWidth Width of the plane in world units.
+ * @param {number} planeHeight Height of the plane in world units.
+ * @param {object} options Optional: { color, bg, fontSize, font, pxPerUnit }
+ * @return {THREE.Mesh} Plane mesh with the text texture.
+ */
+export function createTextLabel(text, planeWidth, planeHeight, options) {
+  options = options || {};
+  var color = options.color || '#ffffff';
+  var bg = options.bg || 'rgba(0,0,0,0)';
+  var font = options.font || 'sans-serif';
+  var pxPerUnit = options.pxPerUnit || 10; // pixels per world unit
+  var canvasWidth = Math.max(64, Math.round(planeWidth * pxPerUnit));
+  var canvasHeight = Math.max(32, Math.round(planeHeight * pxPerUnit));
+
+  var canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  var ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // Text styling
+  var fontSize = options.fontSize || Math.floor(canvasHeight * 0.6);
+  ctx.font = fontSize + 'px ' + font;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Draw text
+  ctx.fillText(text, canvasWidth / 2, canvasHeight / 2);
+
+  var texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+
+  var mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+  var geom = new THREE.PlaneGeometry(planeWidth, planeHeight);
+  var mesh = new THREE.Mesh(geom, mat);
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  return mesh;
+}
+
+/**
  * Creates and returns a (possibly asymmetrical) cyinder with the
  * specified properties.
  *

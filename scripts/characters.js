@@ -1,4 +1,4 @@
-import { createBox, createGroup } from './utils.js';
+import { createBox, createGroup, createTextLabel } from './utils.js';
 
 const deg2Rad = Math.PI / 180;
 
@@ -67,6 +67,27 @@ export function Character() {
     self.head.add(self.hair);
 
     self.torso = createBox(150, 190, 40, self.shirtColor, 0, 100, 0);
+
+    // Add a white 'FPT' label on the back of the shirt.
+    // Torso dims: width 150, height 190, depth 40. We'll create a label
+    // slightly smaller than the torso width and place it on the back (positive z).
+    var labelWidth = 100; // world units
+    var labelHeight = 50;
+    var label = createTextLabel('FPT', labelWidth, labelHeight, {
+      color: '#ffffff',
+      bg: 'rgba(0,0,0,0)',
+      font: 'Arial',
+      fontSize: 60,
+      pxPerUnit: 1
+    });
+
+    // Position the label centered horizontally, slightly below top of torso,
+    // and placed on the back face (z = torso depth/2 + small offset).
+    label.position.set(0, 20, self.torso.geometry.parameters.depth / 2 + 0.1);
+    // Rotate so the label faces outward (on the back). For this model the
+    // front faces negative z, so back is positive z; plane faces +Y by default,
+    // but our plane is aligned with the torso, so no rotation needed for upright text.
+    self.torso.add(label);
 
     self.leftLowerArm = createLimb(20, 120, 30, self.skinColor, 0, -170, 0);
     self.leftArm = createLimb(30, 140, 40, self.skinColor, -100, 190, -10);

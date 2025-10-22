@@ -321,19 +321,20 @@ body {
 
 /* Room Code Display */
 .room-code-display {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 30px;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  /* padding: 30px; */
   border-radius: 25px;
   text-align: center;
-  margin: 30px 0;
-  box-shadow: 0 10px 30px rgba(118, 75, 162, 0.4);
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(118, 75, 162, 1);
 }
 
 .room-code-label {
   font-family: 'Baloo 2', cursive;
   font-size: 1.5em;
   color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 15px;
 }
 
 .room-code-value {
@@ -347,8 +348,6 @@ body {
 
 .room-code-hint {
   color: rgba(255, 255, 255, 0.8);
-  margin-top: 15px;
-  font-size: 1.1em;
 }
 
 /* Player List */
@@ -452,7 +451,7 @@ body {
 
 /* Room List */
 .room-list {
-  display: grid;
+  display: flex;
   gap: 15px;
   max-height: 500px;
   overflow-y: auto;
@@ -460,7 +459,7 @@ body {
 }
 
 .room-item {
-  background: rgba(102, 126, 234, 0.1);
+  background: transparent;
   border-radius: 20px;
   padding: 20px;
   display: flex;
@@ -472,10 +471,7 @@ body {
 }
 
 .room-item:hover {
-  background: rgba(102, 126, 234, 0.2);
-  border-color: #764ba2;
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
 }
 
 .room-info {
@@ -496,12 +492,12 @@ body {
 }
 
 .room-host {
-  color: #666;
+  color: #ffffff;
   font-size: 0.95em;
 }
 
 .room-players {
-  background: rgba(0, 0, 0, 0.1);
+  color: #ffffff;
   padding: 8px 20px;
   border-radius: 50px;
   font-weight: 700;

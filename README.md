@@ -1,4 +1,4 @@
-# Boxy-Run - Multiplayer Edition 🎮
+# History Sufers
 
 A Three.js survival game inspired by "Temple Run", now enhanced with **real-time multiplayer racing**! Originally developed for educational purposes for [Bit By Bit](http://littlebitbybit.org/).
 

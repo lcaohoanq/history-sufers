@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-     <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>History Surfers | Multiplayer Lobby</title>
     <link
@@ -32,7 +32,7 @@
     <!-- Main Container -->
     <div class="container">
       <!-- Header -->
-      <div class="header">
+      <!-- <div class="header">
         <a href="index.html" class="back-btn">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
@@ -40,13 +40,12 @@
           History Surfers
         </a>
         <div class="badge">Sảnh chờ</div>
-      </div>
+      </div> -->
 
       <!-- Mode Selection -->
       <div id="modeSelection">
         <div class="card">
           <h1 class="card-title">Chọn chế độ chơi</h1>
-          <p class="card-subtitle">Đua cùng bạn bè trong chế độ nhiều người chơi thời gian thực!</p>
 
           <div class="mode-grid">
             <div class="mode-card create" onclick="showCreateRoom()">
@@ -245,10 +244,24 @@
         <!-- Players Card -->
         <div class="card">
           <div class="player-header">
-            <h2 class="card-title" style="margin: 0">Người chơi</h2>
             <div class="player-count">
-              <span id="playerCount">0</span>/<span id="maxPlayers">50</span>
+              <span id="playerCount">0</span>
+              <svg
+                width="24px"
+                height="24px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="6" r="4" stroke="#ffffff" stroke-width="1.5" />
+                <path
+                  d="M20 17.5C20 19.9853 20 22 12 22C4 22 4 19.9853 4 17.5C4 15.0147 7.58172 13 12 13C16.4183 13 20 15.0147 20 17.5Z"
+                  stroke="#ffffff"
+                  stroke-width="1.5"
+                />
+              </svg>
             </div>
+            <h2 class="card-title" style="margin: 0"></h2>
           </div>
 
           <div id="playerList" class="player-list"></div>
@@ -264,23 +277,54 @@
             <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span id="startingText">Waiting for all players to be ready...</span>
+            <span id="startingText">Đang chờ tất cả người chơi sẵn sàng...</span>
           </div>
 
           <div class="btn-actions">
             <button id="readyButton" class="btn btn-success" onclick="toggleReady()">
-              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-              Ready
-            </button>
-            <button class="btn btn-danger" onclick="leaveRoom()">
-              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <svg
+                width="24px"
+                height="24px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <path
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  d="M12.0004 18.5816V12.5M12.7976 18.754L15.8103 19.7625C17.4511 20.3118 18.2714 20.5864 18.7773 20.3893C19.2166 20.2182 19.5499 19.8505 19.6771 19.3965C19.8236 18.8737 19.4699 18.0843 18.7624 16.5053L14.2198 6.36709C13.5279 4.82299 13.182 4.05094 12.7001 3.81172C12.2814 3.60388 11.7898 3.60309 11.3705 3.80958C10.8878 4.04726 10.5394 4.8182 9.84259 6.36006L5.25633 16.5082C4.54325 18.086 4.18671 18.875 4.33169 19.3983C4.4576 19.8528 4.78992 20.2216 5.22888 20.394C5.73435 20.5926 6.55603 20.3198 8.19939 19.7744L11.2797 18.752C11.5614 18.6585 11.7023 18.6117 11.8464 18.5933C11.9742 18.5769 12.1036 18.5771 12.2314 18.5938C12.3754 18.6126 12.5162 18.6597 12.7976 18.754Z"
+                  stroke="#FFFFFF"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                 />
               </svg>
-              Leave Room
+              Sẵn sàng
+            </button>
+            <button class="btn btn-danger" onclick="leaveRoom()">
+              <svg
+                version="1.1"
+                id="Uploaded to svgrepo.com"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                width="24"
+                height="24"
+                viewBox="0 0 32 32"
+                xml:space="preserve"
+              >
+                <style type="text/css">
+                  .bentblocks_een {
+                    fill: #ffffff;
+                  }
+                </style>
+                <path
+                  class="bentblocks_een"
+                  d="M24.485,7.515c-4.686-4.686-12.284-4.686-16.971,0c-4.686,4.686-4.686,12.284,0,16.971
+	c4.686,4.686,12.284,4.686,16.971,0C29.172,19.799,29.172,12.201,24.485,7.515z M23.071,23.071c-3.908,3.908-10.234,3.908-14.142,0
+	c-3.899-3.899-3.899-10.243,0-14.142c3.908-3.908,10.234-3.909,14.142,0C24.96,10.818,26,13.329,26,16
+	C26,18.671,24.96,21.182,23.071,23.071z M21.657,11.757L17.414,16l4.243,4.243l-1.414,1.414L16,17.414l-4.243,4.243l-1.414-1.414
+	L14.586,16l-4.243-4.243l1.414-1.414L16,14.586l4.243-4.243L21.657,11.757z"
+                />
+              </svg>
+              Rời phòng
             </button>
           </div>
         </div>
@@ -479,12 +523,9 @@
               <div>
                 <div class="player-name">
                   ${player.name}
-                  ${player.id === network.socket?.id ? '<span class="player-you">(You)</span>' : ''}
+                  ${player.id === network.socket?.id ? '<span class="player-you">(Bạn)</span>' : ''}
                 </div>
               </div>
-            </div>
-            <div class="player-status ${player.ready ? 'status-ready' : 'status-not-ready'}">
-              ${player.ready ? '✓ Ready' : 'Not Ready'}
             </div>
           `;
           playerList.appendChild(playerDiv);

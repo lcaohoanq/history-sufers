@@ -5,7 +5,22 @@
  * Run with: node load-test.js
  */
 
-const io = require('socket.io-client');
+import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { io as createClient } from 'socket.io-client'; // added
+
+// Express setup
+const app = express();
+const httpServer = createServer(app);
+
+// Socket.IO setup (server)
+const ioServer = new SocketIOServer(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
 
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
 const NUM_ROOMS = parseInt(process.env.NUM_ROOMS) || 5;
@@ -92,7 +107,7 @@ class LoadTester {
 
   createRoom(roomIndex) {
     return new Promise((resolve, reject) => {
-      const client = io(SERVER_URL, {
+      const client = createClient(SERVER_URL, {
         transports: ['websocket'],
         forceNew: true
       });
@@ -172,7 +187,7 @@ class LoadTester {
 
   addPlayerToRoom(room, playerIndex) {
     return new Promise((resolve, reject) => {
-      const client = io(SERVER_URL, {
+      const client = createClient(SERVER_URL, {
         transports: ['websocket'],
         forceNew: true
       });

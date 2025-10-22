@@ -3,16 +3,17 @@
   "version": "2.0.0",
   "description": "A Three.js Temple Run inspired game with multiplayer racing support",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prettier:check": "prettier --check . --cache",
     "prettier:fix": "prettier --write . --cache",
-    "test": "mocha server.test.js --exit",
-    "test:watch": "mocha server.test.js --watch --exit",
-    "test:coverage": "nyc mocha server.test.js --exit",
+    "test": "mocha test/server.test.js --exit",
+    "test:watch": "mocha test/server.test.js --watch --exit",
+    "test:coverage": "nyc mocha test/server.test.js --exit",
     "monitor": "node monitor-dashboard.js",
-    "load-test": "node load-test.js"
+    "load-test": "node test/load-test.js"
   },
   "keywords": [
     "game",

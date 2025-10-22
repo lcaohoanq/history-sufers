@@ -4,16 +4,28 @@
  * Node.js + Socket.IO server for real-time multiplayer racing
  */
 
-const express = require('express');
+import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// 🔧 Fix __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Express setup
 const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http, {
+const httpServer = createServer(app);
+
+// Socket.IO setup
+const io = new SocketIOServer(httpServer, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
   }
 });
-const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS_PER_ROOM = parseInt(process.env.MAX_PLAYERS) || 50;
@@ -598,7 +610,7 @@ setInterval(() => {
   });
 }, 60000); // Check every minute
 
-http.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║                                                        ║

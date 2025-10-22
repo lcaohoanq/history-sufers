@@ -8,7 +8,8 @@
     />
     <script type="text/javascript" src="js/three.min.js"></script>
     <script type="text/javascript" src="js/audio-manager.js"></script>
-    <script type="text/javascript" src="js/game-old.js"></script>
+    <script type="module" src="scripts/utils.js"></script>
+    <script type="module" src="js/game-old.js"></script>
     <link href="style.css" rel="stylesheet" />
     <style>
       /* Sound Toggle Button */
@@ -49,14 +50,10 @@
   </head>
   <body>
     <!-- Sound Toggle Button -->
-    <button id="sound-toggle" class="sound-toggle" title="Toggle Sound">
-      🔊
-    </button>
+    <button id="sound-toggle" class="sound-toggle" title="Toggle Sound">🔊</button>
 
     <div class="panel">
-
       <div class="stat">
-
         <p id="score">0</p>
       </div>
       <!-- <table id="controls">

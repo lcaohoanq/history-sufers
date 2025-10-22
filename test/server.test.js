@@ -4,10 +4,25 @@
  * Test suite for multiplayer server functionality
  * Run with: npm test
  */
+import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { io as createClient } from 'socket.io-client'; // added
 
-const io = require('socket.io-client');
-const http = require('http');
-const { expect } = require('chai');
+import { expect } from 'chai';
+
+import http from 'http';
+import https from 'https';
+import { URL } from 'url';
+
+function httpGet(url) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const lib = u.protocol === 'https:' ? https : http;
+    const req = lib.get(u, (res) => resolve(res));
+    req.on('error', reject);
+  });
+}
 
 const SERVER_URL = process.env.TEST_SERVER_URL || 'http://localhost:3000';
 const SOCKET_OPTIONS = {
@@ -16,41 +31,62 @@ const SOCKET_OPTIONS = {
   reconnection: false
 };
 
+// Express setup
+const app = express();
+const httpServer = createServer(app);
+
+// Socket.IO setup (server)
+const ioServer = new SocketIOServer(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
 describe('History Sufers Multiplayer Server', function () {
   this.timeout(15000);
 
   describe('Health Check API', () => {
     it('should return server health status', (done) => {
-      http.get(`${SERVER_URL}/health`, (res) => {
-        expect(res.statusCode).to.equal(200);
-
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => {
-          const health = JSON.parse(data);
-          expect(health).to.have.property('status', 'ok');
-          expect(health).to.have.property('uptime');
-          expect(health).to.have.property('rooms');
-          expect(health).to.have.property('activePlayers');
-          done();
-        });
-      });
+      httpGet(`${SERVER_URL}/health`)
+        .then((res) => {
+          try {
+            expect(res.statusCode).to.equal(200);
+            let data = '';
+            res.on('data', (chunk) => (data = chunk));
+            res.on('end', () => {
+              const health = JSON.parse(data);
+              expect(health).to.have.property('status', 'ok');
+              expect(health).to.have.property('uptime');
+              expect(health).to.have.property('rooms');
+              expect(health).to.have.property('activePlayers');
+              done();
+            });
+          } catch (err) {
+            done(err);
+          }
+        })
+        .catch(done);
     });
-
     it('should return server info', (done) => {
-      http.get(`${SERVER_URL}/api/info`, (res) => {
-        expect(res.statusCode).to.equal(200);
-
-        let data = '';
-        res.on('data', (chunk) => (data += chunk));
-        res.on('end', () => {
-          const info = JSON.parse(data);
-          expect(info).to.have.property('name');
-          expect(info).to.have.property('version');
-          expect(info).to.have.property('maxPlayersPerRoom');
-          done();
-        });
-      });
+      httpGet(`${SERVER_URL}/api/info`)
+        .then((res) => {
+          try {
+            expect(res.statusCode).to.equal(200);
+            let data = '';
+            res.on('data', (chunk) => (data = chunk));
+            res.on('end', () => {
+              const info = JSON.parse(data);
+              expect(info).to.have.property('name');
+              expect(info).to.have.property('version');
+              expect(info).to.have.property('maxPlayersPerRoom');
+              done();
+            });
+          } catch (err) {
+            done(err);
+          }
+        })
+        .catch(done);
     });
   });
 
@@ -65,7 +101,7 @@ describe('History Sufers Multiplayer Server', function () {
     });
 
     it('should connect to server', (done) => {
-      client = io(SERVER_URL, SOCKET_OPTIONS);
+      client = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       client.on('connect', () => {
         expect(client.connected).to.be.true;
@@ -76,7 +112,7 @@ describe('History Sufers Multiplayer Server', function () {
     });
 
     it('should receive server config on connect', (done) => {
-      client = io(SERVER_URL, SOCKET_OPTIONS);
+      client = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       client.on('serverConfig', (config) => {
         expect(config).to.have.property('maxPlayersPerRoom');
@@ -96,7 +132,7 @@ describe('History Sufers Multiplayer Server', function () {
     });
 
     it('should create a room', (done) => {
-      client1 = io(SERVER_URL, SOCKET_OPTIONS);
+      client1 = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       client1.on('connect', () => {
         client1.emit('createRoom', { playerName: 'TestPlayer1' });
@@ -112,8 +148,8 @@ describe('History Sufers Multiplayer Server', function () {
     });
 
     it('should join an existing room', (done) => {
-      client1 = io(SERVER_URL, SOCKET_OPTIONS);
-      client2 = io(SERVER_URL, SOCKET_OPTIONS);
+      client1 = createClient(SERVER_URL, SOCKET_OPTIONS);
+      client2 = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       let roomId;
       let client1Connected = false;
@@ -160,7 +196,7 @@ describe('History Sufers Multiplayer Server', function () {
     });
 
     it('should fail to join non-existent room', (done) => {
-      client1 = io(SERVER_URL, SOCKET_OPTIONS);
+      client1 = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       client1.on('connect', () => {
         client1.emit('joinRoom', {
@@ -176,7 +212,7 @@ describe('History Sufers Multiplayer Server', function () {
     });
 
     it('should list available rooms', (done) => {
-      client1 = io(SERVER_URL, SOCKET_OPTIONS);
+      client1 = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       client1.on('connect', () => {
         client1.emit('createRoom', { playerName: 'Host' });
@@ -207,8 +243,8 @@ describe('History Sufers Multiplayer Server', function () {
     beforeEach(async function () {
       this.timeout(15000); // 15s
 
-      host = io(SERVER_URL, SOCKET_OPTIONS);
-      guest = io(SERVER_URL, SOCKET_OPTIONS);
+      host = createClient(SERVER_URL, SOCKET_OPTIONS);
+      guest = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       // Wait for both to connect first
       await Promise.all([
@@ -277,8 +313,8 @@ describe('History Sufers Multiplayer Server', function () {
     beforeEach(async function () {
       this.timeout(200000); // 15s
 
-      host = io(SERVER_URL, SOCKET_OPTIONS);
-      guest = io(SERVER_URL, SOCKET_OPTIONS);
+      host = createClient(SERVER_URL, SOCKET_OPTIONS);
+      guest = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       // Wait for both to connect first
       await Promise.all([
@@ -364,8 +400,8 @@ describe('History Sufers Multiplayer Server', function () {
     beforeEach(async function () {
       this.timeout(15000); // 15s
 
-      host = io(SERVER_URL, SOCKET_OPTIONS);
-      guest = io(SERVER_URL, SOCKET_OPTIONS);
+      host = createClient(SERVER_URL, SOCKET_OPTIONS);
+      guest = createClient(SERVER_URL, SOCKET_OPTIONS);
 
       // Wait for both to connect first
       await Promise.all([
@@ -435,7 +471,7 @@ describe('History Sufers Multiplayer Server', function () {
       let connected = 0;
 
       for (let i = 0; i < connectCount; i++) {
-        const client = io(SERVER_URL, SOCKET_OPTIONS);
+        const client = createClient(SERVER_URL, SOCKET_OPTIONS);
 
         client.on('connect', () => {
           connected++;

@@ -602,11 +602,11 @@ http.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║                                                        ║
-║   🎮  HISTORY SUFERS - MULTIPLAYER SERVER                   ║
+║   🎮  HISTORY SUFERS - MULTIPLAYER SERVER              ║
 ║                                                        ║
-║   🚀  Server running on port ${PORT}                      ║
-║   🌐  URL: http://localhost:${PORT}                     ║
-║   👥  Max players per room: ${MAX_PLAYERS_PER_ROOM}                      ║
+║   🚀  Server running on port ${PORT}                   ║
+║   🌐  URL: http://localhost:${PORT}                    ║
+║   👥  Max players per room: ${MAX_PLAYERS_PER_ROOM}    ║
 ║   📊  Server version: 2.0.0                            ║
 ║                                                        ║
 ╚════════════════════════════════════════════════════════╝

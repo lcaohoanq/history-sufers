@@ -79,10 +79,29 @@ function World() {
   var rowCounter = 0;
   var lastDeadlySpawn = 0;
   var lastBuffSpawn = 0;
-  var minRowsBetweenDeadly = 5; // Tối thiểu 5 hàng giữa các deadly
-  var maxRowsBetweenDeadly = 10; // Tối đa 10 hàng
-  var minRowsBetweenBuff = 3; // Tối thiểu 3 hàng giữa các buff/debuff
-  var maxRowsBetweenBuff = 6; // Tối đa 6 hàng
+  var minRowsBetweenDeadly = 5;
+  var maxRowsBetweenDeadly = 10;
+  var minRowsBetweenBuff = 3;
+  var maxRowsBetweenBuff = 6;
+
+  // ===== DIFFICULTY SCALING =====
+  var gameSpeed = 100; // Initial speed
+  var deadlySpawnChance = 0.3; // Initial 30%
+  var buffSpawnChance = 0.4; // Initial 40%
+  var multiLaneDeadlyChance = 0.5; // Chance for multiple deadly objects
+
+  // ===== OBJECT POOL =====
+  var objectPool = {
+    gates: [],
+    remnants: [],
+    buffs: {}
+  };
+
+  var poolConfig = {
+    maxGates: 10,
+    maxRemnants: 10,
+    maxBuffsPerType: 5
+  };
 
   init();
 
@@ -545,15 +564,15 @@ function World() {
     if (shouldSpawnBuff) {
       // Define buff object weights
       var buffWeights = {
-        hammerandsickle: 0.1,
-        ruleOfLawState: 0.15,
-        unityHands: 0.15,
-        reformGears: 0.1,
-        ballotBox: 0.1,
-        bribeEnvelope: 0.1,
-        corruptedThrone: 0.1,
-        puppetManipulation: 0.1,
-        misbalancedScale: 0.1
+        hammerandsickle: 0.7,
+        ruleOfLawState: 0.7,
+        unityHands: 0.7,
+        reformGears: 0.7,
+        ballotBox: 0.7,
+        bribeEnvelope: 0.7,
+        corruptedThrone: 0.7,
+        puppetManipulation: 0.7,
+        misbalancedScale: 0.7
       };
 
       var objectType = weightedRandomObstacle(buffWeights);
@@ -563,31 +582,31 @@ function World() {
 
       switch (objectType) {
         case 'hammerandsickle':
-          buffObject = new HammerAndSickle(lane * 800, -400, position, scale);
+          buffObject = new HammerAndSickle(lane * 800, 0, position, scale);
           break;
         case 'ruleOfLawState':
-          buffObject = new RuleOfLawState(lane * 800, -400, position, scale);
+          buffObject = new RuleOfLawState(lane * 800, 0, position, scale);
           break;
         case 'unityHands':
-          buffObject = new UnityHands(lane * 800, -400, position, scale);
+          buffObject = new UnityHands(lane * 800, 0, position, scale);
           break;
         case 'reformGears':
-          buffObject = new ReformGears(lane * 800, -400, position, scale);
+          buffObject = new ReformGears(lane * 800, 0, position, scale);
           break;
         case 'ballotBox':
-          buffObject = new BallotBox(lane * 800, -400, position, scale);
+          buffObject = new BallotBox(lane * 800, 0, position, scale);
           break;
         case 'bribeEnvelope':
-          buffObject = new BribeEnvelope(lane * 800, -400, position, scale);
+          buffObject = new BribeEnvelope(lane * 800, 0, position, scale);
           break;
         case 'corruptedThrone':
-          buffObject = new CorruptedThrone(lane * 800, -400, position, scale);
+          buffObject = new CorruptedThrone(lane * 800, 0, position, scale);
           break;
         case 'puppetManipulation':
-          buffObject = new PuppetManipulation(lane * 800, -400, position, scale);
+          buffObject = new PuppetManipulation(lane * 800, 0, position, scale);
           break;
         case 'misbalancedScale':
-          buffObject = new MisbalancedScale(lane * 800, -400, position, scale);
+          buffObject = new MisbalancedScale(lane * 800, 0, position, scale);
           break;
       }
 

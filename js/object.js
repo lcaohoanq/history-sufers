@@ -8,7 +8,7 @@ function HammerAndSickle(x, y, z, s) {
     justice: 0,    // Không ảnh hưởng
     unity: 0       // Không ảnh hưởng
   };
-  this.buffValue = 0; // Điểm số chung (nếu cần)
+  this.buffValue = 100; // Điểm số chung (nếu cần)
 
   // ===== GOLD MATERIAL =====
   const goldMaterial = new THREE.MeshStandardMaterial({
@@ -133,7 +133,7 @@ function BribeEnvelope(x, y, z, s) {
     justice: -20,   // Giảm công bằng
     unity: 0        // Không ảnh hưởng
   };
-  this.buffValue = -35; // Tổng điểm âm
+  this.buffValue = -2000; // Tổng điểm âm
 
   var paperMat = new THREE.MeshStandardMaterial({
     color: 0xE5D3B3,
@@ -225,7 +225,7 @@ function BallotBox(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: 0        // Không ảnh hưởng
   };
-  this.buffValue = 25; // Điểm dương
+  this.buffValue = 500; // Điểm dương
 
   var boxMaterial = new THREE.MeshStandardMaterial({
     color: 0x278D3E,
@@ -310,7 +310,7 @@ function RuleOfLawState(x, y, z, s) {
     justice: 35,    // Tăng công bằng mạnh
     unity: 20       // Tăng đoàn kết
   };
-  this.buffValue = 85; // Điểm dương cao nhất
+  this.buffValue = 2000; // Điểm dương cao nhất
 
   var metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.2, roughness: 0.3 });
   var goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.4, roughness: 0.3 });
@@ -548,7 +548,7 @@ function UnityHands(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: 35       // Tăng đoàn kết mạnh
   };
-  this.buffValue = 55; // Điểm dương
+  this.buffValue = 1000; // Điểm dương
 
   var skinMat = new THREE.MeshStandardMaterial({ color: 0xF2D2B6, roughness: 0.2 });
   var bookMat = new THREE.MeshStandardMaterial({ color: 0x3E2723 });
@@ -621,6 +621,10 @@ function UnityHands(x, y, z, s) {
   this.mesh.rotation.x = Math.PI / 4;
   this.mesh.rotation.y = Math.PI;
 
+  this.scale = s; // Thêm dòng này để scale hoạt động đúng
+  this.mesh.position.set(x, y, z); // Bỏ cộng +100 nếu muốn player chạm được
+  this.isCollected = false; // Giống BribeEnvelope
+
   this.update = function () {
     this.mesh.rotation.y += 0.004;
   };
@@ -630,14 +634,13 @@ function UnityHands(x, y, z, s) {
   this.mesh.add(pointLight);
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var scaleFactor = Math.sqrt(this.scale) * 1.2;
-    var obstMinX = self.mesh.position.x - scaleFactor * 200;
-    var obstMaxX = self.mesh.position.x + scaleFactor * 200;
+    var scaleFactor = Math.sqrt(this.scale) * 2.5;
+    var obstMinX = self.mesh.position.x - scaleFactor * 100;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + scaleFactor * 260;
-    var obstMinZ = self.mesh.position.z - scaleFactor * 150;
-    var obstMaxZ = self.mesh.position.z + scaleFactor * 150;
-
+    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
       obstMinX <= maxX && obstMaxX >= minX &&
       obstMinY <= maxY && obstMaxY >= minY &&
@@ -656,11 +659,11 @@ function CorruptedThrone(x, y, z, s) {
     justice: -25,   // Giảm công bằng
     unity: 0        // Không ảnh hưởng
   };
-  this.buffValue = -55; // Điểm âm cao
+  this.buffValue = -5500; // Điểm âm cao
 
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4b3621, roughness: 0.3, metalness: 0.3 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4b3621, roughness: 0.3, metalness: 0.1 });
   const webMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-  const vineMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.3 });
+  const vineMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.3, metalness: 0.2 });
 
   const SCALE = 1.5;
 
@@ -745,9 +748,9 @@ function ColonialRemnant(x, y, z, s) {
   };
   this.buffValue = 0; // Vật phẩm trang trí/lịch sử
 
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.6 });
-  const rustMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3a, metalness: 0.2, roughness: 0.9 });
-  const flagMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.5, side: THREE.DoubleSide });
+  const ironMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.3 });
+  const rustMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3a, metalness: 0.2, roughness: 0.3 });
+  const flagMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.3, side: THREE.DoubleSide });
 
   const SCALE = 2.5;
 
@@ -816,7 +819,7 @@ function PuppetManipulation(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: -20      // Giảm đoàn kết
   };
-  this.buffValue = -45; // Điểm âm
+  this.buffValue = -4500; // Điểm âm
 
   const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6, metalness: 0.1 });
   const stringMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
@@ -908,7 +911,7 @@ function MisbalancedScale(x, y, z, s) {
     justice: 0,     // Không ảnh hưởng
     unity: -30      // Giảm đoàn kết mạnh (bất công xã hội)
   };
-  this.buffValue = -30; // Điểm âm
+  this.buffValue = -3000; // Điểm âm
 
   var metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.35 });
   var darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.25, roughness: 0.4 });

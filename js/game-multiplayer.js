@@ -1,3 +1,20 @@
+import * as THREE from 'three';
+import {
+  BallotBox,
+  BribeEnvelope,
+  ColonialGate,
+  ColonialRemnant,
+  CorruptedThrone,
+  HammerAndSickle,
+  MisbalancedScale,
+  PuppetManipulation,
+  ReformGears,
+  RuleOfLawState,
+  UnityHands
+} from './object.js';
+import { createBox, createGroup, sinusoid } from '../scripts/utils.js';
+import { Character } from '../scripts/characters.js';
+
 /**
  *
  * HISTORY SURFERS - BUFF SYSTEM EDITION
@@ -11,7 +28,7 @@ var Colors = {
   brown: 0x59332e,
   yellow: 0xffff00,
   olive: 0x556b2f,
-  sand: 0xc2b280,
+  sand: 0xc2b280
 };
 
 var deg2Rad = Math.PI / 180;
@@ -59,8 +76,18 @@ function updateSoundButtonUI() {
 function World() {
   var self = this;
 
-  var element, scene, camera, character, renderer, light, objects,
-    paused, keysAllowed, score, difficulty, gameOver;
+  var element,
+    scene,
+    camera,
+    character,
+    renderer,
+    light,
+    objects,
+    paused,
+    keysAllowed,
+    score,
+    difficulty,
+    gameOver;
 
   // ===== BUFF STATS =====
   var playerStats = {
@@ -151,7 +178,10 @@ function World() {
       paused = true;
     }
 
-    var left = 37, up = 38, right = 39, p = 80;
+    var left = 37,
+      up = 38,
+      right = 39,
+      p = 80;
     keysAllowed = {};
 
     document.addEventListener('keydown', function (e) {
@@ -188,7 +218,8 @@ function World() {
             }
 
             document.getElementById('variable-content').style.visibility = 'visible';
-            document.getElementById('variable-content').innerHTML = 'Game is paused. Press any key to resume.';
+            document.getElementById('variable-content').innerHTML =
+              'Game is paused. Press any key to resume.';
             AudioManager.pause();
           }
           if (key == up && !paused) character.onUpKeyPressed();
@@ -282,12 +313,16 @@ function World() {
 
   function showBuffNotification(buffs) {
     var notification = document.createElement('div');
-    notification.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 2s;';
+    notification.style.cssText =
+      'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 2s;';
 
     var messages = [];
-    if (buffs.trust !== 0) messages.push('🤝 Niềm Tin ' + (buffs.trust > 0 ? '+' : '') + buffs.trust);
-    if (buffs.justice !== 0) messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
-    if (buffs.unity !== 0) messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
+    if (buffs.trust !== 0)
+      messages.push('🤝 Niềm Tin ' + (buffs.trust > 0 ? '+' : '') + buffs.trust);
+    if (buffs.justice !== 0)
+      messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
+    if (buffs.unity !== 0)
+      messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
 
     notification.innerHTML = messages.join('<br>');
     document.body.appendChild(notification);
@@ -300,7 +335,8 @@ function World() {
     if (!document.getElementById('buff-animation-style')) {
       var style = document.createElement('style');
       style.id = 'buff-animation-style';
-      style.innerHTML = '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
+      style.innerHTML =
+        '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
       document.head.appendChild(style);
     }
   }
@@ -340,7 +376,12 @@ function World() {
 
     var variableContent = document.getElementById('variable-content');
     variableContent.style.visibility = 'visible';
-    variableContent.innerHTML = '<h2 style="color: #F44336;">GAME OVER</h2><p style="font-size: 20px;">' + message + '</p><p>Score: ' + score + '</p><p>Press down arrow to try again.</p>';
+    variableContent.innerHTML =
+      '<h2 style="color: #F44336;">GAME OVER</h2><p style="font-size: 20px;">' +
+      message +
+      '</p><p>Score: ' +
+      score +
+      '</p><p>Press down arrow to try again.</p>';
   }
 
   /**
@@ -408,7 +449,8 @@ function World() {
     if (!countdownElement) {
       countdownElement = document.createElement('div');
       countdownElement.id = 'countdown';
-      countdownElement.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
+      countdownElement.style.cssText =
+        'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
       document.body.appendChild(countdownElement);
     }
     countdownElement.innerHTML = count;
@@ -417,7 +459,14 @@ function World() {
   function displayRaceResults(rankings) {
     var resultsHtml = '<h2>Race Results</h2><table>';
     rankings.forEach(function (rank) {
-      resultsHtml += '<tr><td>' + rank.rank + '</td><td>' + rank.playerName + '</td><td>' + rank.score + '</td></tr>';
+      resultsHtml +=
+        '<tr><td>' +
+        rank.rank +
+        '</td><td>' +
+        rank.playerName +
+        '</td><td>' +
+        rank.score +
+        '</td></tr>';
     });
     resultsHtml += '</table>';
     document.getElementById('variable-content').innerHTML = resultsHtml;
@@ -503,7 +552,7 @@ function World() {
       }
 
       score += 10;
-      document.getElementById("score").innerHTML = score;
+      document.getElementById('score').innerHTML = score;
     }
 
     renderer.render(scene, camera);
@@ -526,8 +575,7 @@ function World() {
     var rowsSinceBuff = rowCounter - lastBuffSpawn;
 
     // Random chance to spawn deadly obstacle (like train/barrier in Subway Surfer)
-    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly &&
-      Math.random() < 0.3; // 30% chance after min rows
+    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < 0.3; // 30% chance after min rows
 
     if (shouldSpawnDeadly) {
       var deadlyType = Math.random() < 0.5 ? 'gate' : 'remnant';
@@ -558,8 +606,7 @@ function World() {
     }
 
     // Random chance to spawn buff/debuff objects
-    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff &&
-      Math.random() < 0.4; // 40% chance after min rows
+    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff && Math.random() < 0.4; // 40% chance after min rows
 
     if (shouldSpawnBuff) {
       // Define buff object weights
@@ -658,8 +705,10 @@ function World() {
       if (objects[i] && typeof objects[i].collides === 'function') {
         // Only check non-deadly objects with buffs
         if (objects[i].buffs && !objects[i].mesh.userData.deadly) {
-          if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ) &&
-            !objects[i].isCollected) {
+          if (
+            objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ) &&
+            !objects[i].isCollected
+          ) {
             collidedObjects.push(i);
           }
         }
@@ -770,219 +819,4 @@ function World() {
     // Clear references
     object.mesh = null;
   }
-}
-
-/**
- * CHARACTER (unchanged from original)
- */
-function Character(customColors) {
-  var self = this;
-
-  if (customColors) {
-    this.skinColor = Colors.brown;
-    this.hairColor = Colors.black;
-    this.shirtColor = customColors.shirt || Colors.yellow;
-    this.shortsColor = customColors.shorts || Colors.olive;
-  } else {
-    this.skinColor = Colors.brown;
-    this.hairColor = Colors.black;
-    this.shirtColor = Colors.yellow;
-    this.shortsColor = Colors.olive;
-  }
-
-  this.jumpDuration = 0.6;
-  this.jumpHeight = 2000;
-
-  init();
-
-  function init() {
-    self.face = createBox(100, 100, 60, self.skinColor, 0, 0, 0);
-    self.hair = createBox(105, 20, 65, self.hairColor, 0, 50, 0);
-    self.head = createGroup(0, 260, -25);
-    self.head.add(self.face);
-    self.head.add(self.hair);
-
-    self.torso = createBox(150, 190, 40, self.shirtColor, 0, 100, 0);
-
-    self.leftLowerArm = createLimb(20, 120, 30, self.skinColor, 0, -170, 0);
-    self.leftArm = createLimb(30, 140, 40, self.skinColor, -100, 190, -10);
-    self.leftArm.add(self.leftLowerArm);
-
-    self.rightLowerArm = createLimb(20, 120, 30, self.skinColor, 0, -170, 0);
-    self.rightArm = createLimb(30, 140, 40, self.skinColor, 100, 190, -10);
-    self.rightArm.add(self.rightLowerArm);
-
-    self.leftLowerLeg = createLimb(40, 200, 40, self.skinColor, 0, -200, 0);
-    self.leftLeg = createLimb(50, 170, 50, self.shortsColor, -50, -10, 30);
-    self.leftLeg.add(self.leftLowerLeg);
-
-    self.rightLowerLeg = createLimb(40, 200, 40, self.skinColor, 0, -200, 0);
-    self.rightLeg = createLimb(50, 170, 50, self.shortsColor, 50, -10, 30);
-    self.rightLeg.add(self.rightLowerLeg);
-
-    self.element = createGroup(0, 0, -4000);
-    self.element.add(self.head);
-    self.element.add(self.torso);
-    self.element.add(self.leftArm);
-    self.element.add(self.rightArm);
-    self.element.add(self.leftLeg);
-    self.element.add(self.rightLeg);
-
-    self.isJumping = false;
-    self.isSwitchingLeft = false;
-    self.isSwitchingRight = false;
-    self.currentLane = 0;
-    self.runningStartTime = new Date() / 1000;
-    self.pauseStartTime = new Date() / 1000;
-    self.stepFreq = 2;
-    self.queuedActions = [];
-  }
-
-  function createLimb(dx, dy, dz, color, x, y, z) {
-    var limb = createGroup(x, y, z);
-    var offset = -1 * (Math.max(dx, dz) / 2 + dy / 2);
-    var limbBox = createBox(dx, dy, dz, color, 0, offset, 0);
-    limb.add(limbBox);
-    return limb;
-  }
-
-  this.update = function () {
-    var currentTime = new Date() / 1000;
-
-    if (
-      !self.isJumping &&
-      !self.isSwitchingLeft &&
-      !self.isSwitchingRight &&
-      self.queuedActions.length > 0
-    ) {
-      switch (self.queuedActions.shift()) {
-        case 'up':
-          self.isJumping = true;
-          self.jumpStartTime = new Date() / 1000;
-          break;
-        case 'left':
-          if (self.currentLane != -1) {
-            self.isSwitchingLeft = true;
-          }
-          break;
-        case 'right':
-          if (self.currentLane != 1) {
-            self.isSwitchingRight = true;
-          }
-          break;
-      }
-    }
-
-    if (self.isJumping) {
-      var jumpClock = currentTime - self.jumpStartTime;
-      self.element.position.y =
-        self.jumpHeight * Math.sin((1 / self.jumpDuration) * Math.PI * jumpClock) +
-        sinusoid(2 * self.stepFreq, 0, 20, 0, self.jumpStartTime - self.runningStartTime);
-      if (jumpClock > self.jumpDuration) {
-        self.isJumping = false;
-        self.runningStartTime += self.jumpDuration;
-      }
-    } else {
-      var runningClock = currentTime - self.runningStartTime;
-      self.element.position.y = sinusoid(2 * self.stepFreq, 0, 20, 0, runningClock);
-      self.head.rotation.x = sinusoid(2 * self.stepFreq, -10, -5, 0, runningClock) * deg2Rad;
-      self.torso.rotation.x = sinusoid(2 * self.stepFreq, -10, -5, 180, runningClock) * deg2Rad;
-      self.leftArm.rotation.x = sinusoid(self.stepFreq, -70, 50, 180, runningClock) * deg2Rad;
-      self.rightArm.rotation.x = sinusoid(self.stepFreq, -70, 50, 0, runningClock) * deg2Rad;
-      self.leftLowerArm.rotation.x = sinusoid(self.stepFreq, 70, 140, 180, runningClock) * deg2Rad;
-      self.rightLowerArm.rotation.x = sinusoid(self.stepFreq, 70, 140, 0, runningClock) * deg2Rad;
-      self.leftLeg.rotation.x = sinusoid(self.stepFreq, -20, 80, 0, runningClock) * deg2Rad;
-      self.rightLeg.rotation.x = sinusoid(self.stepFreq, -20, 80, 180, runningClock) * deg2Rad;
-      self.leftLowerLeg.rotation.x = sinusoid(self.stepFreq, -130, 5, 240, runningClock) * deg2Rad;
-      self.rightLowerLeg.rotation.x = sinusoid(self.stepFreq, -130, 5, 60, runningClock) * deg2Rad;
-
-      if (self.isSwitchingLeft) {
-        self.element.position.x -= 200;
-        var offset = self.currentLane * 800 - self.element.position.x;
-        if (offset > 800) {
-          self.currentLane -= 1;
-          self.element.position.x = self.currentLane * 800;
-          self.isSwitchingLeft = false;
-        }
-      }
-      if (self.isSwitchingRight) {
-        self.element.position.x += 200;
-        var offset = self.element.position.x - self.currentLane * 800;
-        if (offset > 800) {
-          self.currentLane += 1;
-          self.element.position.x = self.currentLane * 800;
-          self.isSwitchingRight = false;
-        }
-      }
-    }
-  };
-
-  this.onLeftKeyPressed = function () {
-    self.queuedActions.push('left');
-  };
-
-  this.onUpKeyPressed = function () {
-    self.queuedActions.push('up');
-  };
-
-  this.onRightKeyPressed = function () {
-    self.queuedActions.push('right');
-  };
-
-  this.onPause = function () {
-    self.pauseStartTime = new Date() / 1000;
-  };
-
-  this.onUnpause = function () {
-    var currentTime = new Date() / 1000;
-    var pauseDuration = currentTime - self.pauseStartTime;
-    self.runningStartTime += pauseDuration;
-    if (self.isJumping) {
-      self.jumpStartTime += pauseDuration;
-    }
-  };
-}
-
-/**
- * UTILITY FUNCTIONS
- */
-function sinusoid(frequency, minimum, maximum, phase, time) {
-  var amplitude = 0.5 * (maximum - minimum);
-  var angularFrequency = 2 * Math.PI * frequency;
-  var phaseRadians = (phase * Math.PI) / 180;
-  var offset = amplitude * Math.sin(angularFrequency * time + phaseRadians);
-  var average = (minimum + maximum) / 2;
-  return average + offset;
-}
-
-function createGroup(x, y, z) {
-  var group = new THREE.Group();
-  group.position.set(x, y, z);
-  return group;
-}
-
-function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
-  var geom = new THREE.BoxGeometry(dx, dy, dz);
-  var mat = new THREE.MeshPhongMaterial({
-    color: color,
-    flatShading: notFlatShading != true
-  });
-  var box = new THREE.Mesh(geom, mat);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  box.position.set(x, y, z);
-  return box;
-}
-
-function createCylinder(radiusTop, radiusBottom, height, radialSegments, color, x, y, z) {
-  var geom = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
-  var mat = new THREE.MeshPhongMaterial({
-    color: color,
-    flatShading: true
-  });
-  var cylinder = new THREE.Mesh(geom, mat);
-  cylinder.castShadow = true;
-  cylinder.receiveShadow = true;
-  cylinder.position.set(x, y, z);
-  return cylinder;
 }

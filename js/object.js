@@ -1,36 +1,38 @@
-function HammerAndSickle(x, y, z, s) {
+import * as THREE from 'three';
+
+export function HammerAndSickle(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,      // Không ảnh hưởng
-    justice: 0,    // Không ảnh hưởng
-    unity: 0       // Không ảnh hưởng
+    trust: 0, // Không ảnh hưởng
+    justice: 0, // Không ảnh hưởng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 100; // Điểm số chung (nếu cần)
 
   // ===== GOLD MATERIAL =====
   const goldMaterial = new THREE.MeshStandardMaterial({
-    color: 0xFFD700,
+    color: 0xffd700,
     metalness: 0.5,
-    roughness: 0.5,
+    roughness: 0.5
   });
 
   // ===== BÚA (phía TRƯỚC liềm) =====
   const handleGeom = new THREE.CylinderGeometry(3.5, 3.5, 130, 12);
   const handle = new THREE.Mesh(handleGeom, goldMaterial);
-  handle.rotation.z = Math.PI * 0.30;
+  handle.rotation.z = Math.PI * 0.3;
   handle.position.set(-8, -10, 5);
 
   const headGeom = new THREE.BoxGeometry(45, 18, 20);
   const head = new THREE.Mesh(headGeom, goldMaterial);
-  head.rotation.z = Math.PI * 0.30;
+  head.rotation.z = Math.PI * 0.3;
   head.position.set(28, 22, 5);
 
   const neckGeom = new THREE.BoxGeometry(10, 20, 10);
   const neck = new THREE.Mesh(neckGeom, goldMaterial);
-  neck.rotation.z = Math.PI * 0.30;
+  neck.rotation.z = Math.PI * 0.3;
   neck.position.set(10, 5, 5);
 
   // ===== LIỀM (phía SAU búa) =====
@@ -55,7 +57,7 @@ function HammerAndSickle(x, y, z, s) {
   this.mesh.scale.set(s, s, s);
 
   this.scale = s;
-  this.type = "hammerandsickle";
+  this.type = 'hammerandsickle';
   this.isCollected = false;
   this.particles = [];
 
@@ -72,9 +74,12 @@ function HammerAndSickle(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 
@@ -106,9 +111,9 @@ function HammerAndSickle(x, y, z, s) {
     for (let i = 0; i < 18; i++) {
       let geom = new THREE.SphereGeometry(4, 8, 8);
       let mat = new THREE.MeshBasicMaterial({
-        color: 0xFFD700,
+        color: 0xffd700,
         transparent: true,
-        opacity: 1,
+        opacity: 1
       });
       let spark = new THREE.Mesh(geom, mat);
       spark.position.set(
@@ -122,35 +127,31 @@ function HammerAndSickle(x, y, z, s) {
   };
 }
 
-
-function BribeEnvelope(x, y, z, s) {
+export function BribeEnvelope(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: -15,     // Giảm niềm tin
-    justice: -20,   // Giảm công bằng
-    unity: 0        // Không ảnh hưởng
+    trust: -15, // Giảm niềm tin
+    justice: -20, // Giảm công bằng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = -2000; // Tổng điểm âm
 
   var paperMat = new THREE.MeshStandardMaterial({
-    color: 0xE5D3B3,
+    color: 0xe5d3b3,
     roughness: 0.75,
     metalness: 0.05
   });
 
   var moneyMat = new THREE.MeshStandardMaterial({
-    color: 0x2E8B57,
+    color: 0x2e8b57,
     roughness: 0.4,
     metalness: 0.15
   });
 
-  var envelope = new THREE.Mesh(
-    new THREE.BoxGeometry(120, 80, 6, 1, 1, 1),
-    paperMat
-  );
+  var envelope = new THREE.Mesh(new THREE.BoxGeometry(120, 80, 6, 1, 1, 1), paperMat);
   envelope.position.set(0, 0, 0);
 
   var flapShape = new THREE.Shape();
@@ -164,19 +165,19 @@ function BribeEnvelope(x, y, z, s) {
   flap.position.set(0, 20, 3.5);
   flap.rotation.x = -Math.PI * 0.5;
 
-  var money = new THREE.Mesh(
-    new THREE.BoxGeometry(100, 65, 3),
-    moneyMat
-  );
+  var money = new THREE.Mesh(new THREE.BoxGeometry(100, 65, 3), moneyMat);
   money.position.set(0, 5, -3.2);
   money.rotation.z = Math.PI * 0.02;
 
   var creaseGeom = new THREE.PlaneGeometry(120, 0.8);
-  var crease = new THREE.Mesh(creaseGeom, new THREE.MeshStandardMaterial({
-    color: 0xD0C1A2,
-    roughness: 0.85,
-    metalness: 0.01
-  }));
+  var crease = new THREE.Mesh(
+    creaseGeom,
+    new THREE.MeshStandardMaterial({
+      color: 0xd0c1a2,
+      roughness: 0.85,
+      metalness: 0.01
+    })
+  );
   crease.position.set(0, 0, 3.2);
 
   var pointLight = new THREE.PointLight(0xffffff, 0.55, 200);
@@ -186,7 +187,7 @@ function BribeEnvelope(x, y, z, s) {
   this.mesh.add(envelope, money, flap, crease);
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "bribeEnvelope";
+  this.type = 'bribeEnvelope';
   this.scale = s;
   this.isCollected = false;
 
@@ -207,28 +208,30 @@ function BribeEnvelope(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function BallotBox(x, y, z, s) {
+export function BallotBox(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 25,      // Tăng niềm tin
-    justice: 0,     // Không ảnh hưởng
-    unity: 0        // Không ảnh hưởng
+    trust: 25, // Tăng niềm tin
+    justice: 0, // Không ảnh hưởng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 500; // Điểm dương
 
   var boxMaterial = new THREE.MeshStandardMaterial({
-    color: 0x278D3E,
+    color: 0x278d3e,
     metalness: 0.4,
     roughness: 0.45
   });
@@ -240,7 +243,7 @@ function BallotBox(x, y, z, s) {
   });
 
   var ballotMaterial = new THREE.MeshStandardMaterial({
-    color: 0xFFFFFF,
+    color: 0xffffff,
     roughness: 0.85,
     metalness: 0.05,
     side: THREE.DoubleSide
@@ -265,7 +268,7 @@ function BallotBox(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
-  this.type = "ballotbox";
+  this.type = 'ballotbox';
   this.isCollected = false;
 
   this.update = function () {
@@ -292,30 +295,36 @@ function BallotBox(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function RuleOfLawState(x, y, z, s) {
+export function RuleOfLawState(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 30,      // Tăng niềm tin mạnh
-    justice: 35,    // Tăng công bằng mạnh
-    unity: 20       // Tăng đoàn kết
+    trust: 30, // Tăng niềm tin mạnh
+    justice: 35, // Tăng công bằng mạnh
+    unity: 20 // Tăng đoàn kết
   };
   this.buffValue = 2000; // Điểm dương cao nhất
 
-  var metalMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.2, roughness: 0.3 });
-  var goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.4, roughness: 0.3 });
-  var woodMat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, metalness: 0.2, roughness: 0.2 });
-  var bookMat = new THREE.MeshPhongMaterial({ color: 0xF3E5AB, shininess: 30 });
+  var metalMat = new THREE.MeshStandardMaterial({
+    color: 0x888888,
+    metalness: 0.2,
+    roughness: 0.3
+  });
+  var goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.4, roughness: 0.3 });
+  var woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, metalness: 0.2, roughness: 0.2 });
+  var bookMat = new THREE.MeshPhongMaterial({ color: 0xf3e5ab, shininess: 30 });
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), woodMat);
   base.position.set(0, 10, 0);
@@ -357,8 +366,10 @@ function RuleOfLawState(x, y, z, s) {
     var len = Math.hypot(x2 - x1, y2 - y1, z2 - z1);
     var cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, len, 8), metalMat);
     cyl.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
-    cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1).normalize());
+    cyl.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1).normalize()
+    );
     return cyl;
   }
   this.mesh.add(chainBetween(-70, 200, 0, -70, 180, 0));
@@ -367,7 +378,7 @@ function RuleOfLawState(x, y, z, s) {
   function createThinStar(points, outer, inner, material, depth) {
     var shape = new THREE.Shape();
     for (var i = 0; i < 2 * points; i++) {
-      var r = (i % 2 === 0) ? outer : inner;
+      var r = i % 2 === 0 ? outer : inner;
       var a = (i * Math.PI) / points - Math.PI / 2;
       var x = Math.cos(a) * r;
       var y = Math.sin(a) * r;
@@ -385,8 +396,10 @@ function RuleOfLawState(x, y, z, s) {
 
   var bookGroup = new THREE.Object3D();
   var book = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 40), bookMat);
-  var stripe = new THREE.Mesh(new THREE.BoxGeometry(56, 2, 6),
-    new THREE.MeshStandardMaterial({ color: 0x8B0000 }));
+  var stripe = new THREE.Mesh(
+    new THREE.BoxGeometry(56, 2, 6),
+    new THREE.MeshStandardMaterial({ color: 0x8b0000 })
+  );
   book.position.set(0, 0, 0);
   stripe.position.set(0, 2, 12);
   bookGroup.position.set(0, 34, 0);
@@ -401,7 +414,7 @@ function RuleOfLawState(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
-  this.type = "ruleOfLawState";
+  this.type = 'ruleOfLawState';
 
   this._rotateEnabled = true;
   this._rotationSpeed = 0.005;
@@ -434,28 +447,34 @@ function RuleOfLawState(x, y, z, s) {
     var obstMaxZ = self.mesh.position.z + scaleFactor * 60;
 
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function ReformGears(x, y, z, s) {
+export function ReformGears(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng
-    justice: 30,    // Tăng công bằng
-    unity: 0        // Không ảnh hưởng
+    trust: 0, // Không ảnh hưởng
+    justice: 30, // Tăng công bằng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 30; // Điểm dương
 
-  var metalMat = new THREE.MeshStandardMaterial({ color: 0x707070, metalness: 0.2, roughness: 0.35 });
-  var goldMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.2, roughness: 0.2 });
+  var metalMat = new THREE.MeshStandardMaterial({
+    color: 0x707070,
+    metalness: 0.2,
+    roughness: 0.35
+  });
+  var goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.2, roughness: 0.2 });
 
   var gearsGroup = new THREE.Group();
   gearsGroup.position.set(0, 120, 0);
@@ -469,8 +488,15 @@ function ReformGears(x, y, z, s) {
 
     for (var i = 0; i < teeth; i++) {
       var angle = (i / teeth) * Math.PI * 2;
-      var tooth = new THREE.Mesh(new THREE.BoxGeometry(radius * 0.25, thickness * 1.2, radius * 0.10), colorMat);
-      tooth.position.set(Math.cos(angle) * (radius - radius * 0.01), 0, Math.sin(angle) * (radius - radius * 0.01));
+      var tooth = new THREE.Mesh(
+        new THREE.BoxGeometry(radius * 0.25, thickness * 1.2, radius * 0.1),
+        colorMat
+      );
+      tooth.position.set(
+        Math.cos(angle) * (radius - radius * 0.01),
+        0,
+        Math.sin(angle) * (radius - radius * 0.01)
+      );
       tooth.rotation.y = angle;
       g.add(tooth);
     }
@@ -485,9 +511,15 @@ function ReformGears(x, y, z, s) {
   gearB.position.set(0, 0, -50);
   gearC.position.set(90, 0, 10);
 
-  var pivotA = new THREE.Object3D(); pivotA.add(gearA); pivotA.position.copy(gearA.position);
-  var pivotB = new THREE.Object3D(); pivotB.add(gearB); pivotB.position.copy(gearB.position);
-  var pivotC = new THREE.Object3D(); pivotC.add(gearC); pivotC.position.copy(gearC.position);
+  var pivotA = new THREE.Object3D();
+  pivotA.add(gearA);
+  pivotA.position.copy(gearA.position);
+  var pivotB = new THREE.Object3D();
+  pivotB.add(gearB);
+  pivotB.position.copy(gearB.position);
+  var pivotC = new THREE.Object3D();
+  pivotC.add(gearC);
+  pivotC.position.copy(gearC.position);
 
   gearA.position.set(0, 0, 0);
   gearB.position.set(0, 0, 0);
@@ -495,9 +527,15 @@ function ReformGears(x, y, z, s) {
 
   gearsGroup.add(pivotA, pivotB, pivotC);
 
-  var hubA = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat); hubA.position.copy(pivotA.position); gearsGroup.add(hubA);
-  var hubB = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat); hubB.position.copy(pivotB.position); gearsGroup.add(hubB);
-  var hubC = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat); hubC.position.copy(pivotC.position); gearsGroup.add(hubC);
+  var hubA = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
+  hubA.position.copy(pivotA.position);
+  gearsGroup.add(hubA);
+  var hubB = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
+  hubB.position.copy(pivotB.position);
+  gearsGroup.add(hubB);
+  var hubC = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
+  hubC.position.copy(pivotC.position);
+  gearsGroup.add(hubC);
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
@@ -507,12 +545,12 @@ function ReformGears(x, y, z, s) {
   this.mesh.add(pointLight);
 
   this.scale = s;
-  this.type = "reformgears";
+  this.type = 'reformgears';
   this._gearSpeed = 0.015;
   this._time = 0;
 
   this.update = function (delta) {
-    this._time += (delta !== undefined) ? delta : 0.016;
+    this._time += delta !== undefined ? delta : 0.016;
     var speedB = this._gearSpeed;
     pivotB.rotation.y += speedB;
     pivotA.rotation.y -= speedB * (28 / 48);
@@ -530,28 +568,30 @@ function ReformGears(x, y, z, s) {
     var obstMaxZ = self.mesh.position.z + scaleFactor * 150;
 
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function UnityHands(x, y, z, s) {
+export function UnityHands(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 20,      // Tăng niềm tin
-    justice: 0,     // Không ảnh hưởng
-    unity: 35       // Tăng đoàn kết mạnh
+    trust: 20, // Tăng niềm tin
+    justice: 0, // Không ảnh hưởng
+    unity: 35 // Tăng đoàn kết mạnh
   };
   this.buffValue = 1000; // Điểm dương
 
-  var skinMat = new THREE.MeshStandardMaterial({ color: 0xF2D2B6, roughness: 0.2 });
-  var bookMat = new THREE.MeshStandardMaterial({ color: 0x3E2723 });
+  var skinMat = new THREE.MeshStandardMaterial({ color: 0xf2d2b6, roughness: 0.2 });
+  var bookMat = new THREE.MeshStandardMaterial({ color: 0x3e2723 });
   var gearMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.3, roughness: 0.4 });
   var hoeMat = new THREE.MeshStandardMaterial({ color: 0x665544 });
 
@@ -616,7 +656,7 @@ function UnityHands(x, y, z, s) {
 
   this.mesh.position.set(x, y + 100, z);
   this.mesh.scale.set(s * 1.5, s * 1.5, s * 1.5);
-  this.type = "unityhands";
+  this.type = 'unityhands';
 
   this.mesh.rotation.x = Math.PI / 4;
   this.mesh.rotation.y = Math.PI;
@@ -642,28 +682,42 @@ function UnityHands(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function CorruptedThrone(x, y, z, s) {
+export function CorruptedThrone(x, y, z, s) {
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: -30,     // Giảm niềm tin mạnh
-    justice: -25,   // Giảm công bằng
-    unity: 0        // Không ảnh hưởng
+    trust: -30, // Giảm niềm tin mạnh
+    justice: -25, // Giảm công bằng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = -5500; // Điểm âm cao
 
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x4b3621, roughness: 0.3, metalness: 0.1 });
-  const webMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-  const vineMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.3, metalness: 0.2 });
+  const woodMat = new THREE.MeshStandardMaterial({
+    color: 0x4b3621,
+    roughness: 0.3,
+    metalness: 0.1
+  });
+  const webMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.25
+  });
+  const vineMat = new THREE.MeshStandardMaterial({
+    color: 0x556b2f,
+    roughness: 0.3,
+    metalness: 0.2
+  });
 
   const SCALE = 1.5;
 
@@ -676,7 +730,9 @@ function CorruptedThrone(x, y, z, s) {
   armR.position.set(50 * SCALE, 40 * SCALE, 0);
 
   const leg1 = new THREE.Mesh(new THREE.BoxGeometry(15 * SCALE, 50 * SCALE, 15 * SCALE), woodMat);
-  const leg2 = leg1.clone(), leg3 = leg1.clone(), leg4 = leg1.clone();
+  const leg2 = leg1.clone(),
+    leg3 = leg1.clone(),
+    leg4 = leg1.clone();
   leg1.position.set(-30 * SCALE, 10 * SCALE, 30 * SCALE);
   leg2.position.set(30 * SCALE, 10 * SCALE, 30 * SCALE);
   leg3.position.set(-30 * SCALE, 10 * SCALE, -30 * SCALE);
@@ -687,7 +743,7 @@ function CorruptedThrone(x, y, z, s) {
 
   this.mesh.add(seat, back, armL, armR, leg1, leg2, leg3, leg4);
 
-  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
+  var pointLight = new THREE.PointLight(0x5c4fdb, 0.55, 200);
   pointLight.position.set(50, 50, 50);
   this.mesh.add(pointLight);
 
@@ -703,7 +759,10 @@ function CorruptedThrone(x, y, z, s) {
   );
 
   function createVine(pos, rot) {
-    const vine = new THREE.Mesh(new THREE.CylinderGeometry(2 * SCALE, 2 * SCALE, 100 * SCALE, 8), vineMat);
+    const vine = new THREE.Mesh(
+      new THREE.CylinderGeometry(2 * SCALE, 2 * SCALE, 100 * SCALE, 8),
+      vineMat
+    );
     vine.position.set(pos.x * SCALE, pos.y * SCALE, pos.z * SCALE);
     vine.rotation.set(rot.x, rot.y, rot.z);
     return vine;
@@ -715,7 +774,7 @@ function CorruptedThrone(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "corruptedThrone";
+  this.type = 'corruptedThrone';
   this.scale = s;
 
   this.update = function () {
@@ -729,28 +788,42 @@ function CorruptedThrone(x, y, z, s) {
     const py = this.mesh.position.y;
     const pz = this.mesh.position.z;
     return (
-      px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size * 2 >= minY &&
-      pz - size <= maxZ && pz + size >= minZ
+      px - size <= maxX &&
+      px + size >= minX &&
+      py <= maxY &&
+      py + size * 2 >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
     );
   };
 }
 
-
-function ColonialRemnant(x, y, z, s) {
+export function ColonialRemnant(x, y, z, s) {
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng trực tiếp
-    justice: 0,     // Không ảnh hưởng trực tiếp
-    unity: 0        // Không ảnh hưởng (hoặc có thể set âm nếu muốn)
+    trust: 0, // Không ảnh hưởng trực tiếp
+    justice: 0, // Không ảnh hưởng trực tiếp
+    unity: 0 // Không ảnh hưởng (hoặc có thể set âm nếu muốn)
   };
   this.buffValue = 0; // Vật phẩm trang trí/lịch sử
 
-  const ironMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.3 });
-  const rustMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3a, metalness: 0.2, roughness: 0.3 });
-  const flagMat = new THREE.MeshStandardMaterial({ color: 0x8b0000, roughness: 0.3, side: THREE.DoubleSide });
+  const ironMat = new THREE.MeshStandardMaterial({
+    color: 0x555555,
+    metalness: 0.2,
+    roughness: 0.3
+  });
+  const rustMat = new THREE.MeshStandardMaterial({
+    color: 0x7a5a3a,
+    metalness: 0.2,
+    roughness: 0.3
+  });
+  const flagMat = new THREE.MeshStandardMaterial({
+    color: 0x8b0000,
+    roughness: 0.3,
+    side: THREE.DoubleSide
+  });
 
   const SCALE = 2.5;
 
@@ -779,14 +852,17 @@ function ColonialRemnant(x, y, z, s) {
   flag.rotation.y = Math.PI / 2;
   this.mesh.add(flag);
 
-  const rope = new THREE.Mesh(new THREE.CylinderGeometry(1.2 * SCALE, 1.2 * SCALE, 60 * SCALE, 8), ironMat);
+  const rope = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.2 * SCALE, 1.2 * SCALE, 60 * SCALE, 8),
+    ironMat
+  );
   rope.rotation.z = Math.PI / 2;
   rope.position.set(12 * SCALE, 80 * SCALE, 0);
   this.mesh.add(rope);
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "colonialRemnant";
+  this.type = 'colonialRemnant';
 
   this.update = function () {
     flag.rotation.z = Math.sin(Date.now() * 0.002) * 0.1;
@@ -802,27 +878,37 @@ function ColonialRemnant(x, y, z, s) {
     const py = this.mesh.position.y;
     const pz = this.mesh.position.z;
     return (
-      px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size * 2 >= minY &&
-      pz - size <= maxZ && pz + size >= minZ
+      px - size <= maxX &&
+      px + size >= minX &&
+      py <= maxY &&
+      py + size * 2 >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
     );
   };
 }
 
-
-function PuppetManipulation(x, y, z, s) {
+export function PuppetManipulation(x, y, z, s) {
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: -25,     // Giảm niềm tin
-    justice: 0,     // Không ảnh hưởng
-    unity: -20      // Giảm đoàn kết
+    trust: -25, // Giảm niềm tin
+    justice: 0, // Không ảnh hưởng
+    unity: -20 // Giảm đoàn kết
   };
   this.buffValue = -4500; // Điểm âm
 
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6, metalness: 0.1 });
-  const stringMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+  const woodMat = new THREE.MeshStandardMaterial({
+    color: 0x8b5a2b,
+    roughness: 0.6,
+    metalness: 0.1
+  });
+  const stringMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.7
+  });
 
   const body = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 80, 16), woodMat);
   body.position.set(0, 80, 0);
@@ -874,7 +960,7 @@ function PuppetManipulation(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "puppetManipulation";
+  this.type = 'puppetManipulation';
 
   this._rotationSpeed = 0.004;
   this.update = function () {
@@ -884,7 +970,7 @@ function PuppetManipulation(x, y, z, s) {
     rightArm.rotation.z = -Math.sin(Date.now() * 0.0015) * 0.3 - Math.PI / 4;
   };
 
-  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
+  var pointLight = new THREE.PointLight(0x5c4fdb, 0.55, 200);
   pointLight.position.set(50, 50, 50);
   this.mesh.add(pointLight);
 
@@ -894,29 +980,45 @@ function PuppetManipulation(x, y, z, s) {
     let px = this.mesh.position.x;
     let py = this.mesh.position.y;
     let pz = this.mesh.position.z;
-    return (px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size >= minY &&
-      pz - size <= maxZ && pz + size >= minZ);
+    return (
+      px - size <= maxX &&
+      px + size >= minX &&
+      py <= maxY &&
+      py + size >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
+    );
   };
 }
 
-
-function MisbalancedScale(x, y, z, s) {
+export function MisbalancedScale(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng
-    justice: 0,     // Không ảnh hưởng
-    unity: -30      // Giảm đoàn kết mạnh (bất công xã hội)
+    trust: 0, // Không ảnh hưởng
+    justice: 0, // Không ảnh hưởng
+    unity: -30 // Giảm đoàn kết mạnh (bất công xã hội)
   };
   this.buffValue = -3000; // Điểm âm
 
-  var metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.2, roughness: 0.35 });
-  var darkMetalMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.25, roughness: 0.4 });
-  var goldMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.5, roughness: 0.3 });
-  var dullWoodMat = new THREE.MeshStandardMaterial({ color: 0x4b3a2a, metalness: 0.1, roughness: 0.6 });
+  var metalMat = new THREE.MeshStandardMaterial({
+    color: 0x555555,
+    metalness: 0.2,
+    roughness: 0.35
+  });
+  var darkMetalMat = new THREE.MeshStandardMaterial({
+    color: 0x333333,
+    metalness: 0.25,
+    roughness: 0.4
+  });
+  var goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.5, roughness: 0.3 });
+  var dullWoodMat = new THREE.MeshStandardMaterial({
+    color: 0x4b3a2a,
+    metalness: 0.1,
+    roughness: 0.6
+  });
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), dullWoodMat);
   base.position.set(0, 10, 0);
@@ -956,7 +1058,10 @@ function MisbalancedScale(x, y, z, s) {
   rightPan.position.set(80, 160, 0);
   this.mesh.add(leftPan, rightPan);
 
-  var person = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 40, 12), new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.7 }));
+  var person = new THREE.Mesh(
+    new THREE.CylinderGeometry(5, 5, 40, 12),
+    new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.7 })
+  );
   person.position.set(0, 22, 0);
   leftPan.add(person);
 
@@ -968,7 +1073,7 @@ function MisbalancedScale(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "misbalancedScale";
+  this.type = 'misbalancedScale';
 
   this.collider = new THREE.Box3().setFromObject(this.mesh);
 
@@ -976,7 +1081,7 @@ function MisbalancedScale(x, y, z, s) {
   this._rotateEnabled = true;
   this._rotationSpeed = 0.004;
 
-  var pointLight = new THREE.PointLight(0x5C4FDB, 0.55, 200);
+  var pointLight = new THREE.PointLight(0x5c4fdb, 0.55, 200);
   pointLight.position.set(50, 50, 50);
   this.mesh.add(pointLight);
 
@@ -999,23 +1104,25 @@ function MisbalancedScale(x, y, z, s) {
     const size = 200 * scaleFactor;
 
     return (
-      px - size <= maxX && px + size >= minX &&
-      py - size <= maxY && py + size >= minY &&
-      pz - size <= maxZ && pz + size >= minZ
+      px - size <= maxX &&
+      px + size >= minX &&
+      py - size <= maxY &&
+      py + size >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
     );
   };
 }
 
-
-function ColonialGate(x, y, z, s) {
+export function ColonialGate(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Group();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng (chướng ngại vật)
-    justice: 0,     // Không ảnh hưởng
-    unity: 0        // Không ảnh hưởng
+    trust: 0, // Không ảnh hưởng (chướng ngại vật)
+    justice: 0, // Không ảnh hưởng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 0; // Vật cản deadly
 
@@ -1043,7 +1150,7 @@ function ColonialGate(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
-  this.type = "colonialGate";
+  this.type = 'colonialGate';
   this.mesh.userData = { deadly: true };
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
@@ -1059,9 +1166,12 @@ function ColonialGate(x, y, z, s) {
     const obstMaxZ = self.mesh.position.z + depth / 2;
 
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }

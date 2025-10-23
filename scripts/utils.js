@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export function updateSoundButtonUI() {
   var soundToggleBtn = document.getElementById('sound-toggle');
   if (!soundToggleBtn) return;

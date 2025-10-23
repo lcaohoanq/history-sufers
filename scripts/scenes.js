@@ -6,10 +6,16 @@
  *
  */
 
+import {
+  ColonialRemnant,
+  CorruptedThrone,
+  MisbalancedScale,
+  PuppetManipulation
+} from '../js/object.js';
 import { Character } from './characters.js';
 import { Colors } from './colors.js';
 import { createBox, createCylinder } from './utils.js';
-
+import * as THREE from 'three';
 /**
  * A class of which the world is an instance. Initializes the game
  * and contains the main game loop.

@@ -1,3 +1,20 @@
+import * as THREE from 'three';
+import {
+  BallotBox,
+  BribeEnvelope,
+  ColonialGate,
+  ColonialRemnant,
+  CorruptedThrone,
+  HammerAndSickle,
+  MisbalancedScale,
+  PuppetManipulation,
+  ReformGears,
+  RuleOfLawState,
+  UnityHands
+} from './object.js';
+import { createBox, createGroup, sinusoid } from '../scripts/utils.js';
+import { Character } from '../scripts/characters.js';
+
 /**
  *
  * HISTORY SURFERS - BUFF SYSTEM EDITION
@@ -14,7 +31,7 @@ var Colors = {
   brown: 0x59332e,
   yellow: 0xffff00,
   olive: 0x556b2f,
-  sand: 0xc2b280,
+  sand: 0xc2b280
 };
 
 var deg2Rad = Math.PI / 180;
@@ -62,8 +79,18 @@ function updateSoundButtonUI() {
 function World() {
   var self = this;
 
-  var element, scene, camera, character, renderer, light, objects,
-    paused, keysAllowed, score, difficulty, gameOver;
+  var element,
+    scene,
+    camera,
+    character,
+    renderer,
+    light,
+    objects,
+    paused,
+    keysAllowed,
+    score,
+    difficulty,
+    gameOver;
 
   // ===== BUFF STATS =====
   var playerStats = {
@@ -154,7 +181,10 @@ function World() {
       paused = true;
     }
 
-    var left = 37, up = 38, right = 39, p = 80;
+    var left = 37,
+      up = 38,
+      right = 39,
+      p = 80;
     keysAllowed = {};
 
     document.addEventListener('keydown', function (e) {
@@ -191,7 +221,8 @@ function World() {
             }
 
             document.getElementById('variable-content').style.visibility = 'visible';
-            document.getElementById('variable-content').innerHTML = 'Game is paused. Press any key to resume.';
+            document.getElementById('variable-content').innerHTML =
+              'Game is paused. Press any key to resume.';
             AudioManager.pause();
           }
           if (key == up && !paused) character.onUpKeyPressed();
@@ -285,12 +316,16 @@ function World() {
 
   function showBuffNotification(buffs) {
     var notification = document.createElement('div');
-    notification.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 2s;';
+    notification.style.cssText =
+      'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 2s;';
 
     var messages = [];
-    if (buffs.trust !== 0) messages.push('🤝 Niềm Tin ' + (buffs.trust > 0 ? '+' : '') + buffs.trust);
-    if (buffs.justice !== 0) messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
-    if (buffs.unity !== 0) messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
+    if (buffs.trust !== 0)
+      messages.push('🤝 Niềm Tin ' + (buffs.trust > 0 ? '+' : '') + buffs.trust);
+    if (buffs.justice !== 0)
+      messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
+    if (buffs.unity !== 0)
+      messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
 
     notification.innerHTML = messages.join('<br>');
     document.body.appendChild(notification);
@@ -303,7 +338,8 @@ function World() {
     if (!document.getElementById('buff-animation-style')) {
       var style = document.createElement('style');
       style.id = 'buff-animation-style';
-      style.innerHTML = '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
+      style.innerHTML =
+        '@keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }';
       document.head.appendChild(style);
     }
   }
@@ -343,7 +379,12 @@ function World() {
 
     var variableContent = document.getElementById('variable-content');
     variableContent.style.visibility = 'visible';
-    variableContent.innerHTML = '<h2 style="color: #F44336;">GAME OVER</h2><p style="font-size: 20px;">' + message + '</p><p>Score: ' + score + '</p><p>Press down arrow to try again.</p>';
+    variableContent.innerHTML =
+      '<h2 style="color: #F44336;">GAME OVER</h2><p style="font-size: 20px;">' +
+      message +
+      '</p><p>Score: ' +
+      score +
+      '</p><p>Press down arrow to try again.</p>';
   }
 
   /**
@@ -411,7 +452,8 @@ function World() {
     if (!countdownElement) {
       countdownElement = document.createElement('div');
       countdownElement.id = 'countdown';
-      countdownElement.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
+      countdownElement.style.cssText =
+        'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; font-weight: bold; color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); z-index: 1000;';
       document.body.appendChild(countdownElement);
     }
     countdownElement.innerHTML = count;
@@ -420,7 +462,14 @@ function World() {
   function displayRaceResults(rankings) {
     var resultsHtml = '<h2>Race Results</h2><table>';
     rankings.forEach(function (rank) {
-      resultsHtml += '<tr><td>' + rank.rank + '</td><td>' + rank.playerName + '</td><td>' + rank.score + '</td></tr>';
+      resultsHtml +=
+        '<tr><td>' +
+        rank.rank +
+        '</td><td>' +
+        rank.playerName +
+        '</td><td>' +
+        rank.score +
+        '</td></tr>';
     });
     resultsHtml += '</table>';
     document.getElementById('variable-content').innerHTML = resultsHtml;
@@ -506,7 +555,7 @@ function World() {
       }
 
       score += 10;
-      document.getElementById("score").innerHTML = score;
+      document.getElementById('score').innerHTML = score;
     }
 
     renderer.render(scene, camera);
@@ -529,8 +578,7 @@ function World() {
     var rowsSinceBuff = rowCounter - lastBuffSpawn;
 
     // Random chance to spawn deadly obstacle (like train/barrier in Subway Surfer)
-    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly &&
-      Math.random() < 0.3; // 30% chance after min rows
+    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < 0.3; // 30% chance after min rows
 
     if (shouldSpawnDeadly) {
       var deadlyType = Math.random() < 0.5 ? 'gate' : 'remnant';
@@ -561,8 +609,7 @@ function World() {
     }
 
     // Random chance to spawn buff/debuff objects
-    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff &&
-      Math.random() < 0.4; // 40% chance after min rows
+    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff && Math.random() < 0.4; // 40% chance after min rows
 
     if (shouldSpawnBuff) {
       // Define buff object weights
@@ -661,8 +708,10 @@ function World() {
       if (objects[i] && typeof objects[i].collides === 'function') {
         // Only check non-deadly objects with buffs
         if (objects[i].buffs && !objects[i].mesh.userData.deadly) {
-          if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ) &&
-            !objects[i].isCollected) {
+          if (
+            objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ) &&
+            !objects[i].isCollected
+          ) {
             collidedObjects.push(i);
           }
         }

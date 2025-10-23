@@ -4,8 +4,14 @@
       href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700"
       rel="stylesheet"
     />
-    <script type="text/javascript" src="js/three.min.js"></script>
-    <script type="text/javascript" src="js/display.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.180.0/build/three.module.js"
+        }
+      }
+    </script>
+    <script type="module" src="js/display.js"></script>
     <link href="style.css" rel="stylesheet" />
   </head>
   <body>

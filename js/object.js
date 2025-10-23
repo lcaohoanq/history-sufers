@@ -1,12 +1,60 @@
-function HammerAndSickle(x, y, z, s) {
+import * as THREE from 'three';
+import { createCylinder } from '../scripts/utils.js';
+import { Colors } from '../scripts/colors.js';
+
+/**
+ * A collidable tree in the game positioned at X, Y, Z in the scene and with
+ * scale S.
+ */
+export function Tree(x, y, z, s) {
+  // Explicit binding.
+  var self = this;
+
+  // The object portrayed in the scene.
+  this.mesh = new THREE.Object3D();
+  var top = createCylinder(1, 300, 300, 4, Colors.green, 0, 1000, 0);
+  var mid = createCylinder(1, 400, 400, 4, Colors.green, 0, 800, 0);
+  var bottom = createCylinder(1, 500, 500, 4, Colors.green, 0, 500, 0);
+  var trunk = createCylinder(100, 100, 250, 32, Colors.brownDark, 0, 125, 0);
+  this.mesh.add(top);
+  this.mesh.add(mid);
+  this.mesh.add(bottom);
+  this.mesh.add(trunk);
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(s, s, s);
+  this.scale = s;
+
+  /**
+   * A method that detects whether this tree is colliding with the character,
+   * which is modelled as a box bounded by the given coordinate space.
+   */
+  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
+    var treeMinX = self.mesh.position.x - this.scale * 250;
+    var treeMaxX = self.mesh.position.x + this.scale * 250;
+    var treeMinY = self.mesh.position.y;
+    var treeMaxY = self.mesh.position.y + this.scale * 1150;
+    var treeMinZ = self.mesh.position.z - this.scale * 250;
+    var treeMaxZ = self.mesh.position.z + this.scale * 250;
+    return (
+      treeMinX <= maxX &&
+      treeMaxX >= minX &&
+      treeMinY <= maxY &&
+      treeMaxY >= minY &&
+      treeMinZ <= maxZ &&
+      treeMaxZ >= minZ
+    );
+  };
+}
+
+export function HammerAndSickle(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,      // Không ảnh hưởng
-    justice: 0,    // Không ảnh hưởng
-    unity: 0       // Không ảnh hưởng
+    trust: 0, // Không ảnh hưởng
+    justice: 0, // Không ảnh hưởng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 100; // Điểm số chung (nếu cần)
 
@@ -16,17 +64,17 @@ function HammerAndSickle(x, y, z, s) {
   // ===== BÚA (phía TRƯỚC liềm) =====
   const handleGeom = new THREE.CylinderGeometry(3.5, 3.5, 130, 12);
   const handle = new THREE.Mesh(handleGeom, goldMaterial);
-  handle.rotation.z = Math.PI * 0.30;
+  handle.rotation.z = Math.PI * 0.3;
   handle.position.set(-8, -10, 5);
 
   const headGeom = new THREE.BoxGeometry(45, 18, 20);
   const head = new THREE.Mesh(headGeom, goldMaterial);
-  head.rotation.z = Math.PI * 0.30;
+  head.rotation.z = Math.PI * 0.3;
   head.position.set(28, 22, 5);
 
   const neckGeom = new THREE.BoxGeometry(10, 20, 10);
   const neck = new THREE.Mesh(neckGeom, goldMaterial);
-  neck.rotation.z = Math.PI * 0.30;
+  neck.rotation.z = Math.PI * 0.3;
   neck.position.set(10, 5, 5);
 
   // ===== LIỀM (phía SAU búa) =====
@@ -51,7 +99,7 @@ function HammerAndSickle(x, y, z, s) {
   this.mesh.scale.set(s, s, s);
 
   this.scale = s;
-  this.type = "hammerandsickle";
+  this.type = 'hammerandsickle';
   this.isCollected = false;
   this.particles = [];
 
@@ -66,9 +114,12 @@ function HammerAndSickle(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 
@@ -100,9 +151,9 @@ function HammerAndSickle(x, y, z, s) {
     for (let i = 0; i < 18; i++) {
       let geom = new THREE.SphereGeometry(4, 8, 8);
       let mat = new THREE.MeshBasicMaterial({
-        color: 0xFFD700,
+        color: 0xffd700,
         transparent: true,
-        opacity: 1,
+        opacity: 1
       });
       let spark = new THREE.Mesh(geom, mat);
       spark.position.set(
@@ -116,16 +167,15 @@ function HammerAndSickle(x, y, z, s) {
   };
 }
 
-
-function BribeEnvelope(x, y, z, s) {
+export function BribeEnvelope(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: -15,     // Giảm niềm tin
-    justice: -20,   // Giảm công bằng
-    unity: 0        // Không ảnh hưởng
+    trust: -15, // Giảm niềm tin
+    justice: -20, // Giảm công bằng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = -2000; // Tổng điểm âm
 
@@ -133,10 +183,7 @@ function BribeEnvelope(x, y, z, s) {
 
   var moneyMat = new THREE.MeshBasicMaterial({ color: 0x2E8B57 });
 
-  var envelope = new THREE.Mesh(
-    new THREE.BoxGeometry(120, 80, 6, 1, 1, 1),
-    paperMat
-  );
+  var envelope = new THREE.Mesh(new THREE.BoxGeometry(120, 80, 6, 1, 1, 1), paperMat);
   envelope.position.set(0, 0, 0);
 
   var flapShape = new THREE.Shape();
@@ -150,10 +197,7 @@ function BribeEnvelope(x, y, z, s) {
   flap.position.set(0, 20, 3.5);
   flap.rotation.x = -Math.PI * 0.5;
 
-  var money = new THREE.Mesh(
-    new THREE.BoxGeometry(100, 65, 3),
-    moneyMat
-  );
+  var money = new THREE.Mesh(new THREE.BoxGeometry(100, 65, 3), moneyMat);
   money.position.set(0, 5, -3.2);
   money.rotation.z = Math.PI * 0.02;
 
@@ -166,7 +210,7 @@ function BribeEnvelope(x, y, z, s) {
   this.mesh.add(envelope, money, flap, crease);
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "bribeEnvelope";
+  this.type = 'bribeEnvelope';
   this.scale = s;
   this.isCollected = false;
 
@@ -187,23 +231,25 @@ function BribeEnvelope(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function BallotBox(x, y, z, s) {
+export function BallotBox(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 25,      // Tăng niềm tin
-    justice: 0,     // Không ảnh hưởng
-    unity: 0        // Không ảnh hưởng
+    trust: 25, // Tăng niềm tin
+    justice: 0, // Không ảnh hưởng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 500; // Điểm dương
 
@@ -232,7 +278,7 @@ function BallotBox(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
-  this.type = "ballotbox";
+  this.type = 'ballotbox';
   this.isCollected = false;
 
   this.update = function () {
@@ -257,23 +303,25 @@ function BallotBox(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function RuleOfLawState(x, y, z, s) {
+export function RuleOfLawState(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 30,      // Tăng niềm tin mạnh
-    justice: 35,    // Tăng công bằng mạnh
-    unity: 20       // Tăng đoàn kết
+    trust: 30, // Tăng niềm tin mạnh
+    justice: 35, // Tăng công bằng mạnh
+    unity: 20 // Tăng đoàn kết
   };
   this.buffValue = 2000; // Điểm dương cao nhất
 
@@ -322,8 +370,10 @@ function RuleOfLawState(x, y, z, s) {
     var len = Math.hypot(x2 - x1, y2 - y1, z2 - z1);
     var cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, len, 8), metalMat);
     cyl.position.set((x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2);
-    cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1).normalize());
+    cyl.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(x2 - x1, y2 - y1, z2 - z1).normalize()
+    );
     return cyl;
   }
   this.mesh.add(chainBetween(-70, 200, 0, -70, 180, 0));
@@ -332,7 +382,7 @@ function RuleOfLawState(x, y, z, s) {
   function createThinStar(points, outer, inner, material, depth) {
     var shape = new THREE.Shape();
     for (var i = 0; i < 2 * points; i++) {
-      var r = (i % 2 === 0) ? outer : inner;
+      var r = i % 2 === 0 ? outer : inner;
       var a = (i * Math.PI) / points - Math.PI / 2;
       var x = Math.cos(a) * r;
       var y = Math.sin(a) * r;
@@ -350,8 +400,10 @@ function RuleOfLawState(x, y, z, s) {
 
   var bookGroup = new THREE.Object3D();
   var book = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 40), bookMat);
-  var stripe = new THREE.Mesh(new THREE.BoxGeometry(56, 2, 6),
-    new THREE.MeshStandardMaterial({ color: 0x8B0000 }));
+  var stripe = new THREE.Mesh(
+    new THREE.BoxGeometry(56, 2, 6),
+    new THREE.MeshStandardMaterial({ color: 0x8b0000 })
+  );
   book.position.set(0, 0, 0);
   stripe.position.set(0, 2, 12);
   bookGroup.position.set(0, 34, 0);
@@ -366,7 +418,7 @@ function RuleOfLawState(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
-  this.type = "ruleOfLawState";
+  this.type = 'ruleOfLawState';
 
   this._rotateEnabled = true;
   this._rotationSpeed = 0.005;
@@ -397,23 +449,25 @@ function RuleOfLawState(x, y, z, s) {
     var obstMaxZ = self.mesh.position.z + scaleFactor * 60;
 
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function ReformGears(x, y, z, s) {
+export function ReformGears(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng
-    justice: 30,    // Tăng công bằng
-    unity: 0        // Không ảnh hưởng
+    trust: 0, // Không ảnh hưởng
+    justice: 30, // Tăng công bằng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 30; // Điểm dương
 
@@ -432,8 +486,15 @@ function ReformGears(x, y, z, s) {
 
     for (var i = 0; i < teeth; i++) {
       var angle = (i / teeth) * Math.PI * 2;
-      var tooth = new THREE.Mesh(new THREE.BoxGeometry(radius * 0.25, thickness * 1.2, radius * 0.10), colorMat);
-      tooth.position.set(Math.cos(angle) * (radius - radius * 0.01), 0, Math.sin(angle) * (radius - radius * 0.01));
+      var tooth = new THREE.Mesh(
+        new THREE.BoxGeometry(radius * 0.25, thickness * 1.2, radius * 0.1),
+        colorMat
+      );
+      tooth.position.set(
+        Math.cos(angle) * (radius - radius * 0.01),
+        0,
+        Math.sin(angle) * (radius - radius * 0.01)
+      );
       tooth.rotation.y = angle;
       g.add(tooth);
     }
@@ -448,9 +509,15 @@ function ReformGears(x, y, z, s) {
   gearB.position.set(0, 0, -50);
   gearC.position.set(90, 0, 10);
 
-  var pivotA = new THREE.Object3D(); pivotA.add(gearA); pivotA.position.copy(gearA.position);
-  var pivotB = new THREE.Object3D(); pivotB.add(gearB); pivotB.position.copy(gearB.position);
-  var pivotC = new THREE.Object3D(); pivotC.add(gearC); pivotC.position.copy(gearC.position);
+  var pivotA = new THREE.Object3D();
+  pivotA.add(gearA);
+  pivotA.position.copy(gearA.position);
+  var pivotB = new THREE.Object3D();
+  pivotB.add(gearB);
+  pivotB.position.copy(gearB.position);
+  var pivotC = new THREE.Object3D();
+  pivotC.add(gearC);
+  pivotC.position.copy(gearC.position);
 
   gearA.position.set(0, 0, 0);
   gearB.position.set(0, 0, 0);
@@ -458,9 +525,15 @@ function ReformGears(x, y, z, s) {
 
   gearsGroup.add(pivotA, pivotB, pivotC);
 
-  var hubA = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat); hubA.position.copy(pivotA.position); gearsGroup.add(hubA);
-  var hubB = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat); hubB.position.copy(pivotB.position); gearsGroup.add(hubB);
-  var hubC = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat); hubC.position.copy(pivotC.position); gearsGroup.add(hubC);
+  var hubA = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
+  hubA.position.copy(pivotA.position);
+  gearsGroup.add(hubA);
+  var hubB = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
+  hubB.position.copy(pivotB.position);
+  gearsGroup.add(hubB);
+  var hubC = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
+  hubC.position.copy(pivotC.position);
+  gearsGroup.add(hubC);
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
@@ -468,12 +541,12 @@ function ReformGears(x, y, z, s) {
   // removed point light - flat materials
 
   this.scale = s;
-  this.type = "reformgears";
+  this.type = 'reformgears';
   this._gearSpeed = 0.015;
   this._time = 0;
 
   this.update = function (delta) {
-    this._time += (delta !== undefined) ? delta : 0.016;
+    this._time += delta !== undefined ? delta : 0.016;
     var speedB = this._gearSpeed;
     pivotB.rotation.y += speedB;
     pivotA.rotation.y -= speedB * (28 / 48);
@@ -491,23 +564,25 @@ function ReformGears(x, y, z, s) {
     var obstMaxZ = self.mesh.position.z + scaleFactor * 150;
 
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function UnityHands(x, y, z, s) {
+export function UnityHands(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 20,      // Tăng niềm tin
-    justice: 0,     // Không ảnh hưởng
-    unity: 35       // Tăng đoàn kết mạnh
+    trust: 20, // Tăng niềm tin
+    justice: 0, // Không ảnh hưởng
+    unity: 35 // Tăng đoàn kết mạnh
   };
   this.buffValue = 1000; // Điểm dương
 
@@ -577,7 +652,7 @@ function UnityHands(x, y, z, s) {
 
   this.mesh.position.set(x, y + 100, z);
   this.mesh.scale.set(s * 1.5, s * 1.5, s * 1.5);
-  this.type = "unityhands";
+  this.type = 'unityhands';
 
   this.mesh.rotation.x = Math.PI / 4;
   this.mesh.rotation.y = Math.PI;
@@ -601,22 +676,24 @@ function UnityHands(x, y, z, s) {
     var obstMinZ = self.mesh.position.z - scaleFactor * 100;
     var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }
 
-
-function CorruptedThrone(x, y, z, s) {
+export function CorruptedThrone(x, y, z, s) {
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: -30,     // Giảm niềm tin mạnh
-    justice: -25,   // Giảm công bằng
-    unity: 0        // Không ảnh hưởng
+    trust: -30, // Giảm niềm tin mạnh
+    justice: -25, // Giảm công bằng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = -5500; // Điểm âm cao
 
@@ -635,7 +712,9 @@ function CorruptedThrone(x, y, z, s) {
   armR.position.set(50 * SCALE, 40 * SCALE, 0);
 
   const leg1 = new THREE.Mesh(new THREE.BoxGeometry(15 * SCALE, 50 * SCALE, 15 * SCALE), woodMat);
-  const leg2 = leg1.clone(), leg3 = leg1.clone(), leg4 = leg1.clone();
+  const leg2 = leg1.clone(),
+    leg3 = leg1.clone(),
+    leg4 = leg1.clone();
   leg1.position.set(-30 * SCALE, 10 * SCALE, 30 * SCALE);
   leg2.position.set(30 * SCALE, 10 * SCALE, 30 * SCALE);
   leg3.position.set(-30 * SCALE, 10 * SCALE, -30 * SCALE);
@@ -660,7 +739,10 @@ function CorruptedThrone(x, y, z, s) {
   );
 
   function createVine(pos, rot) {
-    const vine = new THREE.Mesh(new THREE.CylinderGeometry(2 * SCALE, 2 * SCALE, 100 * SCALE, 8), vineMat);
+    const vine = new THREE.Mesh(
+      new THREE.CylinderGeometry(2 * SCALE, 2 * SCALE, 100 * SCALE, 8),
+      vineMat
+    );
     vine.position.set(pos.x * SCALE, pos.y * SCALE, pos.z * SCALE);
     vine.rotation.set(rot.x, rot.y, rot.z);
     return vine;
@@ -672,7 +754,7 @@ function CorruptedThrone(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "corruptedThrone";
+  this.type = 'corruptedThrone';
   this.scale = s;
 
   this.update = function () {
@@ -686,22 +768,24 @@ function CorruptedThrone(x, y, z, s) {
     const py = this.mesh.position.y;
     const pz = this.mesh.position.z;
     return (
-      px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size * 2 >= minY &&
-      pz - size <= maxZ && pz + size >= minZ
+      px - size <= maxX &&
+      px + size >= minX &&
+      py <= maxY &&
+      py + size * 2 >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
     );
   };
 }
 
-
-function ColonialRemnant(x, y, z, s) {
+export function ColonialRemnant(x, y, z, s) {
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng trực tiếp
-    justice: 0,     // Không ảnh hưởng trực tiếp
-    unity: 0        // Không ảnh hưởng (hoặc có thể set âm nếu muốn)
+    trust: 0, // Không ảnh hưởng trực tiếp
+    justice: 0, // Không ảnh hưởng trực tiếp
+    unity: 0 // Không ảnh hưởng (hoặc có thể set âm nếu muốn)
   };
   this.buffValue = 0; // Vật phẩm trang trí/lịch sử
 
@@ -736,14 +820,17 @@ function ColonialRemnant(x, y, z, s) {
   flag.rotation.y = Math.PI / 2;
   this.mesh.add(flag);
 
-  const rope = new THREE.Mesh(new THREE.CylinderGeometry(1.2 * SCALE, 1.2 * SCALE, 60 * SCALE, 8), ironMat);
+  const rope = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.2 * SCALE, 1.2 * SCALE, 60 * SCALE, 8),
+    ironMat
+  );
   rope.rotation.z = Math.PI / 2;
   rope.position.set(12 * SCALE, 80 * SCALE, 0);
   this.mesh.add(rope);
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "colonialRemnant";
+  this.type = 'colonialRemnant';
 
   this.update = function () {
     flag.rotation.z = Math.sin(Date.now() * 0.002) * 0.1;
@@ -759,22 +846,24 @@ function ColonialRemnant(x, y, z, s) {
     const py = this.mesh.position.y;
     const pz = this.mesh.position.z;
     return (
-      px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size * 2 >= minY &&
-      pz - size <= maxZ && pz + size >= minZ
+      px - size <= maxX &&
+      px + size >= minX &&
+      py <= maxY &&
+      py + size * 2 >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
     );
   };
 }
 
-
-function PuppetManipulation(x, y, z, s) {
+export function PuppetManipulation(x, y, z, s) {
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: -25,     // Giảm niềm tin
-    justice: 0,     // Không ảnh hưởng
-    unity: -20      // Giảm đoàn kết
+    trust: -25, // Giảm niềm tin
+    justice: 0, // Không ảnh hưởng
+    unity: -20 // Giảm đoàn kết
   };
   this.buffValue = -4500; // Điểm âm
 
@@ -831,7 +920,7 @@ function PuppetManipulation(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "puppetManipulation";
+  this.type = 'puppetManipulation';
 
   this._rotationSpeed = 0.004;
   this.update = function () {
@@ -849,22 +938,26 @@ function PuppetManipulation(x, y, z, s) {
     let px = this.mesh.position.x;
     let py = this.mesh.position.y;
     let pz = this.mesh.position.z;
-    return (px - size <= maxX && px + size >= minX &&
-      py <= maxY && py + size >= minY &&
-      pz - size <= maxZ && pz + size >= minZ);
+    return (
+      px - size <= maxX &&
+      px + size >= minX &&
+      py <= maxY &&
+      py + size >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
+    );
   };
 }
 
-
-function MisbalancedScale(x, y, z, s) {
+export function MisbalancedScale(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng
-    justice: 0,     // Không ảnh hưởng
-    unity: -30      // Giảm đoàn kết mạnh (bất công xã hội)
+    trust: 0, // Không ảnh hưởng
+    justice: 0, // Không ảnh hưởng
+    unity: -30 // Giảm đoàn kết mạnh (bất công xã hội)
   };
   this.buffValue = -3000; // Điểm âm
 
@@ -923,7 +1016,7 @@ function MisbalancedScale(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.type = "misbalancedScale";
+  this.type = 'misbalancedScale';
 
   this.collider = new THREE.Box3().setFromObject(this.mesh);
 
@@ -952,23 +1045,25 @@ function MisbalancedScale(x, y, z, s) {
     const size = 200 * scaleFactor;
 
     return (
-      px - size <= maxX && px + size >= minX &&
-      py - size <= maxY && py + size >= minY &&
-      pz - size <= maxZ && pz + size >= minZ
+      px - size <= maxX &&
+      px + size >= minX &&
+      py - size <= maxY &&
+      py + size >= minY &&
+      pz - size <= maxZ &&
+      pz + size >= minZ
     );
   };
 }
 
-
-function ColonialGate(x, y, z, s) {
+export function ColonialGate(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Group();
 
   // ===== BUFF SYSTEM =====
   this.buffs = {
-    trust: 0,       // Không ảnh hưởng (chướng ngại vật)
-    justice: 0,     // Không ảnh hưởng
-    unity: 0        // Không ảnh hưởng
+    trust: 0, // Không ảnh hưởng (chướng ngại vật)
+    justice: 0, // Không ảnh hưởng
+    unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 0; // Vật cản deadly
 
@@ -996,7 +1091,7 @@ function ColonialGate(x, y, z, s) {
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
-  this.type = "colonialGate";
+  this.type = 'colonialGate';
   this.mesh.userData = { deadly: true };
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
@@ -1012,9 +1107,12 @@ function ColonialGate(x, y, z, s) {
     const obstMaxZ = self.mesh.position.z + depth / 2;
 
     return (
-      obstMinX <= maxX && obstMaxX >= minX &&
-      obstMinY <= maxY && obstMaxY >= minY &&
-      obstMinZ <= maxZ && obstMaxZ >= minZ
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
     );
   };
 }

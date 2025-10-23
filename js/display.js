@@ -9,6 +9,8 @@
  *
  */
 
+import * as THREE from 'three';
+
 /**
  * Constants used in this game.
  */

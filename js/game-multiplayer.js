@@ -23,6 +23,9 @@ import { Character } from '../scripts/characters.js';
  *
  */
 
+import { Character } from "../scripts/characters.js";
+import { createBox } from "../scripts/utils.js";
+
 var Colors = {
   black: 0x000000,
   brown: 0x59332e,
@@ -595,7 +598,7 @@ function World() {
       } else {
         // Spawn remnant (single lane block)
         var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
-        var remnant = new ColonialRemnant(lane * 800, -400, position, 10);
+        var remnant = new ColonialRemnant(lane * 800, -400, position, 5);
         remnant.mesh.userData = { deadly: true };
         objects.push(remnant);
         scene.add(remnant.mesh);

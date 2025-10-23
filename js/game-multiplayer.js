@@ -470,19 +470,19 @@ function World() {
       // Tăng tốc theo mốc điểm
       if (score > 25000) {
         gameSpeed = 150;
-        minRowsBetweenDeadly = 3;
-        deadlySpawnChance = 0.6;
+        minRowsBetweenDeadly = 5;
+        deadlySpawnChance = 0.5;
       }
       if (score > 50000) {
-        gameSpeed = 200;
-        minRowsBetweenDeadly = 2;
-        deadlySpawnChance = 0.75;
+        gameSpeed = 175;
+        minRowsBetweenDeadly = 3;
+        deadlySpawnChance = 0.6;
         multiLaneDeadlyChance = 0.7;
       }
       if (score > 100000) {
-        gameSpeed = 250;
-        minRowsBetweenDeadly = 1;
-        deadlySpawnChance = 0.85;
+        gameSpeed = 200;
+        minRowsBetweenDeadly = 2;
+        deadlySpawnChance = 0.75;
         multiLaneDeadlyChance = 0.9;
       }
 

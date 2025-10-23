@@ -6,16 +6,20 @@
  *
  */
 
+import * as THREE from 'three';
 import {
   ColonialRemnant,
   CorruptedThrone,
+  HammerAndSickle,
   MisbalancedScale,
-  PuppetManipulation
+  PuppetManipulation,
+  Tree
 } from '../js/object.js';
 import { Character } from './characters.js';
 import { Colors } from './colors.js';
-import { createBox, createCylinder } from './utils.js';
-import * as THREE from 'three';
+import { GAME_CONSTANTS, DUONG_CHAY } from './constants.js';
+import { createBox } from './utils.js';
+
 /**
  * A class of which the world is an instance. Initializes the game
  * and contains the main game loop.
@@ -85,8 +89,11 @@ export function World() {
     character = new Character();
     scene.add(character.element);
 
-    var ground = createBox(3000, 20, 120000, Colors.sand, 0, -400, -60000);
-    scene.add(ground);
+    scene.add(DUONG_CHAY);
+
+    DUONG_CHAY.material.map.wrapS = THREE.RepeatWrapping;
+    DUONG_CHAY.material.map.wrapT = THREE.RepeatWrapping;
+    DUONG_CHAY.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
 
     objects = [];
     treePresenceProb = 0.2;
@@ -116,7 +123,7 @@ export function World() {
           paused = false;
           character.onUnpause();
           document.getElementById('variable-content').style.visibility = 'hidden';
-          document.getElementById('controls').style.display = 'none';
+          // document.getElementById('controls').style.display = 'none';
 
           // Start playing background music when game starts
           AudioManager.play();
@@ -214,6 +221,8 @@ export function World() {
       objects.forEach(function (object) {
         object.mesh.position.z += 100;
       });
+
+      DUONG_CHAY.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
 
       // Remove trees that are outside of the world.
       objects = objects.filter(function (object) {
@@ -324,9 +333,16 @@ export function World() {
    *
    */
   function createRowOfTrees(position, probability, minScale, maxScale) {
-    for (var lane = -1; lane < 2; lane++) {
+    for (var lane = GAME_CONSTANTS.START_LANE; lane < GAME_CONSTANTS.END_LANE; lane++) {
       var randomNumber = Math.random();
-      if (randomNumber < probability) {
+      if (lane == -1 || lane == 0 || lane == 1) {
+        if (randomNumber < probability) {
+          var scale = minScale + (10 - minScale) * Math.random();
+          var object = new HammerAndSickle(lane * 800, -400, position, scale);
+          objects.push(object);
+          scene.add(object.mesh);
+        }
+      } else {
         var scale = minScale + (maxScale - minScale) * Math.random();
         var tree = new Tree(lane * 800, -400, position, scale);
         objects.push(tree);
@@ -461,7 +477,7 @@ export function WorldSingle() {
           paused = false;
           character.onUnpause();
           document.getElementById('variable-content').style.visibility = 'hidden';
-          document.getElementById('controls').style.display = 'none';
+          // document.getElementById('controls').style.display = 'none';
 
           // Start playing background music when game starts
           AudioManager.play();
@@ -736,7 +752,7 @@ export function WorldSingle() {
     // Available obstacle types from object.js
     const obstacleTypes = [ColonialRemnant, CorruptedThrone, PuppetManipulation, MisbalancedScale];
 
-    for (var lane = -1; lane < 2; lane++) {
+    for (var lane = GAME_CONSTANTS.START_LANE; lane < GAME_CONSTANTS.END_LANE; lane++) {
       var randomNumber = Math.random();
       if (randomNumber < probability) {
         var scale = minScale + (maxScale - minScale) * Math.random();

@@ -12,7 +12,7 @@ import {
   RuleOfLawState,
   UnityHands
 } from './object.js';
-import { createBox, createGroup, sinusoid } from '../scripts/utils.js';
+import { createBox, createGroup, sinusoid, updateSoundButtonUI } from '../scripts/utils.js';
 import { Character } from '../scripts/characters.js';
 
 /**
@@ -22,9 +22,6 @@ import { Character } from '../scripts/characters.js';
  * Enhanced game with trust/justice/unity mechanics
  *
  */
-
-import { Character } from "../scripts/characters.js";
-import { createBox } from "../scripts/utils.js";
 
 var Colors = {
   black: 0x000000,
@@ -60,19 +57,6 @@ window.addEventListener('load', function () {
 
   new World();
 });
-
-function updateSoundButtonUI() {
-  var soundToggleBtn = document.getElementById('sound-toggle');
-  if (!soundToggleBtn) return;
-  var isMuted = AudioManager.getMuteState();
-  soundToggleBtn.innerHTML = isMuted ? '🔇' : '🔊';
-  if (isMuted) {
-    soundToggleBtn.classList.add('muted');
-  } else {
-    soundToggleBtn.classList.remove('muted');
-  }
-}
-
 /**
  * THE WORLD WITH BUFF SYSTEM
  */

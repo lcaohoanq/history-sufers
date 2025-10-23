@@ -75,6 +75,37 @@ export function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
   return box;
 }
 
+export function createBoxTexture(dx, dy, dz, color, x, y, z, notFlatShading, texturePath) {
+  const geom = new THREE.BoxGeometry(dx, dy, dz);
+
+  let mat;
+
+  if (texturePath) {
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load(texturePath);
+
+    // Repeat the texture across the surface
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(dx / 500, dz / 500); // tweak this ratio for scale
+
+    mat = new THREE.MeshPhongMaterial({
+      map: texture
+    });
+  } else {
+    mat = new THREE.MeshPhongMaterial({
+      color: color,
+      flatShading: notFlatShading != true
+    });
+  }
+
+  const box = new THREE.Mesh(geom, mat);
+  box.castShadow = true;
+  box.receiveShadow = true;
+  box.position.set(x, y, z);
+  return box;
+}
+
 /**
  * Create a plane mesh with a canvas texture containing text.
  * Useful for labels on clothing without loading font assets.

@@ -59,7 +59,7 @@ export function HammerAndSickle(x, y, z, s) {
   this.buffValue = 100; // Điểm số chung (nếu cần)
 
   // ===== GOLD MATERIAL (flat 2D color) =====
-  const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+  const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
 
   // ===== BÚA (phía TRƯỚC liềm) =====
   const handleGeom = new THREE.CylinderGeometry(3.5, 3.5, 130, 12);
@@ -179,9 +179,9 @@ export function BribeEnvelope(x, y, z, s) {
   };
   this.buffValue = -2000; // Tổng điểm âm
 
-  var paperMat = new THREE.MeshBasicMaterial({ color: 0xE5D3B3 });
+  var paperMat = new THREE.MeshBasicMaterial({ color: 0xe5d3b3 });
 
-  var moneyMat = new THREE.MeshBasicMaterial({ color: 0x2E8B57 });
+  var moneyMat = new THREE.MeshBasicMaterial({ color: 0x2e8b57 });
 
   var envelope = new THREE.Mesh(new THREE.BoxGeometry(120, 80, 6, 1, 1, 1), paperMat);
   envelope.position.set(0, 0, 0);
@@ -202,7 +202,7 @@ export function BribeEnvelope(x, y, z, s) {
   money.rotation.z = Math.PI * 0.02;
 
   var creaseGeom = new THREE.PlaneGeometry(120, 0.8);
-  var crease = new THREE.Mesh(creaseGeom, new THREE.MeshBasicMaterial({ color: 0xD0C1A2 }));
+  var crease = new THREE.Mesh(creaseGeom, new THREE.MeshBasicMaterial({ color: 0xd0c1a2 }));
   crease.position.set(0, 0, 3.2);
 
   // removed point light - flat colors
@@ -253,11 +253,11 @@ export function BallotBox(x, y, z, s) {
   };
   this.buffValue = 500; // Điểm dương
 
-  var boxMaterial = new THREE.MeshBasicMaterial({ color: 0x278D3E });
+  var boxMaterial = new THREE.MeshBasicMaterial({ color: 0x278d3e });
 
   var slotMaterial = new THREE.MeshBasicMaterial({ color: 0x222222 });
 
-  var ballotMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+  var ballotMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
 
   var boxGeometry = new THREE.BoxGeometry(200, 150, 200);
   var box = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -326,9 +326,9 @@ export function RuleOfLawState(x, y, z, s) {
   this.buffValue = 2000; // Điểm dương cao nhất
 
   var metalMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
-  var goldMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
-  var woodMat = new THREE.MeshBasicMaterial({ color: 0x8B5A2B });
-  var bookMat = new THREE.MeshBasicMaterial({ color: 0xF3E5AB });
+  var goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+  var woodMat = new THREE.MeshBasicMaterial({ color: 0x8b5a2b });
+  var bookMat = new THREE.MeshBasicMaterial({ color: 0xf3e5ab });
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), woodMat);
   base.position.set(0, 10, 0);
@@ -472,7 +472,7 @@ export function ReformGears(x, y, z, s) {
   this.buffValue = 30; // Điểm dương
 
   var metalMat = new THREE.MeshBasicMaterial({ color: 0x707070 });
-  var goldMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+  var goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
 
   var gearsGroup = new THREE.Group();
   gearsGroup.position.set(0, 120, 0);
@@ -586,8 +586,8 @@ export function UnityHands(x, y, z, s) {
   };
   this.buffValue = 1000; // Điểm dương
 
-  var skinMat = new THREE.MeshBasicMaterial({ color: 0xF2D2B6 });
-  var bookMat = new THREE.MeshBasicMaterial({ color: 0x3E2723 });
+  var skinMat = new THREE.MeshBasicMaterial({ color: 0xf2d2b6 });
+  var bookMat = new THREE.MeshBasicMaterial({ color: 0x3e2723 });
   var gearMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
   var hoeMat = new THREE.MeshBasicMaterial({ color: 0x665544 });
 
@@ -868,7 +868,11 @@ export function PuppetManipulation(x, y, z, s) {
   this.buffValue = -4500; // Điểm âm
 
   const woodMat = new THREE.MeshBasicMaterial({ color: 0x8b5a2b });
-  const stringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+  const stringMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.7
+  });
 
   const body = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 80, 16), woodMat);
   body.position.set(0, 80, 0);
@@ -963,7 +967,7 @@ export function MisbalancedScale(x, y, z, s) {
 
   var metalMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
   var darkMetalMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-  var goldMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37 });
+  var goldMat = new THREE.MeshBasicMaterial({ color: 0xd4af37 });
   var dullWoodMat = new THREE.MeshBasicMaterial({ color: 0x4b3a2a });
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), dullWoodMat);
@@ -1004,7 +1008,10 @@ export function MisbalancedScale(x, y, z, s) {
   rightPan.position.set(80, 160, 0);
   this.mesh.add(leftPan, rightPan);
 
-  var person = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 40, 12), new THREE.MeshBasicMaterial({ color: 0xdddddd }));
+  var person = new THREE.Mesh(
+    new THREE.CylinderGeometry(5, 5, 40, 12),
+    new THREE.MeshBasicMaterial({ color: 0xdddddd })
+  );
   person.position.set(0, 22, 0);
   leftPan.add(person);
 

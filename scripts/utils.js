@@ -13,22 +13,6 @@ export function updateSoundButtonUI() {
 }
 
 /**
- *
- * IMPORTANT OBJECTS
- *
- * The character and environmental objects in the game.
- *
- */
-export function sinusoid(frequency, minimum, maximum, phase, time) {
-  var amplitude = 0.5 * (maximum - minimum);
-  var angularFrequency = 2 * Math.PI * frequency;
-  var phaseRadians = (phase * Math.PI) / 180;
-  var offset = amplitude * Math.sin(angularFrequency * time + phaseRadians);
-  var average = (minimum + maximum) / 2;
-  return average + offset;
-}
-
-/**
  * Utility function for generating current values of sinusoidally
  * varying variables.
  *

@@ -1,3 +1,4 @@
+import { SKINS } from './skins.js';
 import { createBox, createGroup, createTextLabel, sinusoid } from './utils.js';
 
 const deg2Rad = Math.PI / 180;
@@ -9,11 +10,54 @@ export function Character() {
   // Explicit binding of this even in changing contexts.
   var self = this;
 
+  // Define multiple skins
+  this.skins = SKINS;
+
+  // Current skin index
+  this.currentSkinIndex = 0;
+
+  // Apply the current skin colors
+  this.applySkin = function (skinIndex) {
+    if (skinIndex >= 0 && skinIndex < self.skins.length) {
+      self.currentSkinIndex = skinIndex;
+      var skin = self.skins[skinIndex];
+
+      self.skinColor = skin.skinColor;
+      self.hairColor = skin.hairColor;
+      self.shirtColor = skin.shirtColor;
+      self.shortsColor = skin.shortsColor;
+
+      // Update colors if character is already built
+      if (self.face) {
+        self.face.material.color.setHex(self.skinColor);
+        self.hair.material.color.setHex(self.hairColor);
+        self.torso.material.color.setHex(self.shirtColor);
+        self.leftArm.children[0].material.color.setHex(self.skinColor);
+        self.rightArm.children[0].material.color.setHex(self.skinColor);
+        self.leftLeg.children[0].material.color.setHex(self.shortsColor);
+        self.rightLeg.children[0].material.color.setHex(self.shortsColor);
+        self.leftLowerArm.children[0].material.color.setHex(self.skinColor);
+        self.rightLowerArm.children[0].material.color.setHex(self.skinColor);
+        self.leftLowerLeg.children[0].material.color.setHex(self.skinColor);
+        self.rightLowerLeg.children[0].material.color.setHex(self.skinColor);
+      }
+    }
+  };
+
+  // Method to cycle to next skin
+  this.nextSkin = function () {
+    var nextIndex = (self.currentSkinIndex + 1) % self.skins.length;
+    self.applySkin(nextIndex);
+  };
+
+  // Method to cycle to previous skin
+  this.previousSkin = function () {
+    var prevIndex = (self.currentSkinIndex - 1 + self.skins.length) % self.skins.length;
+    self.applySkin(prevIndex);
+  };
+
   // Character defaults that don't change throughout the game.
-  this.skinColor = 0xead8c4;
-  this.hairColor = 0x084d9a;
-  this.shirtColor = 0xea6d22;
-  this.shortsColor = 0x4eb146;
+  this.applySkin(0); // Apply default skin
   this.jumpDuration = 0.6;
   this.jumpHeight = 2000;
 

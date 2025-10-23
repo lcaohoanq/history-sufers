@@ -152,6 +152,10 @@ export function WorldMap() {
             const mode = cameraModes[currentCameraIndex];
             setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
           }
+
+          if (key === KEYCODE.P && !paused) {
+            character.nextSkin();
+          }
         }
       }
     });

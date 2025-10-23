@@ -104,10 +104,10 @@ function Character() {
   var self = this;
 
   // Character defaults.
-  this.skinColor = Colors.brown;
-  this.hairColor = Colors.black;
-  this.shirtColor = Colors.yellow;
-  this.shortsColor = Colors.olive;
+  ((this.skinColor = 0xf5d5b8),
+    (this.hairColor = 0x2c3e50),
+    (this.shirtColor = 0x3498db),
+    (this.shortsColor = 0x34495e));
   this.stepFreq = 2;
 
   // Initialize the character.

@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 // Helper functions for creating 3D objects
 // Shared across the application
 var Colors = {
@@ -12,7 +14,7 @@ var Colors = {
   grey: 0x696969,
   sand: 0xc2b280,
   brownDark: 0x23190f,
-  green: 0x669900,
+  green: 0x669900
 };
 
 function createGroup(x, y, z) {
@@ -25,7 +27,7 @@ function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
   var geom = new THREE.BoxGeometry(dx, dy, dz);
   var mat = new THREE.MeshPhongMaterial({
     color: color,
-    flatShading: notFlatShading != true,
+    flatShading: notFlatShading != true
   });
   var box = new THREE.Mesh(geom, mat);
   box.castShadow = true;
@@ -34,25 +36,11 @@ function createBox(dx, dy, dz, color, x, y, z, notFlatShading) {
   return box;
 }
 
-function createCylinder(
-  radiusTop,
-  radiusBottom,
-  height,
-  radialSegments,
-  color,
-  x,
-  y,
-  z
-) {
-  var geom = new THREE.CylinderGeometry(
-    radiusTop,
-    radiusBottom,
-    height,
-    radialSegments
-  );
+function createCylinder(radiusTop, radiusBottom, height, radialSegments, color, x, y, z) {
+  var geom = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
   var mat = new THREE.MeshPhongMaterial({
     color: color,
-    flatShading: true,
+    flatShading: true
   });
   var cylinder = new THREE.Mesh(geom, mat);
   cylinder.castShadow = true;

@@ -9,12 +9,18 @@ import {
   PuppetManipulation,
   ReformGears,
   RuleOfLawState,
+  Tree,
   UnityHands
 } from '../js/object.js';
 import * as THREE from 'three';
 // Store all renderers, scenes, cameras, and objects
 const displays = [];
 const objectTypes = [
+  {
+    name: 'Default Tree',
+    constructor: Tree,
+    options: { y: 0, scale: 0.5 }
+  },
   {
     name: 'HammerAndSickle',
     constructor: HammerAndSickle,

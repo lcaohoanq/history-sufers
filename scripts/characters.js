@@ -1,22 +1,6 @@
-import { createBox, createGroup, createTextLabel } from './utils.js';
+import { createBox, createGroup, createTextLabel, sinusoid } from './utils.js';
 
 const deg2Rad = Math.PI / 180;
-
-/**
- *
- * IMPORTANT OBJECTS
- *
- * The character and environmental objects in the game.
- *
- */
-function sinusoid(frequency, minimum, maximum, phase, time) {
-  var amplitude = 0.5 * (maximum - minimum);
-  var angularFrequency = 2 * Math.PI * frequency;
-  var phaseRadians = (phase * Math.PI) / 180;
-  var offset = amplitude * Math.sin(angularFrequency * time + phaseRadians);
-  var average = (minimum + maximum) / 2;
-  return average + offset;
-}
 
 /**
  * The player's character in the game.

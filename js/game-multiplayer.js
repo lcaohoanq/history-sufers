@@ -14,6 +14,8 @@ import {
 } from './object.js';
 import { createBox, createGroup, sinusoid, updateSoundButtonUI } from '../scripts/utils.js';
 import { Character } from '../scripts/characters.js';
+import { CAMERA_SETTINGS } from '../scripts/constants.js';
+import { KEYCODE } from '../scripts/keycode.js';
 
 /**
  *
@@ -33,6 +35,8 @@ var Colors = {
 
 var deg2Rad = Math.PI / 180;
 var networkManager = null;
+let cameraModes = ['NORMAL', 'NGANG', 'LIVE', 'HARD_CORE'];
+let currentCameraIndex = 0;
 
 window.addEventListener('load', function () {
   AudioManager.init();
@@ -133,9 +137,17 @@ function World() {
     var fogDistance = 40000;
     scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
 
+    // Initialize the camera with field of view, aspect ratio,
+    // near plane, and far plane.
     camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
-    camera.position.set(0, 1500, -2000);
+    // Initial camera position
+    camera.position.set(CAMERA_SETTINGS.NGANG.x, CAMERA_SETTINGS.NGANG.y, CAMERA_SETTINGS.NGANG.z);
     camera.lookAt(new THREE.Vector3(0, 600, -5000));
+
+    // After 2s, transition back to NORMAL
+    setTimeout(() => {
+      setCameraPosition(CAMERA_SETTINGS.NORMAL, 1500);
+    }, 2000);
     window.camera = camera;
 
     window.addEventListener('resize', handleWindowResize, false);
@@ -191,26 +203,39 @@ function World() {
 
           AudioManager.play();
         } else {
-          if (key == p) {
+          if (key == KEYCODE.ESC) {
             paused = true;
             character.onPause();
-
-            // Show game panel when paused
-            if (typeof window.showGamePanel === 'function') {
-              window.showGamePanel();
-            } else {
-              var panel = document.getElementById('gamePanel');
-              if (panel) panel.style.display = 'block';
-            }
-
             document.getElementById('variable-content').style.visibility = 'visible';
             document.getElementById('variable-content').innerHTML =
               'Game is paused. Press any key to resume.';
+
+            // Pause music when game is paused
             AudioManager.pause();
           }
-          if (key == up && !paused) character.onUpKeyPressed();
-          if (key == left && !paused) character.onLeftKeyPressed();
-          if (key == right && !paused) character.onRightKeyPressed();
+          if (key == KEYCODE.UP && !paused) {
+            character.onUpKeyPressed();
+          }
+          if (key == KEYCODE.LEFT && !paused) {
+            character.onLeftKeyPressed();
+          }
+          if (key == KEYCODE.RIGHT && !paused) {
+            character.onRightKeyPressed();
+          }
+          if (key === KEYCODE.V && !paused) {
+            // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
+            //   setCameraPosition(CAMERA_SETTINGS.NGANG);
+            // } else {
+            //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
+            // }
+            currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
+            const mode = cameraModes[currentCameraIndex];
+            setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
+          }
+
+          if (key === KEYCODE.P && !paused) {
+            character.nextSkin();
+          }
         }
       }
     });
@@ -466,7 +491,6 @@ function World() {
    */
   function loop() {
     if (!paused) {
-
       // Tăng tốc theo mốc điểm
       if (score > 25000) {
         gameSpeed = 150;
@@ -567,7 +591,6 @@ function World() {
     requestAnimationFrame(loop);
   }
 
-
   function handleWindowResize() {
     renderer.setSize(element.clientWidth, element.clientHeight);
     camera.aspect = element.clientWidth / element.clientHeight;
@@ -584,24 +607,22 @@ function World() {
     var rowsSinceBuff = rowCounter - lastBuffSpawn;
 
     // ===== DEADLY PATTERN =====
-    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < deadlySpawnChance;
+    var shouldSpawnDeadly =
+      rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < deadlySpawnChance;
 
     if (shouldSpawnDeadly) {
       var patternType = Math.random();
 
       if (patternType < 0.4) {
         spawnSingleGate(position);
-      }
-      else if (patternType < 0.7) {
+      } else if (patternType < 0.7) {
         for (let i = 0; i < 3; i++) {
           spawnSingleGate(position - i * 1500);
         }
-      }
-      else if (patternType < 0.9) {
+      } else if (patternType < 0.9) {
         spawnSingleGate(position);
         spawnHammerCoinPattern(position - 1000);
-      }
-      else {
+      } else {
         spawnTwoLaneBlock(position);
       }
 
@@ -723,8 +744,6 @@ function World() {
       scene.add(gate.mesh);
     }
   }
-
-
 
   function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {
@@ -874,11 +893,49 @@ function World() {
       material.dispose();
     }
 
-
     // Start disposal from the root mesh
     disposeNode(object.mesh);
 
     // Clear references
     object.mesh = null;
+  }
+
+  function setCameraPosition(target, duration = 1000) {
+    const start = {
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z
+    };
+
+    const lookAtTarget = target.lookAt || { x: 0, y: 600, z: -5000 };
+    const vector = new THREE.Vector3();
+    camera.getWorldDirection(vector); // hướng nhìn hiện tại
+    vector.add(camera.position); // convert direction -> lookAt point
+    const startLookAt = vector;
+
+    const startTime = performance.now();
+
+    function animateCamera(time) {
+      const elapsed = time - startTime;
+      const t = Math.min(elapsed / duration, 1);
+
+      // Smoothstep easing (for smoother motion)
+      const smoothT = t * t * (3 - 2 * t);
+
+      // Interpolate position
+      camera.position.x = THREE.MathUtils.lerp(start.x, target.x, smoothT);
+      camera.position.y = THREE.MathUtils.lerp(start.y, target.y, smoothT);
+      camera.position.z = THREE.MathUtils.lerp(start.z, target.z, smoothT);
+
+      // Interpolate lookAt
+      const lx = THREE.MathUtils.lerp(startLookAt.x, lookAtTarget.x, smoothT);
+      const ly = THREE.MathUtils.lerp(startLookAt.y, lookAtTarget.y, smoothT);
+      const lz = THREE.MathUtils.lerp(startLookAt.z, lookAtTarget.z, smoothT);
+      camera.lookAt(new THREE.Vector3(lx, ly, lz));
+
+      if (t < 1) requestAnimationFrame(animateCamera);
+    }
+
+    requestAnimationFrame(animateCamera);
   }
 }

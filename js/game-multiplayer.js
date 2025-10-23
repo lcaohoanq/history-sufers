@@ -311,6 +311,8 @@ function World() {
     if (buffs.unity !== 0)
       messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
 
+    if (messages.length === 0) return;
+
     notification.innerHTML = messages.join('<br>');
     document.body.appendChild(notification);
 
@@ -493,6 +495,25 @@ function World() {
         return true;
       });
 
+      // Trong loop()
+      if (score > 20000) {
+        gameSpeed = 150;
+        minRowsBetweenDeadly = 3;
+        deadlySpawnChance = 0.6;
+      }
+      if (score > 50000) {
+        gameSpeed = 200;
+        minRowsBetweenDeadly = 2;
+        deadlySpawnChance = 0.75;
+        multiLaneDeadlyChance = 0.7;
+      }
+      if (score > 100000) {
+        gameSpeed = 250;
+        minRowsBetweenDeadly = 1;
+        deadlySpawnChance = 0.85;
+        multiLaneDeadlyChance = 0.9;
+      }
+
       character.update();
 
       // Send multiplayer updates
@@ -562,38 +583,33 @@ function World() {
     var rowsSinceBuff = rowCounter - lastBuffSpawn;
 
     // Random chance to spawn deadly obstacle (like train/barrier in Subway Surfer)
-    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < 0.3; // 30% chance after min rows
+    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < 0.7; // 70% chance after min rows
 
     if (shouldSpawnDeadly) {
-      var deadlyType = Math.random() < 0.5 ? 'gate' : 'remnant';
+      var patternType = Math.random();
 
-      if (deadlyType === 'gate') {
-        // Spawn gate (blocks one or two lanes)
-        var gateCount = Math.random() < 0.5 ? 1 : 2;
-        var lanes = [-1, 0, 1];
-        shuffleArray(lanes);
-
-        for (var i = 0; i < gateCount; i++) {
-          var gate = new ColonialGate(lanes[i] * 800, -300, position, 30);
-          gate.mesh.userData = { deadly: true };
-          objects.push(gate);
-          scene.add(gate.mesh);
+      if (patternType < 0.4) {
+        // Single Gate như cũ
+        spawnSingleGate(position);
+      }
+      else if (patternType < 0.7) {
+        // Spawn 3 row deadly liên tiếp như Subway Surfer
+        for (let i = 0; i < 3; i++) {
+          spawnSingleGate(position - i * 1500);
         }
-      } else {
-        // Spawn remnant (single lane block)
-        var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
-        var remnant = new ColonialRemnant(lane * 800, -400, position, 5);
-        remnant.mesh.userData = { deadly: true };
-        objects.push(remnant);
-        scene.add(remnant.mesh);
+      }
+      else {
+        // Hard mode: block 2 lanes, chỉ chừa 1 lane
+        spawnTwoLaneBlock(position);
       }
 
       lastDeadlySpawn = rowCounter;
-      return; // Skip buff spawning this row
+      return;
     }
 
+
     // Random chance to spawn buff/debuff objects
-    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff && Math.random() < 0.4; // 40% chance after min rows
+    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff && Math.random() < 0.7; // 30% chance after min rows
 
     if (shouldSpawnBuff) {
       // Define buff object weights
@@ -651,6 +667,39 @@ function World() {
       }
     }
   }
+
+  function spawnSingleGate(zPos) {
+    // Gate có thể chặn 1 hoặc 2 lane ngẫu nhiên
+    var gateCount = Math.random() < 0.5 ? 1 : 2;
+    var lanes = [-1, 0, 1];
+    shuffleArray(lanes);
+
+    for (var i = 0; i < gateCount; i++) {
+      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 30);
+      gate.mesh.userData = { deadly: true };
+      objects.push(gate);
+      scene.add(gate.mesh);
+    }
+  }
+
+  var lastSafeLane = 0; // bạn khai báo ở đầu file
+
+  function spawnTwoLaneBlock(zPos) {
+    var lanes = [-1, 0, 1];
+    shuffleArray(lanes);
+
+    // lanes[0] là lane an toàn (không đặt vật cản)
+    lastSafeLane = lanes[0];
+
+    for (var i = 1; i < 3; i++) {
+      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 30);
+      gate.mesh.userData = { deadly: true };
+      objects.push(gate);
+      scene.add(gate.mesh);
+    }
+  }
+
+
 
   function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {
@@ -799,6 +848,27 @@ function World() {
 
       material.dispose();
     }
+
+    function spawnHammerCoinPattern(zPos) {
+      var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
+      var coinCount = 7;
+      var lanes = [-1, 0, 1];
+      var startLane = lanes[Math.floor(Math.random() * 3)];
+
+      for (let i = 0; i < coinCount; i++) {
+        var lane;
+        if (pattern === 'line') {
+          lane = startLane;
+        } else {
+          // zigzag: -1 → 0 → 1 → 0 …
+          lane = lanes[i % 3];
+        }
+        var coin = new HammerAndSickle(lane * 800, 0, zPos - i * 500, 1);
+        objects.push(coin);
+        scene.add(coin.mesh);
+      }
+    }
+
 
     // Start disposal from the root mesh
     disposeNode(object.mesh);

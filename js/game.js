@@ -1,4 +1,4 @@
-import { WorldSingle } from '../scripts/scenes.js';
+import { WorldMap } from '../scripts/maps.js';
 import { updateSoundButtonUI } from '../scripts/utils.js';
 
 // Make a new world when the page is loaded.
@@ -23,5 +23,5 @@ window.addEventListener('load', function () {
     });
   }
 
-  new WorldSingle();
+  new WorldMap();
 });

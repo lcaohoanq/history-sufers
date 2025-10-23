@@ -1,23 +1,19 @@
-/**
- *
- * THE WORLD
- *
- * The world in which History Sufers takes place.
- *
- */
-
 import * as THREE from 'three';
-import { HammerAndSickle, Tree } from '../js/object.js';
+import {
+  ColonialRemnant,
+  CorruptedThrone,
+  MisbalancedScale,
+  PuppetManipulation,
+  Tree
+} from '../js/object.js';
 import { Character } from './characters.js';
 import { CAMERA_SETTINGS, DUONG_CHAY, GAME_CONSTANTS } from './constants.js';
 import { KEYCODE } from './keycode.js';
 
-/**
- * A class of which the world is an instance. Initializes the game
- * and contains the main game loop.
- *
- */
-export function World() {
+let cameraModes = ['NORMAL', 'NGANG', 'LIVE', 'HARD_CORE'];
+let currentCameraIndex = 0;
+
+export function WorldMap() {
   // Explicit binding of this even in changing contexts.
   var self = this;
 
@@ -33,8 +29,8 @@ export function World() {
     keysAllowed,
     score,
     difficulty,
-    treePresenceProb,
-    maxTreeSize,
+    obstaclePresenceProb, // Changed from treePresenceProb
+    maxObstacleSize, // Changed from maxTreeSize
     fogDistance,
     gameOver;
 
@@ -62,17 +58,19 @@ export function World() {
     // Initialize the scene.
     scene = new THREE.Scene();
     fogDistance = 40000;
-    scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
+    // scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
 
     // Initialize the camera with field of view, aspect ratio,
     // near plane, and far plane.
     camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
-    camera.position.set(
-      CAMERA_SETTINGS.NORMAL.x,
-      CAMERA_SETTINGS.NORMAL.y,
-      CAMERA_SETTINGS.NORMAL.z
-    );
+    // Initial camera position
+    camera.position.set(CAMERA_SETTINGS.NGANG.x, CAMERA_SETTINGS.NGANG.y, CAMERA_SETTINGS.NGANG.z);
     camera.lookAt(new THREE.Vector3(0, 600, -5000));
+
+    // After 2s, transition back to NORMAL
+    setTimeout(() => {
+      setCameraPosition(CAMERA_SETTINGS.NORMAL, 1500);
+    }, 2000);
     window.camera = camera;
 
     // Set up resizing capabilities.
@@ -81,6 +79,9 @@ export function World() {
     // Initialize the lights.
     light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
     scene.add(light);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
 
     // Initialize the character and add it to the scene.
     character = new Character();
@@ -96,10 +97,10 @@ export function World() {
     DUONG_CHAY.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
 
     objects = [];
-    treePresenceProb = 0.2;
-    maxTreeSize = 0.7;
+    obstaclePresenceProb = 0.2;
+    maxObstacleSize = 0.7;
     for (var i = 10; i < 40; i++) {
-      createRowOfTrees(i * -3000, treePresenceProb, 0.5, maxTreeSize);
+      createRowOfObstacles(i * -3000, obstaclePresenceProb, 0.5, maxObstacleSize);
     }
 
     // The game is paused to begin with and the game is not over.
@@ -112,6 +113,7 @@ export function World() {
         var key = e.keyCode;
         if (keysAllowed[key] === false) return;
         keysAllowed[key] = false;
+
         if (paused && !collisionsDetected() && key > 18) {
           paused = false;
           character.onUnpause();
@@ -140,6 +142,16 @@ export function World() {
           if (key == KEYCODE.RIGHT && !paused) {
             character.onRightKeyPressed();
           }
+          if (key === KEYCODE.V && !paused) {
+            // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
+            //   setCameraPosition(CAMERA_SETTINGS.NGANG);
+            // } else {
+            //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
+            // }
+            currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
+            const mode = cameraModes[currentCameraIndex];
+            setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
+          }
         }
       }
     });
@@ -152,7 +164,50 @@ export function World() {
 
     // Initialize the scores and difficulty.
     score = 0;
-    difficulty = 0;
+    // difficulty = 0;
+    if (objects[objects.length - 1].mesh.position.z % 3000 == 0) {
+      difficulty += 1;
+      var levelLength = 30;
+      if (difficulty % levelLength == 0) {
+        var level = difficulty / levelLength;
+        switch (level) {
+          case 1:
+            obstaclePresenceProb = 0.35;
+            maxObstacleSize = 0.8;
+            break;
+          case 2:
+            obstaclePresenceProb = 0.35;
+            maxObstacleSize = 1.2;
+            break;
+          case 3:
+            obstaclePresenceProb = 0.5;
+            maxObstacleSize = 1.2;
+            break;
+          case 4:
+            obstaclePresenceProb = 0.5;
+            maxObstacleSize = 1.5;
+            break;
+          case 5:
+            obstaclePresenceProb = 0.5;
+            maxObstacleSize = 1.5;
+            break;
+          case 6:
+            obstaclePresenceProb = 0.55;
+            maxObstacleSize = 1.5;
+            break;
+          default:
+            obstaclePresenceProb = 0.55;
+            maxObstacleSize = 1.8;
+        }
+      }
+      if (difficulty >= 5 * levelLength && difficulty < 6 * levelLength) {
+        fogDistance -= 25000 / levelLength;
+      } else if (difficulty >= 8 * levelLength && difficulty < 9 * levelLength) {
+        fogDistance -= 5000 / levelLength;
+      }
+      createRowOfObstacles(-120000, obstaclePresenceProb, 0.5, maxObstacleSize);
+      // scene.fog.far = fogDistance;
+    }
     document.getElementById('score').innerHTML = score;
 
     // Begin the rendering loop.
@@ -173,32 +228,32 @@ export function World() {
           var level = difficulty / levelLength;
           switch (level) {
             case 1:
-              treePresenceProb = 0.35;
-              maxTreeSize = 0.5;
+              obstaclePresenceProb = 0.35;
+              maxObstacleSize = 0.5;
               break;
             case 2:
-              treePresenceProb = 0.35;
-              maxTreeSize = 0.85;
+              obstaclePresenceProb = 0.35;
+              maxObstacleSize = 0.85;
               break;
             case 3:
-              treePresenceProb = 0.5;
-              maxTreeSize = 0.85;
+              obstaclePresenceProb = 0.5;
+              maxObstacleSize = 0.85;
               break;
             case 4:
-              treePresenceProb = 0.5;
-              maxTreeSize = 1.1;
+              obstaclePresenceProb = 0.5;
+              maxObstacleSize = 1.1;
               break;
             case 5:
-              treePresenceProb = 0.5;
-              maxTreeSize = 1.1;
+              obstaclePresenceProb = 0.5;
+              maxObstacleSize = 1.1;
               break;
             case 6:
-              treePresenceProb = 0.55;
-              maxTreeSize = 1.1;
+              obstaclePresenceProb = 0.55;
+              maxObstacleSize = 1.1;
               break;
             default:
-              treePresenceProb = 0.55;
-              maxTreeSize = 1.25;
+              obstaclePresenceProb = 0.55;
+              maxObstacleSize = 1.25;
           }
         }
         if (difficulty >= 5 * levelLength && difficulty < 6 * levelLength) {
@@ -206,16 +261,14 @@ export function World() {
         } else if (difficulty >= 8 * levelLength && difficulty < 9 * levelLength) {
           fogDistance -= 5000 / levelLength;
         }
-        createRowOfTrees(-120000, treePresenceProb, 0.5, maxTreeSize);
-        scene.fog.far = fogDistance;
+        createRowOfObstacles(-120000, obstaclePresenceProb, 0.5, maxObstacleSize);
+        // scene.fog.far = fogDistance;
       }
 
       // Move the trees closer to the character.
       objects.forEach(function (object) {
         object.mesh.position.z += 100;
       });
-
-      DUONG_CHAY.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
 
       // Remove trees that are outside of the world.
       objects = objects.filter(function (object) {
@@ -314,26 +367,32 @@ export function World() {
     camera.updateProjectionMatrix();
   }
 
+  // Replace with:
   /**
-   * Creates and returns a row of trees according to the specifications.
+   * Creates a row of obstacles (various historical objects) at the specified position
    *
-   * @param {number} POSITION The z-position of the row of trees.
-   * @param {number} PROBABILITY The probability that a given lane in the row
-   *                             has a tree.
-   * @param {number} MINSCALE The minimum size of the trees. The trees have a
-   *							uniformly distributed size from minScale to maxScale.
-   * @param {number} MAXSCALE The maximum size of the trees.
-   *
+   * @param {number} position - The z-position of the row
+   * @param {number} probability - Probability of spawning obstacle in each lane
+   * @param {number} minScale - Minimum scale of obstacles
+   * @param {number} maxScale - Maximum scale of obstacles
    */
-  function createRowOfTrees(position, probability, minScale, maxScale) {
+  function createRowOfObstacles(position, probability, minScale, maxScale) {
+    // Available obstacle types from object.js
+    const obstacleTypes = [ColonialRemnant, CorruptedThrone, PuppetManipulation, MisbalancedScale];
+
     for (var lane = GAME_CONSTANTS.START_LANE; lane < GAME_CONSTANTS.END_LANE; lane++) {
       var randomNumber = Math.random();
       if (lane == -1 || lane == 0 || lane == 1) {
         if (randomNumber < probability) {
-          var scale = minScale + (10 - minScale) * Math.random();
-          var object = new HammerAndSickle(lane * 800, -400, position, scale);
-          objects.push(object);
-          scene.add(object.mesh);
+          var scale = minScale + (maxScale - minScale) * Math.random();
+
+          // Randomly select an obstacle type
+          var ObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+
+          // Create the obstacle
+          var obstacle = new ObstacleType(lane * 800, -400, position, scale);
+          objects.push(obstacle);
+          scene.add(obstacle.mesh);
         }
       } else {
         var scale = minScale + (maxScale - minScale) * Math.random();
@@ -362,5 +421,44 @@ export function World() {
       }
     }
     return false;
+  }
+
+  function setCameraPosition(target, duration = 1000) {
+    const start = {
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z
+    };
+
+    const lookAtTarget = target.lookAt || { x: 0, y: 600, z: -5000 };
+    const vector = new THREE.Vector3();
+    camera.getWorldDirection(vector); // hướng nhìn hiện tại
+    vector.add(camera.position); // convert direction -> lookAt point
+    const startLookAt = vector;
+
+    const startTime = performance.now();
+
+    function animateCamera(time) {
+      const elapsed = time - startTime;
+      const t = Math.min(elapsed / duration, 1);
+
+      // Smoothstep easing (for smoother motion)
+      const smoothT = t * t * (3 - 2 * t);
+
+      // Interpolate position
+      camera.position.x = THREE.MathUtils.lerp(start.x, target.x, smoothT);
+      camera.position.y = THREE.MathUtils.lerp(start.y, target.y, smoothT);
+      camera.position.z = THREE.MathUtils.lerp(start.z, target.z, smoothT);
+
+      // Interpolate lookAt
+      const lx = THREE.MathUtils.lerp(startLookAt.x, lookAtTarget.x, smoothT);
+      const ly = THREE.MathUtils.lerp(startLookAt.y, lookAtTarget.y, smoothT);
+      const lz = THREE.MathUtils.lerp(startLookAt.z, lookAtTarget.z, smoothT);
+      camera.lookAt(new THREE.Vector3(lx, ly, lz));
+
+      if (t < 1) requestAnimationFrame(animateCamera);
+    }
+
+    requestAnimationFrame(animateCamera);
   }
 }

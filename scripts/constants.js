@@ -15,9 +15,10 @@ export const GROUND_KIT = {
 };
 
 export const CAMERA_SETTINGS = {
-  NORMAL: { x: 0, y: 700, z: -2000 },
-  NGANG: { x: 300, y: 700, z: -2000 },
-  NGUOC: { x: 0, y: 700, z: -7000 }
+  NORMAL: { x: 0, y: 700, z: -2000, lookAt: { x: 0, y: 600, z: -5000 } },
+  NGANG: { x: 2000, y: 700, z: -2000, lookAt: { x: 0, y: 600, z: -5000 } },
+  LIVE: { x: 0, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
+  HARD_CORE: { x: 0, y: 200, z: -7000, lookAt: { x: 0, y: 0, z: -5000 } }
 };
 
 export let DUONG_CHAY = createBoxTexture(

@@ -167,6 +167,139 @@ export function HammerAndSickle(x, y, z, s) {
   };
 }
 
+export function HammerAndSickleUpScale(x, y, z, s) {
+  var self = this;
+  this.mesh = new THREE.Object3D();
+
+  // ===== BUFF SYSTEM =====
+  this.buffs = { trust: 0, justice: 0, unity: 0 };
+  this.buffValue = 100;
+
+  // ===== MATERIAL =====
+  const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+
+  // ===== SCALE FIX FACTOR =====
+  // Tree ~1150 units tall → scale hammer/sickle up by ~5x
+  const SCALE_FIX = 5;
+
+  // ===== HAMMER =====
+  const handleGeom = new THREE.CylinderGeometry(
+    3.5 * SCALE_FIX,
+    3.5 * SCALE_FIX,
+    130 * SCALE_FIX,
+    12
+  );
+  const handle = new THREE.Mesh(handleGeom, goldMaterial);
+  handle.rotation.z = Math.PI * 0.3;
+  handle.position.set(-8 * SCALE_FIX, -10 * SCALE_FIX, 5 * SCALE_FIX);
+
+  const headGeom = new THREE.BoxGeometry(45 * SCALE_FIX, 18 * SCALE_FIX, 20 * SCALE_FIX);
+  const head = new THREE.Mesh(headGeom, goldMaterial);
+  head.rotation.z = Math.PI * 0.3;
+  head.position.set(28 * SCALE_FIX, 22 * SCALE_FIX, 5 * SCALE_FIX);
+
+  const neckGeom = new THREE.BoxGeometry(10 * SCALE_FIX, 20 * SCALE_FIX, 10 * SCALE_FIX);
+  const neck = new THREE.Mesh(neckGeom, goldMaterial);
+  neck.rotation.z = Math.PI * 0.3;
+  neck.position.set(10 * SCALE_FIX, 5 * SCALE_FIX, 5 * SCALE_FIX);
+
+  // ===== SICKLE =====
+  const sickleGeom = new THREE.TorusGeometry(
+    90 * SCALE_FIX,
+    8 * SCALE_FIX,
+    24,
+    200,
+    Math.PI * 1.55
+  );
+  const sickle = new THREE.Mesh(sickleGeom, goldMaterial);
+  sickle.rotation.set(Math.PI / 2, 0, -Math.PI * 0.25);
+  sickle.position.set(-10 * SCALE_FIX, 5 * SCALE_FIX, 0);
+
+  const innerGeom = new THREE.TorusGeometry(75 * SCALE_FIX, 5 * SCALE_FIX, 16, 180, Math.PI * 1.5);
+  const inner = new THREE.Mesh(innerGeom, goldMaterial);
+  inner.rotation.set(Math.PI / 2, 0, -Math.PI * 0.25);
+  inner.position.set(-10 * SCALE_FIX, 5 * SCALE_FIX, 0);
+
+  const bladeGeom = new THREE.ConeGeometry(9 * SCALE_FIX, 30 * SCALE_FIX, 12);
+  const blade = new THREE.Mesh(bladeGeom, goldMaterial);
+  blade.position.set(-78 * SCALE_FIX, 38 * SCALE_FIX, 0);
+  blade.rotation.set(0, 0, -Math.PI * 0.6);
+
+  this.mesh.add(sickle, inner, blade, handle, neck, head);
+  this.mesh.rotation.z = Math.PI * 0.5;
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(s, s, s);
+
+  this.scale = s;
+  this.type = 'hammerandsickle';
+  this.isCollected = false;
+  this.particles = [];
+
+  // ===== COLLISION BOX (adjusted for bigger size) =====
+  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
+    var scaleFactor = Math.sqrt(this.scale) * SCALE_FIX * 1.2;
+    var obstMinX = self.mesh.position.x - scaleFactor * 100;
+    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
+    var obstMinY = self.mesh.position.y;
+    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
+    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
+    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
+    return (
+      obstMinX <= maxX &&
+      obstMaxX >= minX &&
+      obstMinY <= maxY &&
+      obstMaxY >= minY &&
+      obstMinZ <= maxZ &&
+      obstMaxZ >= minZ
+    );
+  };
+
+  // ===== UPDATE =====
+  this.update = function () {
+    this.mesh.rotation.y += 0.008;
+    if (this.isCollected) {
+      this.mesh.position.y += 0.6;
+      this.mesh.rotation.y += 0.06;
+    }
+    if (this.particles.length > 0) {
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        let p = this.particles[i];
+        p.position.y += 0.35;
+        p.material.opacity -= 0.02;
+        if (p.material.opacity <= 0) {
+          this.mesh.remove(p);
+          this.particles.splice(i, 1);
+        }
+      }
+    }
+  };
+
+  // ===== PARTICLE EFFECT =====
+  this.collect = function () {
+    this.isCollected = true;
+    this.spawnParticles();
+  };
+
+  this.spawnParticles = function () {
+    for (let i = 0; i < 18; i++) {
+      let geom = new THREE.SphereGeometry(4 * SCALE_FIX * 0.3, 8, 8);
+      let mat = new THREE.MeshBasicMaterial({
+        color: 0xffd700,
+        transparent: true,
+        opacity: 1
+      });
+      let spark = new THREE.Mesh(geom, mat);
+      spark.position.set(
+        (Math.random() - 0.5) * 60 * SCALE_FIX,
+        Math.random() * 60 * SCALE_FIX,
+        (Math.random() - 0.5) * 40 * SCALE_FIX
+      );
+      this.mesh.add(spark);
+      this.particles.push(spark);
+    }
+  };
+}
+
 export function BribeEnvelope(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();

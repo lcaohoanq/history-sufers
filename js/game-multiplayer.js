@@ -94,9 +94,8 @@ function World() {
   var lastDeadlySpawn = 0;
   var lastBuffSpawn = 0;
   var minRowsBetweenDeadly = 5;
-  var maxRowsBetweenDeadly = 10;
   var minRowsBetweenBuff = 3;
-  var maxRowsBetweenBuff = 6;
+  var lastSafeLane = 0;
 
   // ===== DIFFICULTY SCALING =====
   var gameSpeed = 100; // Initial speed
@@ -467,36 +466,9 @@ function World() {
    */
   function loop() {
     if (!paused) {
-      // Add more rows (throttle to prevent excessive object creation)
-      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z % 3000 == 0) {
-        difficulty += 1;
-        createRowOfObjects(-120000);
-      }
 
-      // Batch update objects for better performance
-      var objectsToUpdate = objects.length;
-      for (var i = 0; i < objectsToUpdate; i++) {
-        var object = objects[i];
-        if (object && object.mesh) {
-          object.mesh.position.z += 100;
-          if (typeof object.update === 'function') {
-            object.update();
-          }
-        }
-      }
-
-      // Remove off-screen objects with proper disposal
-      objects = objects.filter(function (object) {
-        if (object.mesh.position.z >= 0) {
-          // Object is off-screen, need to dispose it
-          disposeObject(object);
-          return false;
-        }
-        return true;
-      });
-
-      // Trong loop()
-      if (score > 20000) {
+      // Tăng tốc theo mốc điểm
+      if (score > 25000) {
         gameSpeed = 150;
         minRowsBetweenDeadly = 3;
         deadlySpawnChance = 0.6;
@@ -514,6 +486,34 @@ function World() {
         multiLaneDeadlyChance = 0.9;
       }
 
+      // Spawn đường mới
+      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z > -80000) {
+        difficulty += 1;
+        createRowOfObjects(objects[objects.length - 1].mesh.position.z - 3000);
+      }
+
+      // Di chuyển object theo tốc độ gameSpeed
+      var objectsToUpdate = objects.length;
+      for (var i = 0; i < objectsToUpdate; i++) {
+        var object = objects[i];
+        if (object && object.mesh) {
+          object.mesh.position.z += gameSpeed;
+          if (typeof object.update === 'function') {
+            object.update();
+          }
+        }
+      }
+
+      // Xóa object khi ra khỏi màn
+      objects = objects.filter(function (object) {
+        if (object.mesh.position.z >= 0) {
+          disposeObject(object);
+          return false;
+        }
+        return true;
+      });
+
+      // Update nhân vật
       character.update();
 
       // Send multiplayer updates
@@ -567,6 +567,7 @@ function World() {
     requestAnimationFrame(loop);
   }
 
+
   function handleWindowResize() {
     renderer.setSize(element.clientWidth, element.clientHeight);
     camera.aspect = element.clientWidth / element.clientHeight;
@@ -582,24 +583,25 @@ function World() {
     var rowsSinceDeadly = rowCounter - lastDeadlySpawn;
     var rowsSinceBuff = rowCounter - lastBuffSpawn;
 
-    // Random chance to spawn deadly obstacle (like train/barrier in Subway Surfer)
-    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < 0.7; // 70% chance after min rows
+    // ===== DEADLY PATTERN =====
+    var shouldSpawnDeadly = rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < deadlySpawnChance;
 
     if (shouldSpawnDeadly) {
       var patternType = Math.random();
 
       if (patternType < 0.4) {
-        // Single Gate như cũ
         spawnSingleGate(position);
       }
       else if (patternType < 0.7) {
-        // Spawn 3 row deadly liên tiếp như Subway Surfer
         for (let i = 0; i < 3; i++) {
           spawnSingleGate(position - i * 1500);
         }
       }
+      else if (patternType < 0.9) {
+        spawnSingleGate(position);
+        spawnHammerCoinPattern(position - 1000);
+      }
       else {
-        // Hard mode: block 2 lanes, chỉ chừa 1 lane
         spawnTwoLaneBlock(position);
       }
 
@@ -607,33 +609,35 @@ function World() {
       return;
     }
 
-
-    // Random chance to spawn buff/debuff objects
-    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff && Math.random() < 0.7; // 30% chance after min rows
+    // ===== BUFF / COIN SPAWN =====
+    var shouldSpawnBuff = rowsSinceBuff >= minRowsBetweenBuff && Math.random() < buffSpawnChance;
 
     if (shouldSpawnBuff) {
-      // Define buff object weights
       var buffWeights = {
-        hammerandsickle: 0.7,
-        ruleOfLawState: 0.7,
-        unityHands: 0.7,
-        reformGears: 0.7,
-        ballotBox: 0.7,
-        bribeEnvelope: 0.7,
-        corruptedThrone: 0.7,
-        puppetManipulation: 0.7,
-        misbalancedScale: 0.7
+        hammerandsickle: 1.0,
+        ruleOfLawState: 0.6,
+        unityHands: 0.6,
+        reformGears: 0.6,
+        ballotBox: 0.6,
+        bribeEnvelope: 0.6,
+        corruptedThrone: 0.6,
+        puppetManipulation: 0.6,
+        misbalancedScale: 0.6
       };
 
       var objectType = weightedRandomObstacle(buffWeights);
+
+      if (objectType === 'hammerandsickle') {
+        spawnHammerCoinPattern(position);
+        lastBuffSpawn = rowCounter;
+        return;
+      }
+
       var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
-      var scale = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+      var scale = 0.8 + Math.random() * 0.4;
       var buffObject;
 
       switch (objectType) {
-        case 'hammerandsickle':
-          buffObject = new HammerAndSickle(lane * 800, 0, position, scale);
-          break;
         case 'ruleOfLawState':
           buffObject = new RuleOfLawState(lane * 800, 0, position, scale);
           break;
@@ -661,6 +665,7 @@ function World() {
       }
 
       if (buffObject) {
+        buffObject.mesh.userData = { buff: true };
         objects.push(buffObject);
         scene.add(buffObject.mesh);
         lastBuffSpawn = rowCounter;
@@ -668,8 +673,30 @@ function World() {
     }
   }
 
+  function spawnHammerCoinPattern(zPos) {
+    var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
+    var coinCount = 7; // số lượng hammer liên tiếp
+    var lanes = [-1, 0, 1];
+    var startLane = lanes[Math.floor(Math.random() * 3)];
+
+    for (let i = 0; i < coinCount; i++) {
+      var lane;
+
+      if (pattern === 'line') {
+        lane = startLane;
+      } else {
+        lane = lanes[i % 3];
+      }
+
+      var coin = new HammerAndSickle(lane * 800, 0, zPos - i * 750, 1);
+      coin.mesh.userData = { buff: true };
+
+      objects.push(coin);
+      scene.add(coin.mesh);
+    }
+  }
+
   function spawnSingleGate(zPos) {
-    // Gate có thể chặn 1 hoặc 2 lane ngẫu nhiên
     var gateCount = Math.random() < 0.5 ? 1 : 2;
     var lanes = [-1, 0, 1];
     shuffleArray(lanes);
@@ -681,8 +708,6 @@ function World() {
       scene.add(gate.mesh);
     }
   }
-
-  var lastSafeLane = 0; // bạn khai báo ở đầu file
 
   function spawnTwoLaneBlock(zPos) {
     var lanes = [-1, 0, 1];
@@ -847,26 +872,6 @@ function World() {
       if (material.roughnessMap) material.roughnessMap.dispose();
 
       material.dispose();
-    }
-
-    function spawnHammerCoinPattern(zPos) {
-      var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
-      var coinCount = 7;
-      var lanes = [-1, 0, 1];
-      var startLane = lanes[Math.floor(Math.random() * 3)];
-
-      for (let i = 0; i < coinCount; i++) {
-        var lane;
-        if (pattern === 'line') {
-          lane = startLane;
-        } else {
-          // zigzag: -1 → 0 → 1 → 0 …
-          lane = lanes[i % 3];
-        }
-        var coin = new HammerAndSickle(lane * 800, 0, zPos - i * 500, 1);
-        objects.push(coin);
-        scene.add(coin.mesh);
-      }
     }
 
 

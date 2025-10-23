@@ -56,7 +56,7 @@ export function HammerAndSickle(x, y, z, s) {
     justice: 0, // Không ảnh hưởng
     unity: 0 // Không ảnh hưởng
   };
-  this.buffValue = 100; // Điểm số chung (nếu cần)
+  this.buffValue = 10; // Điểm số chung (nếu cần)
 
   // ===== GOLD MATERIAL (flat 2D color) =====
   const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
@@ -173,7 +173,7 @@ export function HammerAndSickleUpScale(x, y, z, s) {
 
   // ===== BUFF SYSTEM =====
   this.buffs = { trust: 0, justice: 0, unity: 0 };
-  this.buffValue = 100;
+  this.buffValue = 10;
 
   // ===== MATERIAL =====
   const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
@@ -456,7 +456,7 @@ export function RuleOfLawState(x, y, z, s) {
     justice: 35, // Tăng công bằng mạnh
     unity: 20 // Tăng đoàn kết
   };
-  this.buffValue = 2000; // Điểm dương cao nhất
+  this.buffValue = 750; // Điểm dương cao nhất
 
   var metalMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
   var goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
@@ -602,7 +602,7 @@ export function ReformGears(x, y, z, s) {
     justice: 30, // Tăng công bằng
     unity: 0 // Không ảnh hưởng
   };
-  this.buffValue = 30; // Điểm dương
+  this.buffValue = 50; // Điểm dương
 
   var metalMat = new THREE.MeshBasicMaterial({ color: 0x707070 });
   var goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
@@ -717,7 +717,7 @@ export function UnityHands(x, y, z, s) {
     justice: 0, // Không ảnh hưởng
     unity: 35 // Tăng đoàn kết mạnh
   };
-  this.buffValue = 1000; // Điểm dương
+  this.buffValue = 100; // Điểm dương
 
   var skinMat = new THREE.MeshBasicMaterial({ color: 0xf2d2b6 });
   var bookMat = new THREE.MeshBasicMaterial({ color: 0x3e2723 });
@@ -828,7 +828,7 @@ export function CorruptedThrone(x, y, z, s) {
     justice: -25, // Giảm công bằng
     unity: 0 // Không ảnh hưởng
   };
-  this.buffValue = -5500; // Điểm âm cao
+  this.buffValue = -5000; // Điểm âm cao
 
   const woodMat = new THREE.MeshBasicMaterial({ color: 0x4b3621 });
   const webMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });

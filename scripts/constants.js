@@ -14,6 +14,12 @@ export const GROUND_KIT = {
   DUONG_GACH: 'textures/brick/Bricks075A_1K-JPG_Color.jpg'
 };
 
+export const CAMERA_SETTINGS = {
+  NORMAL: { x: 0, y: 700, z: -2000 },
+  NGANG: { x: 300, y: 700, z: -2000 },
+  NGUOC: { x: 0, y: 700, z: -7000 }
+};
+
 export let DUONG_CHAY = createBoxTexture(
   3000,
   20,

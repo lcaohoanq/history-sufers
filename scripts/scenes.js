@@ -17,8 +17,9 @@ import {
 } from '../js/object.js';
 import { Character } from './characters.js';
 import { Colors } from './colors.js';
-import { GAME_CONSTANTS, DUONG_CHAY } from './constants.js';
+import { GAME_CONSTANTS, DUONG_CHAY, CAMERA_SETTINGS } from './constants.js';
 import { createBox } from './utils.js';
+import { KEYCODE } from './keycode.js';
 
 /**
  * A class of which the world is an instance. Initializes the game
@@ -74,7 +75,11 @@ export function World() {
     // Initialize the camera with field of view, aspect ratio,
     // near plane, and far plane.
     camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
-    camera.position.set(0, 1500, -2000);
+    camera.position.set(
+      CAMERA_SETTINGS.NORMAL.x,
+      CAMERA_SETTINGS.NORMAL.y,
+      CAMERA_SETTINGS.NORMAL.z
+    );
     camera.lookAt(new THREE.Vector3(0, 600, -5000));
     window.camera = camera;
 
@@ -91,13 +96,16 @@ export function World() {
 
     scene.add(DUONG_CHAY);
 
+    const background = new THREE.TextureLoader().load('../assets/road.jpg');
+    scene.background = background;
+
     DUONG_CHAY.material.map.wrapS = THREE.RepeatWrapping;
     DUONG_CHAY.material.map.wrapT = THREE.RepeatWrapping;
     DUONG_CHAY.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
 
     objects = [];
     treePresenceProb = 0.2;
-    maxTreeSize = 0.5;
+    maxTreeSize = 0.7;
     for (var i = 10; i < 40; i++) {
       createRowOfTrees(i * -3000, treePresenceProb, 0.5, maxTreeSize);
     }
@@ -105,13 +113,6 @@ export function World() {
     // The game is paused to begin with and the game is not over.
     gameOver = false;
     paused = true;
-
-    // Start receiving feedback from the player.
-    var left = 37;
-    var up = 38;
-    var right = 39;
-    var p = 80;
-    var esc = 27;
 
     keysAllowed = {};
     document.addEventListener('keydown', function (e) {
@@ -128,7 +129,7 @@ export function World() {
           // Start playing background music when game starts
           AudioManager.play();
         } else {
-          if (key == esc) {
+          if (key == KEYCODE.ESC) {
             paused = true;
             character.onPause();
             document.getElementById('variable-content').style.visibility = 'visible';
@@ -138,13 +139,13 @@ export function World() {
             // Pause music when game is paused
             AudioManager.pause();
           }
-          if (key == up && !paused) {
+          if (key == KEYCODE.UP && !paused) {
             character.onUpKeyPressed();
           }
-          if (key == left && !paused) {
+          if (key == KEYCODE.LEFT && !paused) {
             character.onLeftKeyPressed();
           }
-          if (key == right && !paused) {
+          if (key == KEYCODE.RIGHT && !paused) {
             character.onRightKeyPressed();
           }
         }
@@ -344,6 +345,7 @@ export function World() {
         }
       } else {
         var scale = minScale + (maxScale - minScale) * Math.random();
+        console.log(`Tree scale: ${scale}`);
         var tree = new Tree(lane * 800, -400, position, scale);
         objects.push(tree);
         scene.add(tree.mesh);
@@ -482,7 +484,7 @@ export function WorldSingle() {
           // Start playing background music when game starts
           AudioManager.play();
         } else {
-          if (key == esc) {
+          if (key == KEYCODE.ESC) {
             paused = true;
             character.onPause();
             document.getElementById('variable-content').style.visibility = 'visible';
@@ -492,13 +494,13 @@ export function WorldSingle() {
             // Pause music when game is paused
             AudioManager.pause();
           }
-          if (key == up && !paused) {
+          if (key == KEYCODE.UP && !paused) {
             character.onUpKeyPressed();
           }
-          if (key == left && !paused) {
+          if (key == KEYCODE.LEFT && !paused) {
             character.onLeftKeyPressed();
           }
-          if (key == right && !paused) {
+          if (key == KEYCODE.RIGHT && !paused) {
             character.onRightKeyPressed();
           }
         }

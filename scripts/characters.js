@@ -1,5 +1,6 @@
 import { SKINS } from './skins.js';
 import { createBox, createGroup, createTextLabel, sinusoid } from './utils.js';
+import * as THREE from 'three';
 
 const deg2Rad = Math.PI / 180;
 
@@ -58,8 +59,12 @@ export function Character() {
 
   // Character defaults that don't change throughout the game.
   this.applySkin(0); // Apply default skin
-  this.jumpDuration = 0.6;
-  this.jumpHeight = 2000;
+  this.jumpDuration = 0.5;
+  this.jumpHeight = 1000;
+  this.isSliding = false;
+  this.slideDuration = 0.4;
+  this.slideStartTime = 0;
+
 
   // Initialize the character.
   init();
@@ -175,6 +180,67 @@ export function Character() {
   }
 
   /**
+ * Get character's hitbox based on current state
+ */
+  this.getHitbox = function () {
+    // Base hitbox size
+    var baseWidth = 115;
+    var baseHeightMin = 310;
+    var baseHeightMax = 320;
+    var baseDepth = 40;
+
+    // Adjust hitbox when sliding
+    if (self.isSliding) {
+      baseWidth = 85;           // Thu hẹp chiều rộng
+      baseHeightMin = 110;      // Giảm chiều cao đáng kể
+      baseHeightMax = 120;
+    }
+    else if (self.isJumping) {
+      baseWidth = 100;
+    }
+
+    // For testing: show the hitbox as a visible wireframe box
+    if (!self._hitboxHelper) {
+      const boxGeom = new THREE.BoxGeometry(
+        baseWidth * 2,
+        baseHeightMin + baseHeightMax,
+        baseDepth * 2
+      );
+      const boxMat = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        wireframe: true,
+        transparent: true,
+        opacity: 1,
+        depthTest: false
+      });
+      self._hitboxHelper = new THREE.Mesh(boxGeom, boxMat);
+      self._hitboxHelper.name = 'HitboxHelper';
+      self.element.add(self._hitboxHelper);
+    }
+    // Update hitbox helper size and position
+    self._hitboxHelper.scale.set(
+      (baseWidth * 2) / self._hitboxHelper.geometry.parameters.width,
+      (baseHeightMin + baseHeightMax) / self._hitboxHelper.geometry.parameters.height,
+      (baseDepth * 2) / self._hitboxHelper.geometry.parameters.depth
+    );
+    self._hitboxHelper.position.set(
+      0,
+      (baseHeightMax - baseHeightMin) / 2,
+      0
+    );
+    self._hitboxHelper.visible = true;
+
+    return {
+      minX: self.element.position.x - baseWidth,
+      maxX: self.element.position.x + baseWidth,
+      minY: self.element.position.y - baseHeightMin,
+      maxY: self.element.position.y + baseHeightMax,
+      minZ: self.element.position.z - baseDepth,
+      maxZ: self.element.position.z + baseDepth
+    };
+  };
+
+  /**
    * A method called on the character when time moves forward.
    */
   this.update = function () {
@@ -185,6 +251,7 @@ export function Character() {
     // carried out.
     if (
       !self.isJumping &&
+      !self.isSliding &&
       !self.isSwitchingLeft &&
       !self.isSwitchingRight &&
       self.queuedActions.length > 0
@@ -193,6 +260,10 @@ export function Character() {
         case 'up':
           self.isJumping = true;
           self.jumpStartTime = new Date() / 1000;
+          break;
+        case 'down':
+          self.isSliding = true;
+          self.slideStartTime = currentTime;
           break;
         case 'left':
           if (self.currentLane != -1) {
@@ -218,7 +289,87 @@ export function Character() {
         self.isJumping = false;
         self.runningStartTime += self.jumpDuration;
       }
-    } else {
+    }
+    else if (self.isSliding) {
+      let slideClock = currentTime - self.slideStartTime;
+      let t = Math.min(slideClock / self.slideDuration, 1);
+
+      // 1. Hạ người xuống thấp hơn
+      self.element.position.y = THREE.MathUtils.lerp(0, -200, t);
+
+      // 2. DI CHUYỂN TOÀN BỘ NGƯỜI VỀ PHÍA SAU (trượt lùi)
+      self.element.position.z = THREE.MathUtils.lerp(-4000, -4200, t);
+
+      // 3. Ngả đầu ra sau (chỉ xoay, không dịch)
+      self.head.rotation.x = THREE.MathUtils.lerp(0, -30 * deg2Rad, t);
+
+      // 4. Torso ngả ra sau (chỉ xoay, không dịch)
+      self.torso.rotation.x = THREE.MathUtils.lerp(0, 90 * deg2Rad, t);
+      self.torso.position.y = THREE.MathUtils.lerp(100, 50, t); // Chỉ hạ thấp
+
+      // 5. Tay duỗi ra sau
+      self.leftArm.rotation.x = THREE.MathUtils.lerp(0, -100 * deg2Rad, t);
+      self.rightArm.rotation.x = THREE.MathUtils.lerp(0, -100 * deg2Rad, t);
+      self.leftArm.position.y = THREE.MathUtils.lerp(190, 150, t);
+      self.rightArm.position.y = THREE.MathUtils.lerp(190, 150, t);
+
+      // 6. Lower arms duỗi thẳng
+      self.leftLowerArm.rotation.x = THREE.MathUtils.lerp(0, -30 * deg2Rad, t);
+      self.rightLowerArm.rotation.x = THREE.MathUtils.lerp(0, -30 * deg2Rad, t);
+
+      // 7. Chân duỗi thẳng ra trước
+      self.leftLeg.rotation.x = THREE.MathUtils.lerp(0, 100 * deg2Rad, t);
+      self.rightLeg.rotation.x = THREE.MathUtils.lerp(0, 100 * deg2Rad, t);
+      self.leftLeg.position.y = THREE.MathUtils.lerp(-10, -50, t);
+      self.rightLeg.position.y = THREE.MathUtils.lerp(-10, -50, t);
+
+      // 8. Lower legs duỗi thẳng
+      self.leftLowerLeg.rotation.x = THREE.MathUtils.lerp(0, -20 * deg2Rad, t);
+      self.rightLowerLeg.rotation.x = THREE.MathUtils.lerp(0, -20 * deg2Rad, t);
+
+      // 9. Rung nhẹ
+      let twitch = Math.sin(currentTime * 30) * 1 * deg2Rad;
+      self.torso.rotation.x += twitch;
+
+      // 10. Reset khi hết slide
+      if (slideClock > self.slideDuration) {
+        self.isSliding = false;
+
+        const smoothBack = (current, target) => THREE.MathUtils.lerp(current, target, 0.3);
+
+        // Reset position tổng thể
+        self.element.position.y = smoothBack(self.element.position.y, 0);
+        self.element.position.z = smoothBack(self.element.position.z, -4000); // ⭐ Reset Z
+
+        // Reset head (chỉ rotation, không có position.z)
+        self.head.rotation.x = smoothBack(self.head.rotation.x, 0);
+
+        // Reset torso (chỉ rotation và Y, không có position.z)
+        self.torso.rotation.x = smoothBack(self.torso.rotation.x, 0);
+        self.torso.position.y = smoothBack(self.torso.position.y, 100);
+
+        // Reset arms
+        self.leftArm.rotation.x = smoothBack(self.leftArm.rotation.x, 0);
+        self.rightArm.rotation.x = smoothBack(self.rightArm.rotation.x, 0);
+        self.leftArm.position.y = smoothBack(self.leftArm.position.y, 190);
+        self.rightArm.position.y = smoothBack(self.rightArm.position.y, 190);
+
+        // Reset lower arms
+        self.leftLowerArm.rotation.x = smoothBack(self.leftLowerArm.rotation.x, 0);
+        self.rightLowerArm.rotation.x = smoothBack(self.rightLowerArm.rotation.x, 0);
+
+        // Reset legs
+        self.leftLeg.rotation.x = smoothBack(self.leftLeg.rotation.x, 0);
+        self.rightLeg.rotation.x = smoothBack(self.rightLeg.rotation.x, 0);
+        self.leftLeg.position.y = smoothBack(self.leftLeg.position.y, -10);
+        self.rightLeg.position.y = smoothBack(self.rightLeg.position.y, -10);
+
+        // Reset lower legs
+        self.leftLowerLeg.rotation.x = smoothBack(self.leftLowerLeg.rotation.x, 0);
+        self.rightLowerLeg.rotation.x = smoothBack(self.rightLowerLeg.rotation.x, 0);
+      }
+    }
+    else {
       var runningClock = currentTime - self.runningStartTime;
       self.element.position.y = sinusoid(2 * self.stepFreq, 0, 20, 0, runningClock);
       self.head.rotation.x = sinusoid(2 * self.stepFreq, -10, -5, 0, runningClock) * deg2Rad;
@@ -273,6 +424,13 @@ export function Character() {
    */
   this.onRightKeyPressed = function () {
     self.queuedActions.push('right');
+  };
+
+  /**
+   * Handles character activity when the down key is pressed.
+   */
+  this.onDownKeyPressed = function () {
+    self.queuedActions.push('down');
   };
 
   /**

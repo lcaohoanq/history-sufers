@@ -11,7 +11,8 @@ import {
   ReformGears,
   RuleOfLawState,
   Tree,
-  UnityHands
+  UnityHands,
+  HighBarrier
 } from '../js/object.js';
 import { Character } from './characters.js';
 import { CAMERA_SETTINGS, DUONG_CHAY, DUONG_DAT, DUONG_GACH, GAME_CONSTANTS } from './constants.js';
@@ -59,6 +60,7 @@ export function WorldMap(networkStrategy = null) {
   var minRowsBetweenDeadly = 5;
   var minRowsBetweenBuff = 3;
   var lastSafeLane = 0;
+  var DEBUG_HITBOX = true; // Bật/tắt toàn bộ hitbox test
 
   // ===== DIFFICULTY SCALING =====
   var gameSpeed = 75; // Initial speed
@@ -72,8 +74,17 @@ export function WorldMap(networkStrategy = null) {
   var network = networkStrategy || new SinglePlayerStrategy();
   var opponents = new Map();
 
-  var groundSwapped = false;
-  var groundStage = 1
+  // Gom tất cả đường vào 1 object để dễ quản lý
+  const GROUNDS = {
+    1: DUONG_DAT,
+    2: DUONG_GACH,
+    3: DUONG_CHAY,
+  };
+
+  // Đường hiện tại đang active trong scene
+  let activeGround = null;
+  let groundStage = 1;
+
 
   // Initialize the world.
   init();
@@ -128,22 +139,27 @@ export function WorldMap(networkStrategy = null) {
     character = new Character();
     scene.add(character.element);
 
-    scene.add(DUONG_DAT);
-    groundStage = 1;
+    [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach(g => {
+      if (g?.material?.map) {
+        g.material.map.wrapS = THREE.RepeatWrapping;
+        g.material.map.wrapT = THREE.RepeatWrapping;
+        g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+      }
+    });
+
+    groundStage = 0;
+    activeGround = null;
+    switchGround(1);
 
     const background = new THREE.TextureLoader().load('../assets/road.jpg');
     scene.background = background;
 
-    DUONG_DAT.material.map.wrapS = THREE.RepeatWrapping;
-    DUONG_DAT.material.map.wrapT = THREE.RepeatWrapping;
-    DUONG_DAT.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
 
     objects = [];
     for (var i = 10; i < 40; i++) {
       createRowOfObjects(i * -3000);
     }
 
-    // The game is paused to begin with and the game is not over.
     gameOver = false;
     paused = true;
 
@@ -188,6 +204,9 @@ export function WorldMap(networkStrategy = null) {
           }
           if (key == KEYCODE.RIGHT && !paused) {
             character.onRightKeyPressed();
+          }
+          if (key == KEYCODE.DOWN && !paused) {
+            character.onDownKeyPressed();
           }
           if (key === KEYCODE.V && !paused) {
             // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
@@ -453,7 +472,7 @@ export function WorldMap(networkStrategy = null) {
     }
 
     document.addEventListener('keydown', function (e) {
-      if (e.keyCode == 40) {
+      if (e.keyCode == KEYCODE.R) {
         document.location.reload(true);
       }
     });
@@ -465,7 +484,7 @@ export function WorldMap(networkStrategy = null) {
       message +
       '</p><p>Score: ' +
       score +
-      '</p><p>Press down arrow to try again.</p>';
+      '</p><p>Press R to try again.</p>';
   }
 
   /**
@@ -480,31 +499,13 @@ export function WorldMap(networkStrategy = null) {
         deadlySpawnChance = 0.5;
       }
 
-      // Swap ground when reaching 50000 points
-            if (groundStage < 2 && score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
-        // remove previous ground if present
-        try {
-          if (groundStage === 1 && scene && DUONG_DAT) scene.remove(DUONG_DAT);
-          else if (groundStage === 3 && scene && DUONG_CHAY) scene.remove(DUONG_CHAY);
-        } catch (e) {
-          console.warn('Failed to remove previous ground', e);
-        }
-        if (DUONG_GACH) {
-          if (DUONG_GACH.material && DUONG_GACH.material.map) {
-            DUONG_GACH.material.map.wrapS = THREE.RepeatWrapping;
-            DUONG_GACH.material.map.wrapT = THREE.RepeatWrapping;
-            DUONG_GACH.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
-          }
-          scene.add(DUONG_GACH);
-        }
-        groundStage = 2;
-      }
-
       if (score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
         gameSpeed = 125;
         minRowsBetweenDeadly = 5;
         deadlySpawnChance = 0.6;
         multiLaneDeadlyChance = 0.7;
+
+        if (groundStage < 2) switchGround(2);
       }
 
 
@@ -514,25 +515,8 @@ export function WorldMap(networkStrategy = null) {
         minRowsBetweenDeadly = 4;
         deadlySpawnChance = 0.7;
         multiLaneDeadlyChance = 0.7;
-      }
 
-      if (groundStage < 3 && score > GAME_CONSTANTS.MILE_STONES.HARD) {
-        // remove previous ground if present
-        try {
-          if (groundStage === 2 && scene && DUONG_GACH) scene.remove(DUONG_GACH);
-          else if (groundStage === 1 && scene && DUONG_DAT) scene.remove(DUONG_DAT);
-        } catch (e) {
-          console.warn('Failed to remove previous ground', e);
-        }
-        if (DUONG_CHAY) {
-          if (DUONG_CHAY.material && DUONG_CHAY.material.map) {
-            DUONG_CHAY.material.map.wrapS = THREE.RepeatWrapping;
-            DUONG_CHAY.material.map.wrapT = THREE.RepeatWrapping;
-            DUONG_CHAY.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
-          }
-          scene.add(DUONG_CHAY);
-        }
-        groundStage = 3;
+        if (groundStage < 3) switchGround(3);
       }
 
       // Spawn đường mới
@@ -553,7 +537,14 @@ export function WorldMap(networkStrategy = null) {
         }
       }
 
-      DUONG_CHAY.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      // ✅ Update offset cho texture đường hiện tại
+      if (activeGround?.material?.map) {
+        activeGround.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      }
+
+      for (let obj of objects) {
+        if (obj.updateHitbox) obj.updateHitbox();
+      }
 
       // Xóa object khi ra khỏi màn
       objects = objects.filter(function (object) {
@@ -612,6 +603,33 @@ export function WorldMap(networkStrategy = null) {
     requestAnimationFrame(loop);
   }
 
+  function switchGround(newStage) {
+    if (groundStage === newStage) return;
+
+    // Remove ground cũ
+    if (activeGround && scene) {
+      try {
+        scene.remove(activeGround);
+      } catch (e) {
+        console.warn("Remove ground failed", e);
+      }
+    }
+
+    // Set ground mới
+    activeGround = GROUNDS[newStage];
+    if (activeGround) {
+      if (activeGround.material?.map) {
+        activeGround.material.map.wrapS = THREE.RepeatWrapping;
+        activeGround.material.map.wrapT = THREE.RepeatWrapping;
+        activeGround.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+      }
+      scene.add(activeGround);
+    }
+
+    groundStage = newStage;
+  }
+
+
   /**
    * A method called when window is resized.
    */
@@ -638,20 +656,31 @@ export function WorldMap(networkStrategy = null) {
         if (shouldSpawnDeadly) {
           var patternType = Math.random();
 
-          if (score > 30000 && patternType < 0.2) {
-
+          if (score > 30000 && patternType < 0.15) {
+            // Train (giảm tỉ lệ xuống 15%)
             spawnCapitalistTrain(position);
-          } else if (patternType < 0.4) {
+          } else if (patternType < 0.3) {
+            // Single gate
             spawnSingleGate(position);
+          } else if (patternType < 0.5) {
+            // High barrier (slide để qua) ⭐ MỚI
+            spawnHighBarrierPattern(position);
           } else if (patternType < 0.7) {
+            // 3 gates liên tiếp
             for (let i = 0; i < 3; i++) {
               spawnSingleGate(position - i * 1500);
             }
-          } else if (patternType < 0.9) {
+          } else if (patternType < 0.85) {
+            // Gate + coins
             spawnSingleGate(position);
             spawnHammerCoinPattern(position - 1000);
-          } else {
+          } else if (patternType < 0.95) {
+            // Two lane block
             spawnTwoLaneBlock(position);
+          } else {
+            // High barrier + low gate combo ⭐ MỚI
+            spawnHighBarrierPattern(position);
+            spawnSingleGate(position - 1500); // Gate thấp phía sau
           }
 
           lastDeadlySpawn = rowCounter;
@@ -731,7 +760,7 @@ export function WorldMap(networkStrategy = null) {
 
   function spawnHammerCoinPattern(zPos) {
     var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
-    var coinCount = 7; // số lượng hammer liên tiếp
+    var coinCount = 7;
     var lanes = [-1, 0, 1];
     var startLane = lanes[Math.floor(Math.random() * 3)];
 
@@ -752,14 +781,28 @@ export function WorldMap(networkStrategy = null) {
     }
   }
 
+  function spawnHighBarrierPattern(position) {
+    var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
+    var barrier = new HighBarrier(lane * 800, -300, position, 1.2, scene);
+    barrier.mesh.userData = { deadly: true };
+
+    if (DEBUG_HITBOX) barrier.showHitbox();
+
+    objects.push(barrier);
+    scene.add(barrier.mesh);
+  }
+
   function spawnSingleGate(zPos) {
     var gateCount = Math.random() < 0.5 ? 1 : 2;
     var lanes = [-1, 0, 1];
     shuffleArray(lanes);
 
     for (var i = 0; i < gateCount; i++) {
-      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 45);
+      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 0.8, scene);
       gate.mesh.userData = { deadly: true };
+
+      if (DEBUG_HITBOX) gate.showHitbox();
+
       objects.push(gate);
       scene.add(gate.mesh);
     }
@@ -773,8 +816,11 @@ export function WorldMap(networkStrategy = null) {
     lastSafeLane = lanes[0];
 
     for (var i = 1; i < 3; i++) {
-      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 45);
+      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 0.8, scene);
       gate.mesh.userData = { deadly: true };
+
+      if (DEBUG_HITBOX) gate.showHitbox();
+
       objects.push(gate);
       scene.add(gate.mesh);
     }
@@ -785,7 +831,10 @@ export function WorldMap(networkStrategy = null) {
     var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
 
     // Z spawn xa phía trước (vì train lao ngược về player)
-    var train = new CapitalistExpress(lane * 800, -300, zPos - 6000, 2.5);
+    var train = new CapitalistExpress(lane * 800, -300, zPos - 10000, 3, scene);
+    train.mesh.userData = { deadly: true };
+
+    if (DEBUG_HITBOX) train.showHitbox();
 
     objects.push(train);
     scene.add(train.mesh);
@@ -828,21 +877,18 @@ export function WorldMap(networkStrategy = null) {
   function checkCollisions() {
     if (!character || !character.element || objects.length === 0) return [];
 
-    var charMinX = character.element.position.x - 115;
-    var charMaxX = character.element.position.x + 115;
-    var charMinY = character.element.position.y - 310;
-    var charMaxY = character.element.position.y + 320;
-    var charMinZ = character.element.position.z - 40;
-    var charMaxZ = character.element.position.z + 40;
+    var hitbox = character.getHitbox();
     var collidedObjects = [];
 
     for (var i = 0; i < objects.length; i++) {
       if (objects[i] && typeof objects[i].collides === 'function') {
-        // Only check non-deadly objects with buffs
         if (objects[i].buffs && !objects[i].mesh.userData.deadly) {
           if (
-            objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ) &&
-            !objects[i].isCollected
+            objects[i].collides(
+              hitbox.minX, hitbox.maxX,
+              hitbox.minY, hitbox.maxY,
+              hitbox.minZ, hitbox.maxZ
+            ) && !objects[i].isCollected
           ) {
             collidedObjects.push(i);
           }
@@ -855,18 +901,16 @@ export function WorldMap(networkStrategy = null) {
   function checkDeadlyCollisions() {
     if (!character || !character.element || objects.length === 0) return false;
 
-    var charMinX = character.element.position.x - 115;
-    var charMaxX = character.element.position.x + 115;
-    var charMinY = character.element.position.y - 310;
-    var charMaxY = character.element.position.y + 320;
-    var charMinZ = character.element.position.z - 40;
-    var charMaxZ = character.element.position.z + 40;
+    var hitbox = character.getHitbox();
 
     for (var i = 0; i < objects.length; i++) {
       if (objects[i] && typeof objects[i].collides === 'function') {
-        // Only check deadly objects
         if (objects[i].mesh.userData.deadly) {
-          if (objects[i].collides(charMinX, charMaxX, charMinY, charMaxY, charMinZ, charMaxZ)) {
+          if (objects[i].collides(
+            hitbox.minX, hitbox.maxX,
+            hitbox.minY, hitbox.maxY,
+            hitbox.minZ, hitbox.maxZ
+          )) {
             return true;
           }
         }

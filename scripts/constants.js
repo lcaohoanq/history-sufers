@@ -35,7 +35,7 @@ export let DUONG_CHAY = createBoxTexture(
   -400,
   -60000,
   true,
-  GROUND_KIT.DUONG_NHUA // path to your sand texture
+  GROUND_KIT.DUONG_NHUA, // path to your sand texture
 );
 
 export let DUONG_DAT = createBoxTexture(

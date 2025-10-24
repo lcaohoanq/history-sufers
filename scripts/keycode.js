@@ -3,7 +3,9 @@ export const KEYCODE = {
   LEFT: 37,
   UP: 38,
   RIGHT: 39,
+  DOWN: 40,
   ESC: 27,
   V: 86,
-  P: 80
+  P: 80,
+  R: 82
 };

@@ -2,7 +2,6 @@ import {
   BallotBox,
   BribeEnvelope,
   ColonialGate,
-  ColonialRemnant,
   CorruptedThrone,
   HammerAndSickle,
   MisbalancedScale,
@@ -10,7 +9,16 @@ import {
   ReformGears,
   RuleOfLawState,
   Tree,
-  UnityHands
+  UnityHands,
+  VillageHut,
+  BambooTree,
+  BrokenColonialGate,
+  WaterBuffalo,
+  RiceStorage,
+  WindPump,
+  OldFactory,
+  OldApartmentBlock,
+  HighBarrier
 } from '../js/object.js';
 import * as THREE from 'three';
 // Store all renderers, scenes, cameras, and objects
@@ -57,11 +65,6 @@ const objectTypes = [
     options: { y: 0, scale: 1.5 }
   },
   {
-    name: 'ColonialRemnant',
-    constructor: ColonialRemnant,
-    options: { y: 0, scale: 1.5 }
-  },
-  {
     name: 'PuppetManipulation',
     constructor: PuppetManipulation,
     options: { y: 0, scale: 1.5 }
@@ -74,7 +77,12 @@ const objectTypes = [
   {
     name: 'ColonialGate',
     constructor: ColonialGate,
-    options: { y: 0, scale: 15 }
+    options: { y: 0, scale: 0.5 }
+  },
+  {
+    name: 'HighBarrier',
+    constructor: HighBarrier,
+    options: { y: 0, scale: 0.5 }
   }
 ];
 
@@ -84,9 +92,6 @@ function init() {
 
   // Define categories mapping for better organization
   const categoryMap = {
-    // Deadly obstacles
-    colonialremnant: { category: 'obstacle', label: 'Vật cản nguy hiểm' },
-
     // Collectible items
     hammerandsickle: {
       category: 'collectible',

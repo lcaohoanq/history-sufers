@@ -73,7 +73,7 @@ export function WorldMap(networkStrategy = null) {
   var opponents = new Map();
 
   var groundSwapped = false;
-  var groundStage = 1
+  var groundStage = 1;
 
   // Initialize the world.
   init();
@@ -154,8 +154,6 @@ export function WorldMap(networkStrategy = null) {
         if (keysAllowed[key] === false) return;
         keysAllowed[key] = false;
 
-
-
         if (paused && !collisionsDetected() && key > 18) {
           paused = false;
           character.onUnpause();
@@ -176,6 +174,14 @@ export function WorldMap(networkStrategy = null) {
             document.getElementById('variable-content').style.visibility = 'visible';
             document.getElementById('variable-content').innerHTML =
               'Game is paused. Press any key to resume.';
+
+            // Show game panel when paused
+            if (typeof window.showGamePanel === 'function') {
+              window.showGamePanel();
+            } else {
+              const panel = document.getElementById('gamePanel');
+              if (panel) panel.style.display = 'block';
+            }
 
             // Pause music when game is paused
             AudioManager.pause();
@@ -281,11 +287,7 @@ export function WorldMap(networkStrategy = null) {
     if (!opponent) return;
 
     if (data.position) {
-      opponent.element.position.set(
-        data.position.x,
-        data.position.y,
-        data.position.z
-      );
+      opponent.element.position.set(data.position.x, data.position.y, data.position.z);
     }
     if (data.lane !== undefined) opponent.currentLane = data.lane;
     if (data.isJumping !== undefined) opponent.isJumping = data.isJumping;
@@ -316,16 +318,20 @@ export function WorldMap(networkStrategy = null) {
   function displayRaceResults(rankings) {
     var resultsHtml = '<h2>Race Results</h2><table>';
     rankings.forEach(function (rank) {
-      resultsHtml += '<tr><td>' + rank.rank + '</td><td>' +
-        rank.playerName + '</td><td>' + rank.score + '</td></tr>';
+      resultsHtml +=
+        '<tr><td>' +
+        rank.rank +
+        '</td><td>' +
+        rank.playerName +
+        '</td><td>' +
+        rank.score +
+        '</td></tr>';
     });
     resultsHtml += '</table>';
 
     document.getElementById('variable-content').innerHTML = resultsHtml;
     document.getElementById('variable-content').style.visibility = 'visible';
   }
-
-
 
   /**
    * Update stat bars in UI
@@ -405,7 +411,7 @@ export function WorldMap(networkStrategy = null) {
     if (buffs.justice !== 0)
       messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
     if (buffs.unity !== 0)
-      messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
+      messages.push('👨 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
 
     if (messages.length === 0) return;
 
@@ -481,7 +487,7 @@ export function WorldMap(networkStrategy = null) {
       }
 
       // Swap ground when reaching 50000 points
-            if (groundStage < 2 && score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
+      if (groundStage < 2 && score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
         // remove previous ground if present
         try {
           if (groundStage === 1 && scene && DUONG_DAT) scene.remove(DUONG_DAT);
@@ -506,8 +512,6 @@ export function WorldMap(networkStrategy = null) {
         deadlySpawnChance = 0.6;
         multiLaneDeadlyChance = 0.7;
       }
-
-
 
       if (score > GAME_CONSTANTS.MILE_STONES.HARD) {
         gameSpeed = 150;
@@ -639,7 +643,6 @@ export function WorldMap(networkStrategy = null) {
           var patternType = Math.random();
 
           if (score > 30000 && patternType < 0.2) {
-
             spawnCapitalistTrain(position);
           } else if (patternType < 0.4) {
             spawnSingleGate(position);
@@ -790,7 +793,6 @@ export function WorldMap(networkStrategy = null) {
     objects.push(train);
     scene.add(train.mesh);
   }
-
 
   function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {
@@ -1043,10 +1045,16 @@ export function WorldMap(networkStrategy = null) {
    */
   self.pause = function () {
     paused = true;
-    if (character) {
-      character.onPause();
-    }
+    if (character) character.onPause();
     AudioManager.pause();
+
+    // Show game panel when paused
+    if (typeof window.showGamePanel === 'function') {
+      window.showGamePanel();
+    } else {
+      const panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'block';
+    }
   };
 
   /**

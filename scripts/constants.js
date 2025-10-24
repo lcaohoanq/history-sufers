@@ -5,7 +5,12 @@ export const GAME_CONSTANTS = {
   START_LANE: -5,
   END_LANE: 6,
   TOC_DO_LUOT_DAT: 0.025,
-  SO_LUONG_LANE: 3
+  SO_LUONG_LANE: 3,
+  MILE_STONES: {
+    EASY: 25000,
+    MEDIUM: 5000,
+    HARD: 10000
+  }
 };
 
 export const GROUND_KIT = {
@@ -31,4 +36,28 @@ export let DUONG_CHAY = createBoxTexture(
   -60000,
   true,
   GROUND_KIT.DUONG_NHUA // path to your sand texture
+);
+
+export let DUONG_DAT = createBoxTexture(
+  3000,
+  20,
+  120000,
+  Colors.sand,
+  0,
+  -400,
+  -60000,
+  true,
+  GROUND_KIT.DUONG_DAT // path to your sand texture
+);
+
+export let DUONG_GACH = createBoxTexture(
+  3000,
+  20,
+  120000,
+  Colors.sand,
+  0,
+  -400,
+  -60000,
+  true,
+  GROUND_KIT.DUONG_GACH // path to your sand texture
 );

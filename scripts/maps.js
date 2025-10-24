@@ -14,7 +14,7 @@ import {
   UnityHands
 } from '../js/object.js';
 import { Character } from './characters.js';
-import { CAMERA_SETTINGS, DUONG_CHAY, GAME_CONSTANTS } from './constants.js';
+import { CAMERA_SETTINGS, DUONG_CHAY, DUONG_DAT, DUONG_GACH, GAME_CONSTANTS } from './constants.js';
 import { KEYCODE } from './keycode.js';
 import { SinglePlayerStrategy, MultiplayerStrategy } from './network-strategy.js';
 
@@ -72,6 +72,9 @@ export function WorldMap(networkStrategy = null) {
   var network = networkStrategy || new SinglePlayerStrategy();
   var opponents = new Map();
 
+  var groundSwapped = false;
+  var groundStage = 1
+
   // Initialize the world.
   init();
 
@@ -125,14 +128,15 @@ export function WorldMap(networkStrategy = null) {
     character = new Character();
     scene.add(character.element);
 
-    scene.add(DUONG_CHAY);
+    scene.add(DUONG_DAT);
+    groundStage = 1;
 
-    // const background = new THREE.TextureLoader().load('../assets/road.jpg');
-    // scene.background = background;
+    const background = new THREE.TextureLoader().load('../assets/road.jpg');
+    scene.background = background;
 
-    DUONG_CHAY.material.map.wrapS = THREE.RepeatWrapping;
-    DUONG_CHAY.material.map.wrapT = THREE.RepeatWrapping;
-    DUONG_CHAY.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
+    DUONG_DAT.material.map.wrapS = THREE.RepeatWrapping;
+    DUONG_DAT.material.map.wrapT = THREE.RepeatWrapping;
+    DUONG_DAT.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
 
     objects = [];
     for (var i = 10; i < 40; i++) {
@@ -470,22 +474,65 @@ export function WorldMap(networkStrategy = null) {
   function loop() {
     if (!paused) {
       // Tăng tốc theo mốc điểm
-      if (score > 25000) {
+      if (score > GAME_CONSTANTS.MILE_STONES.EASY) {
         gameSpeed = 100;
         minRowsBetweenDeadly = 6;
         deadlySpawnChance = 0.5;
       }
-      if (score > 50000) {
+
+      // Swap ground when reaching 50000 points
+            if (groundStage < 2 && score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
+        // remove previous ground if present
+        try {
+          if (groundStage === 1 && scene && DUONG_DAT) scene.remove(DUONG_DAT);
+          else if (groundStage === 3 && scene && DUONG_CHAY) scene.remove(DUONG_CHAY);
+        } catch (e) {
+          console.warn('Failed to remove previous ground', e);
+        }
+        if (DUONG_GACH) {
+          if (DUONG_GACH.material && DUONG_GACH.material.map) {
+            DUONG_GACH.material.map.wrapS = THREE.RepeatWrapping;
+            DUONG_GACH.material.map.wrapT = THREE.RepeatWrapping;
+            DUONG_GACH.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+          }
+          scene.add(DUONG_GACH);
+        }
+        groundStage = 2;
+      }
+
+      if (score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
         gameSpeed = 125;
         minRowsBetweenDeadly = 5;
         deadlySpawnChance = 0.6;
         multiLaneDeadlyChance = 0.7;
       }
-      if (score > 100000) {
+
+
+
+      if (score > GAME_CONSTANTS.MILE_STONES.HARD) {
         gameSpeed = 150;
         minRowsBetweenDeadly = 4;
         deadlySpawnChance = 0.7;
         multiLaneDeadlyChance = 0.7;
+      }
+
+      if (groundStage < 3 && score > GAME_CONSTANTS.MILE_STONES.HARD) {
+        // remove previous ground if present
+        try {
+          if (groundStage === 2 && scene && DUONG_GACH) scene.remove(DUONG_GACH);
+          else if (groundStage === 1 && scene && DUONG_DAT) scene.remove(DUONG_DAT);
+        } catch (e) {
+          console.warn('Failed to remove previous ground', e);
+        }
+        if (DUONG_CHAY) {
+          if (DUONG_CHAY.material && DUONG_CHAY.material.map) {
+            DUONG_CHAY.material.map.wrapS = THREE.RepeatWrapping;
+            DUONG_CHAY.material.map.wrapT = THREE.RepeatWrapping;
+            DUONG_CHAY.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+          }
+          scene.add(DUONG_CHAY);
+        }
+        groundStage = 3;
       }
 
       // Spawn đường mới
@@ -592,6 +639,7 @@ export function WorldMap(networkStrategy = null) {
           var patternType = Math.random();
 
           if (score > 30000 && patternType < 0.2) {
+
             spawnCapitalistTrain(position);
           } else if (patternType < 0.4) {
             spawnSingleGate(position);

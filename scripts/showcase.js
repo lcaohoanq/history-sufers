@@ -5,7 +5,6 @@ import {
   ColonialRemnant,
   CorruptedThrone,
   HammerAndSickle,
-  HammerAndSickleUpScale,
   MisbalancedScale,
   PuppetManipulation,
   ReformGears,
@@ -26,11 +25,6 @@ const objectTypes = [
     name: 'HammerAndSickle',
     constructor: HammerAndSickle,
     options: { y: 100, scale: 1.5 }
-  },
-  {
-    name: 'HammerAndSickleUpScale',
-    constructor: HammerAndSickleUpScale,
-    options: { y: 0, scale: 0.5 }
   },
   {
     name: 'BribeEnvelope',

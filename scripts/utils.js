@@ -218,3 +218,4 @@ export function animateGlow(mesh, time) {
     mesh.userData.glowLight.intensity = mesh.userData.glowIntensity * pulse;
   }
 }
+

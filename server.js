@@ -241,12 +241,12 @@ io.on('connection', (socket) => {
       // Send notification
       socket.emit('notification', {
         type: 'success',
-        title: 'Room Created!',
-        message: `Room ${roomId} is ready. Share the code with friends!`,
+        title: 'Tạo phòng thành công!',
+        message: `Mã phòng ${roomId} sẵn sàng. Chia sẻ mã với bạn bè!`,
         duration: 5000
       });
 
-      console.log(`🎮 Room created: ${roomId} by ${socket.id}`);
+      console.log(`🎮 Tạo phòng thành công: ${roomId} bởi ${socket.id}`);
     } else {
       socket.emit('error', { message: 'Failed to create room' });
     }
@@ -265,6 +265,22 @@ io.on('connection', (socket) => {
         message: `Room ${roomId} doesn't exist or has been closed.`,
         duration: 5000
       });
+      return;
+    }
+
+    if (room.players.has(socket.id)) {
+      console.log(`🔄 Player ${socket.id} rejoining room ${roomId}`);
+
+      socket.join(roomId);
+      playerRooms.set(socket.id, roomId);
+
+      socket.emit('roomJoined', {
+        roomId: roomId,
+        playerId: socket.id,
+        players: room.getPlayersArray(),
+        maxPlayers: room.maxPlayers
+      });
+
       return;
     }
 

@@ -83,156 +83,173 @@ export function WorldMap(networkStrategy = null) {
    * then begins the rendering loop.
    */
   function init() {
-    // Locate where the world is to be located on the screen.
-    element = document.getElementById('world');
+    try {
+      // Locate where the world is to be located on the screen.
+      element = document.getElementById('world');
 
-    // Initialize the renderer.
-    renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true
-    });
-    renderer.setSize(element.clientWidth, element.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    element.appendChild(renderer.domElement);
+      // Initialize the renderer.
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true
+      });
+      renderer.setSize(element.clientWidth, element.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      element.appendChild(renderer.domElement);
 
-    // Initialize the scene.
-    scene = new THREE.Scene();
-    // fogDistance = 40000;
-    // scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
+      // Initialize the scene.
+      scene = new THREE.Scene();
+      // fogDistance = 40000;
+      // scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
 
-    // Initialize the camera with field of view, aspect ratio,
-    // near plane, and far plane.
-    camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
-    // Initial camera position
-    camera.position.set(CAMERA_SETTINGS.NGANG.x, CAMERA_SETTINGS.NGANG.y, CAMERA_SETTINGS.NGANG.z);
-    camera.lookAt(new THREE.Vector3(0, 600, -5000));
+      // Initialize the camera with field of view, aspect ratio,
+      // near plane, and far plane.
+      camera = new THREE.PerspectiveCamera(
+        60,
+        element.clientWidth / element.clientHeight,
+        1,
+        120000
+      );
+      // Initial camera position
+      camera.position.set(
+        CAMERA_SETTINGS.NGANG.x,
+        CAMERA_SETTINGS.NGANG.y,
+        CAMERA_SETTINGS.NGANG.z
+      );
+      camera.lookAt(new THREE.Vector3(0, 600, -5000));
 
-    // After 2s, transition back to NORMAL
-    setTimeout(() => {
-      setCameraPosition(CAMERA_SETTINGS.NORMAL, 1500);
-    }, 2000);
-    window.camera = camera;
+      // After 2s, transition back to NORMAL
+      setTimeout(() => {
+        setCameraPosition(CAMERA_SETTINGS.NORMAL, 1500);
+      }, 2000);
+      window.camera = camera;
 
-    // Set up resizing capabilities.
-    window.addEventListener('resize', handleWindowResize, false);
+      // Set up resizing capabilities.
+      window.addEventListener('resize', handleWindowResize, false);
 
-    // Initialize the lights.
-    light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
-    scene.add(light);
+      // Initialize the lights.
+      light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
+      scene.add(light);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+      scene.add(ambientLight);
 
-    // Initialize the character and add it to the scene.
-    character = new Character();
-    scene.add(character.element);
+      // Initialize the character and add it to the scene.
+      character = new Character();
+      scene.add(character.element);
 
-    scene.add(DUONG_DAT);
-    groundStage = 1;
+      scene.add(DUONG_DAT);
+      groundStage = 1;
 
-    const background = new THREE.TextureLoader().load('../assets/road.jpg');
-    scene.background = background;
+      const background = new THREE.TextureLoader().load('../assets/road.jpg');
+      scene.background = background;
 
-    DUONG_DAT.material.map.wrapS = THREE.RepeatWrapping;
-    DUONG_DAT.material.map.wrapT = THREE.RepeatWrapping;
-    DUONG_DAT.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
+      DUONG_DAT.material.map.wrapS = THREE.RepeatWrapping;
+      DUONG_DAT.material.map.wrapT = THREE.RepeatWrapping;
+      DUONG_DAT.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200); // adjust to your liking
 
-    objects = [];
-    for (var i = 10; i < 40; i++) {
-      createRowOfObjects(i * -3000);
-    }
+      objects = [];
+      for (var i = 10; i < 40; i++) {
+        createRowOfObjects(i * -3000);
+      }
 
-    // The game is paused to begin with and the game is not over.
-    gameOver = false;
-    paused = true;
+      // The game is paused to begin with and the game is not over.
+      gameOver = false;
+      paused = true;
 
-    keysAllowed = {};
-    document.addEventListener('keydown', function (e) {
-      if (!gameOver) {
-        var key = e.keyCode;
-        if (keysAllowed[key] === false) return;
-        keysAllowed[key] = false;
+      keysAllowed = {};
+      document.addEventListener('keydown', function (e) {
+        if (!gameOver) {
+          var key = e.keyCode;
+          if (keysAllowed[key] === false) return;
+          keysAllowed[key] = false;
 
-        if (paused && !collisionsDetected() && key > 18) {
-          paused = false;
-          character.onUnpause();
-          document.getElementById('variable-content').style.visibility = 'hidden';
-          // document.getElementById('controls').style.display = 'none';
+          if (paused && !collisionsDetected() && key > 18) {
+            paused = false;
+            character.onUnpause();
+            document.getElementById('variable-content').style.visibility = 'hidden';
+            // document.getElementById('controls').style.display = 'none';
 
-          const panel = document.getElementById('gamePanel');
-          if (panel) {
-            panel.style.display = 'none';
-          }
-
-          // Start playing background music when game starts
-          AudioManager.play();
-        } else {
-          if (key == KEYCODE.ESC) {
-            paused = true;
-            character.onPause();
-            document.getElementById('variable-content').style.visibility = 'visible';
-            document.getElementById('variable-content').innerHTML =
-              'Game is paused. Press any key to resume.';
-
-            // Show game panel when paused
-            if (typeof window.showGamePanel === 'function') {
-              window.showGamePanel();
-            } else {
-              const panel = document.getElementById('gamePanel');
-              if (panel) panel.style.display = 'block';
+            const panel = document.getElementById('gamePanel');
+            if (panel) {
+              panel.style.display = 'none';
             }
 
-            // Pause music when game is paused
-            AudioManager.pause();
-          }
-          if (key == KEYCODE.UP && !paused) {
-            character.onUpKeyPressed();
-          }
-          if (key == KEYCODE.LEFT && !paused) {
-            character.onLeftKeyPressed();
-          }
-          if (key == KEYCODE.RIGHT && !paused) {
-            character.onRightKeyPressed();
-          }
-          if (key === KEYCODE.V && !paused) {
-            // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
-            //   setCameraPosition(CAMERA_SETTINGS.NGANG);
-            // } else {
-            //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
-            // }
-            currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
-            const mode = cameraModes[currentCameraIndex];
-            setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
-          }
+            // Start playing background music when game starts
+            AudioManager.play();
+          } else {
+            if (key == KEYCODE.ESC) {
+              paused = true;
+              character.onPause();
+              document.getElementById('variable-content').style.visibility = 'visible';
+              document.getElementById('variable-content').innerHTML =
+                'Game is paused. Press any key to resume.';
 
-          if (key === KEYCODE.P && !paused) {
-            character.nextSkin();
+              // Show game panel when paused
+              if (typeof window.showGamePanel === 'function') {
+                window.showGamePanel();
+              } else {
+                const panel = document.getElementById('gamePanel');
+                if (panel) panel.style.display = 'block';
+              }
+
+              // Pause music when game is paused
+              AudioManager.pause();
+            }
+            if (key == KEYCODE.UP && !paused) {
+              character.onUpKeyPressed();
+            }
+            if (key == KEYCODE.LEFT && !paused) {
+              character.onLeftKeyPressed();
+            }
+            if (key == KEYCODE.RIGHT && !paused) {
+              character.onRightKeyPressed();
+            }
+            if (key === KEYCODE.V && !paused) {
+              // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
+              //   setCameraPosition(CAMERA_SETTINGS.NGANG);
+              // } else {
+              //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
+              // }
+              currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
+              const mode = cameraModes[currentCameraIndex];
+              setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
+            }
+
+            if (key === KEYCODE.P && !paused) {
+              character.nextSkin();
+            }
           }
         }
+      });
+      document.addEventListener('keyup', function (e) {
+        keysAllowed[e.keyCode] = true;
+      });
+      document.addEventListener('focus', function (e) {
+        keysAllowed = {};
+      });
+
+      // Initialize the scores and difficulty.
+      score = 0;
+      difficulty = 0;
+      document.getElementById('score').innerHTML = score;
+
+      network.init();
+
+      // Setup network callbacks nếu là multiplayer
+      if (network.isMultiplayer) {
+        setupMultiplayerCallbacks();
       }
-    });
-    document.addEventListener('keyup', function (e) {
-      keysAllowed[e.keyCode] = true;
-    });
-    document.addEventListener('focus', function (e) {
-      keysAllowed = {};
-    });
 
-    // Initialize the scores and difficulty.
-    score = 0;
-    difficulty = 0;
-    document.getElementById('score').innerHTML = score;
-
-    network.init();
-
-    // Setup network callbacks nếu là multiplayer
-    if (network.isMultiplayer) {
-      setupMultiplayerCallbacks();
+      // Begin the rendering loop.
+      loop();
+    } catch (err) {
+      console.error('World init failed', err);
+      // fail-safe: show pause panel so user sees something instead of blank
+      const panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'block';
+      return;
     }
-
-    // Begin the rendering loop.
-    loop();
   }
 
   function setupMultiplayerCallbacks() {
@@ -471,7 +488,7 @@ export function WorldMap(networkStrategy = null) {
       message +
       '</p><p>Score: ' +
       score +
-      '</p><p>Press down arrow to try again.</p>';
+      '</p><p>Nhấn mũi tên xuống để chơi lại.</p>';
   }
 
   /**

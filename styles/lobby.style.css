@@ -156,6 +156,14 @@ body {
   margin-bottom: 30px;
 }
 
+.card-lobby {
+/* background: rgba(255, 255, 255, 0.95); */
+  /* border-radius: 30px; */
+  padding-top: 0rem;
+  /* box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); */
+  margin-bottom: 30px;
+}
+
 .card-title {
   font-family: 'Baloo 2', cursive;
   font-size: 2.5em;
@@ -363,10 +371,10 @@ body {
   padding: 10px 20px;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 1.2em;
+  font-size: 1.75em;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .player-list {
@@ -452,6 +460,8 @@ body {
 /* Room List */
 .room-list {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 15px;
   max-height: 500px;
   overflow-y: auto;
@@ -518,20 +528,17 @@ body {
 }
 
 .alert-info {
-  background: rgba(79, 172, 254, 0.15);
-  border: 2px solid rgba(79, 172, 254, 0.3);
+  background: #f1f1f1;
   color: #0066cc;
 }
 
 .alert-error {
-  background: rgba(245, 87, 108, 0.15);
-  border: 2px solid rgba(245, 87, 108, 0.3);
+  background: #f1f1f1;
   color: #c44569;
 }
 
 .alert-success {
-  background: rgba(80, 184, 70, 0.15);
-  border: 2px solid rgba(80, 184, 70, 0.3);
+  background: #f1f1f1;
   color: #3d8f35;
 }
 

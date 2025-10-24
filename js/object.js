@@ -1187,7 +1187,7 @@ export function HighBarrier(x, y, z, s, scene) {
     );
   };
 
-  this.enableHitbox = true;  // bật mặc định
+  this.enableHitbox = false;  // tắt mặc định
 
   this.showHitbox = function () {
     if (!this.hitboxHelper) {

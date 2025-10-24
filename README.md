@@ -159,7 +159,7 @@ Example: A player named "Alex" will always have the same adventurer avatar acros
 
 All game events trigger toast notifications:
 
-- 🟢 **Success** (green): Room created, race started, player ready
+- 🟢 **Success** (green): Tạo phòng thành công, race started, player ready
 - 🔴 **Error** (red): Room full, invalid code, connection issues
 - 🟡 **Warning** (yellow): Host left, player disconnected
 - 🔵 **Info** (blue): Player joined, countdown, race updates

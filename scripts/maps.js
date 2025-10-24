@@ -60,7 +60,7 @@ export function WorldMap(networkStrategy = null) {
   var minRowsBetweenDeadly = 5;
   var minRowsBetweenBuff = 3;
   var lastSafeLane = 0;
-  var DEBUG_HITBOX = true; // Bật/tắt toàn bộ hitbox test
+  var DEBUG_HITBOX = false; // Bật/tắt toàn bộ hitbox test
 
   // ===== DIFFICULTY SCALING =====
   var gameSpeed = 75; // Initial speed
@@ -74,7 +74,6 @@ export function WorldMap(networkStrategy = null) {
   var network = networkStrategy || new SinglePlayerStrategy();
   var opponents = new Map();
 
-  // Gom tất cả đường vào 1 object để dễ quản lý
   const GROUNDS = {
     1: DUONG_DAT,
     2: DUONG_GACH,
@@ -94,158 +93,173 @@ export function WorldMap(networkStrategy = null) {
    * then begins the rendering loop.
    */
   function init() {
-    // Locate where the world is to be located on the screen.
-    element = document.getElementById('world');
+    try {
+      // Locate where the world is to be located on the screen.
+      element = document.getElementById('world');
 
-    // Initialize the renderer.
-    renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true
-    });
-    renderer.setSize(element.clientWidth, element.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    element.appendChild(renderer.domElement);
+      // Initialize the renderer.
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true
+      });
+      renderer.setSize(element.clientWidth, element.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      element.appendChild(renderer.domElement);
 
-    // Initialize the scene.
-    scene = new THREE.Scene();
-    // fogDistance = 40000;
-    // scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
+      // Initialize the scene.
+      scene = new THREE.Scene();
+      // fogDistance = 40000;
+      // scene.fog = new THREE.Fog(0xbadbe4, 1, fogDistance);
 
-    // Initialize the camera with field of view, aspect ratio,
-    // near plane, and far plane.
-    camera = new THREE.PerspectiveCamera(60, element.clientWidth / element.clientHeight, 1, 120000);
-    // Initial camera position
-    camera.position.set(CAMERA_SETTINGS.NGANG.x, CAMERA_SETTINGS.NGANG.y, CAMERA_SETTINGS.NGANG.z);
-    camera.lookAt(new THREE.Vector3(0, 600, -5000));
+      // Initialize the camera with field of view, aspect ratio,
+      // near plane, and far plane.
+      camera = new THREE.PerspectiveCamera(
+        60,
+        element.clientWidth / element.clientHeight,
+        1,
+        120000
+      );
+      // Initial camera position
+      camera.position.set(
+        CAMERA_SETTINGS.NGANG.x,
+        CAMERA_SETTINGS.NGANG.y,
+        CAMERA_SETTINGS.NGANG.z
+      );
+      camera.lookAt(new THREE.Vector3(0, 600, -5000));
 
-    // After 2s, transition back to NORMAL
-    setTimeout(() => {
-      setCameraPosition(CAMERA_SETTINGS.NORMAL, 1500);
-    }, 2000);
-    window.camera = camera;
+      // After 2s, transition back to NORMAL
+      setTimeout(() => {
+        setCameraPosition(CAMERA_SETTINGS.NORMAL, 1500);
+      }, 2000);
+      window.camera = camera;
 
-    // Set up resizing capabilities.
-    window.addEventListener('resize', handleWindowResize, false);
+      // Set up resizing capabilities.
+      window.addEventListener('resize', handleWindowResize, false);
 
-    // Initialize the lights.
-    light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
-    scene.add(light);
+      // Initialize the lights.
+      light = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
+      scene.add(light);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+      scene.add(ambientLight);
 
-    // Initialize the character and add it to the scene.
-    character = new Character();
-    scene.add(character.element);
+      // Initialize the character and add it to the scene.
+      character = new Character();
+      scene.add(character.element);
 
-    [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach(g => {
-      if (g?.material?.map) {
-        g.material.map.wrapS = THREE.RepeatWrapping;
-        g.material.map.wrapT = THREE.RepeatWrapping;
-        g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+      [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach(g => {
+        if (g?.material?.map) {
+          g.material.map.wrapS = THREE.RepeatWrapping;
+          g.material.map.wrapT = THREE.RepeatWrapping;
+          g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+      });
+
+      groundStage = 0;
+      activeGround = null;
+      switchGround(1);
+
+      const background = new THREE.TextureLoader().load('../assets/road.jpg');
+      scene.background = background;
+
+
+      objects = [];
+      for (var i = 10; i < 40; i++) {
+        createRowOfObjects(i * -3000);
       }
-    });
 
-    groundStage = 0;
-    activeGround = null;
-    switchGround(1);
+      gameOver = false;
+      paused = true;
 
-    const background = new THREE.TextureLoader().load('../assets/road.jpg');
-    scene.background = background;
+      keysAllowed = {};
+      document.addEventListener('keydown', function (e) {
+        if (!gameOver) {
+          var key = e.keyCode;
+          if (keysAllowed[key] === false) return;
+          keysAllowed[key] = false;
 
+          if (paused && !collisionsDetected() && key > 18) {
+            paused = false;
+            character.onUnpause();
+            document.getElementById('variable-content').style.visibility = 'hidden';
+            // document.getElementById('controls').style.display = 'none';
 
-    objects = [];
-    for (var i = 10; i < 40; i++) {
-      createRowOfObjects(i * -3000);
-    }
+            const panel = document.getElementById('gamePanel');
+            if (panel) {
+              panel.style.display = 'none';
+            }
 
-    gameOver = false;
-    paused = true;
+            // Start playing background music when game starts
+            AudioManager.play();
+          } else {
+            if (key == KEYCODE.ESC) {
+              paused = true;
+              character.onPause();
+              document.getElementById('variable-content').style.visibility = 'visible';
+              document.getElementById('variable-content').innerHTML =
+                '<h2>PAUSED</h2><p>Nhấn phím bất kỳ để tiếp tục.</p>';
 
-    keysAllowed = {};
-    document.addEventListener('keydown', function (e) {
-      if (!gameOver) {
-        var key = e.keyCode;
-        if (keysAllowed[key] === false) return;
-        keysAllowed[key] = false;
+              // Pause music when game is paused
+              AudioManager.pause();
+            }
+            if (key == KEYCODE.UP && !paused) {
+              character.onUpKeyPressed();
+            }
+            if (key == KEYCODE.LEFT && !paused) {
+              character.onLeftKeyPressed();
+            }
+            if (key == KEYCODE.RIGHT && !paused) {
+              character.onRightKeyPressed();
+            }
+            if (key == KEYCODE.DOWN && !paused) {
+              character.onDownKeyPressed();
+            }
+            if (key === KEYCODE.V && !paused) {
+              // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
+              //   setCameraPosition(CAMERA_SETTINGS.NGANG);
+              // } else {
+              //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
+              // }
+              currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
+              const mode = cameraModes[currentCameraIndex];
+              setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
+            }
 
-
-
-        if (paused && !collisionsDetected() && key > 18) {
-          paused = false;
-          character.onUnpause();
-          document.getElementById('variable-content').style.visibility = 'hidden';
-          // document.getElementById('controls').style.display = 'none';
-
-          const panel = document.getElementById('gamePanel');
-          if (panel) {
-            panel.style.display = 'none';
-          }
-
-          // Start playing background music when game starts
-          AudioManager.play();
-        } else {
-          if (key == KEYCODE.ESC) {
-            paused = true;
-            character.onPause();
-            document.getElementById('variable-content').style.visibility = 'visible';
-            document.getElementById('variable-content').innerHTML =
-              'Game is paused. Press any key to resume.';
-
-            // Pause music when game is paused
-            AudioManager.pause();
-          }
-          if (key == KEYCODE.UP && !paused) {
-            character.onUpKeyPressed();
-          }
-          if (key == KEYCODE.LEFT && !paused) {
-            character.onLeftKeyPressed();
-          }
-          if (key == KEYCODE.RIGHT && !paused) {
-            character.onRightKeyPressed();
-          }
-          if (key == KEYCODE.DOWN && !paused) {
-            character.onDownKeyPressed();
-          }
-          if (key === KEYCODE.V && !paused) {
-            // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
-            //   setCameraPosition(CAMERA_SETTINGS.NGANG);
-            // } else {
-            //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
-            // }
-            currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
-            const mode = cameraModes[currentCameraIndex];
-            setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
-          }
-
-          if (key === KEYCODE.P && !paused) {
-            character.nextSkin();
+            if (key === KEYCODE.P && !paused) {
+              character.nextSkin();
+            }
           }
         }
+      });
+      document.addEventListener('keyup', function (e) {
+        keysAllowed[e.keyCode] = true;
+      });
+      document.addEventListener('focus', function (e) {
+        keysAllowed = {};
+      });
+
+      // Initialize the scores and difficulty.
+      score = 0;
+      difficulty = 0;
+      document.getElementById('score').innerHTML = score;
+
+      network.init();
+
+      // Setup network callbacks nếu là multiplayer
+      if (network.isMultiplayer) {
+        setupMultiplayerCallbacks();
       }
-    });
-    document.addEventListener('keyup', function (e) {
-      keysAllowed[e.keyCode] = true;
-    });
-    document.addEventListener('focus', function (e) {
-      keysAllowed = {};
-    });
 
-    // Initialize the scores and difficulty.
-    score = 0;
-    difficulty = 0;
-    document.getElementById('score').innerHTML = score;
-
-    network.init();
-
-    // Setup network callbacks nếu là multiplayer
-    if (network.isMultiplayer) {
-      setupMultiplayerCallbacks();
+      // Begin the rendering loop.
+      loop();
+    } catch (err) {
+      console.error('World init failed', err);
+      // fail-safe: show pause panel so user sees something instead of blank
+      const panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'block';
+      return;
     }
-
-    // Begin the rendering loop.
-    loop();
   }
 
   function setupMultiplayerCallbacks() {
@@ -300,11 +314,7 @@ export function WorldMap(networkStrategy = null) {
     if (!opponent) return;
 
     if (data.position) {
-      opponent.element.position.set(
-        data.position.x,
-        data.position.y,
-        data.position.z
-      );
+      opponent.element.position.set(data.position.x, data.position.y, data.position.z);
     }
     if (data.lane !== undefined) opponent.currentLane = data.lane;
     if (data.isJumping !== undefined) opponent.isJumping = data.isJumping;
@@ -335,16 +345,20 @@ export function WorldMap(networkStrategy = null) {
   function displayRaceResults(rankings) {
     var resultsHtml = '<h2>Race Results</h2><table>';
     rankings.forEach(function (rank) {
-      resultsHtml += '<tr><td>' + rank.rank + '</td><td>' +
-        rank.playerName + '</td><td>' + rank.score + '</td></tr>';
+      resultsHtml +=
+        '<tr><td>' +
+        rank.rank +
+        '</td><td>' +
+        rank.playerName +
+        '</td><td>' +
+        rank.score +
+        '</td></tr>';
     });
     resultsHtml += '</table>';
 
     document.getElementById('variable-content').innerHTML = resultsHtml;
     document.getElementById('variable-content').style.visibility = 'visible';
   }
-
-
 
   /**
    * Update stat bars in UI
@@ -424,7 +438,7 @@ export function WorldMap(networkStrategy = null) {
     if (buffs.justice !== 0)
       messages.push('⚖️ Công Bằng ' + (buffs.justice > 0 ? '+' : '') + buffs.justice);
     if (buffs.unity !== 0)
-      messages.push('🤜🤛 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
+      messages.push('👨 Đoàn Kết ' + (buffs.unity > 0 ? '+' : '') + buffs.unity);
 
     if (messages.length === 0) return;
 
@@ -484,7 +498,7 @@ export function WorldMap(networkStrategy = null) {
       message +
       '</p><p>Score: ' +
       score +
-      '</p><p>Press R to try again.</p>';
+      '</p><p>Nhấn R để chơi lại.</p>';
   }
 
   /**
@@ -507,8 +521,6 @@ export function WorldMap(networkStrategy = null) {
 
         if (groundStage < 2) switchGround(2);
       }
-
-
 
       if (score > GAME_CONSTANTS.MILE_STONES.HARD) {
         gameSpeed = 150;
@@ -537,7 +549,6 @@ export function WorldMap(networkStrategy = null) {
         }
       }
 
-      // ✅ Update offset cho texture đường hiện tại
       if (activeGround?.material?.map) {
         activeGround.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
       }
@@ -657,17 +668,16 @@ export function WorldMap(networkStrategy = null) {
           var patternType = Math.random();
 
           if (score > 30000 && patternType < 0.15) {
-            // Train (giảm tỉ lệ xuống 15%)
+            // Train
             spawnCapitalistTrain(position);
           } else if (patternType < 0.3) {
             // Single gate
             spawnSingleGate(position);
           } else if (patternType < 0.5) {
-            // High barrier (slide để qua) ⭐ MỚI
             spawnHighBarrierPattern(position);
           } else if (patternType < 0.7) {
-            // 3 gates liên tiếp
-            for (let i = 0; i < 3; i++) {
+            // 2 gates liên tiếp
+            for (let i = 0; i < 2; i++) {
               spawnSingleGate(position - i * 1500);
             }
           } else if (patternType < 0.85) {
@@ -678,7 +688,6 @@ export function WorldMap(networkStrategy = null) {
             // Two lane block
             spawnTwoLaneBlock(position);
           } else {
-            // High barrier + low gate combo ⭐ MỚI
             spawnHighBarrierPattern(position);
             spawnSingleGate(position - 1500); // Gate thấp phía sau
           }
@@ -839,7 +848,6 @@ export function WorldMap(networkStrategy = null) {
     objects.push(train);
     scene.add(train.mesh);
   }
-
 
   function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {
@@ -1087,10 +1095,16 @@ export function WorldMap(networkStrategy = null) {
    */
   self.pause = function () {
     paused = true;
-    if (character) {
-      character.onPause();
-    }
+    if (character) character.onPause();
     AudioManager.pause();
+
+    // Show game panel when paused
+    if (typeof window.showGamePanel === 'function') {
+      window.showGamePanel();
+    } else {
+      const panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'block';
+    }
   };
 
   /**
@@ -1120,6 +1134,6 @@ export function WorldMap(networkStrategy = null) {
     };
   };
 
-  // Return self for chaining if needed
+
   return self;
 }

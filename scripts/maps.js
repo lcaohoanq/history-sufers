@@ -557,7 +557,13 @@ export function WorldMap(networkStrategy = null) {
         }
       }
 
-      DUONG_CHAY.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      if (groundStage == 1) {
+        DUONG_DAT.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      } else if (groundStage == 2) {
+        DUONG_GACH.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      } else {
+        DUONG_CHAY.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      }
 
       // Xóa object khi ra khỏi màn
       objects = objects.filter(function (object) {

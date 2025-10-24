@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createCylinder } from '../scripts/utils.js';
+import { createCylinder, createTextLabel, addGlowEffect } from '../scripts/utils.js';
 import { Colors } from '../scripts/colors.js';
 
 /**
@@ -103,8 +103,6 @@ export function HammerAndSickle(x, y, z, s) {
   this.isCollected = false;
   this.particles = [];
 
-  // using flat materials; no point lights for 2D-style coloring
-
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
     var obstMinX = self.mesh.position.x - scaleFactor * 100;
@@ -129,174 +127,10 @@ export function HammerAndSickle(x, y, z, s) {
       this.mesh.position.y += 0.6;
       this.mesh.rotation.y += 0.06;
     }
-    if (this.particles && this.particles.length > 0) {
-      for (let i = this.particles.length - 1; i >= 0; i--) {
-        let p = this.particles[i];
-        p.position.y += 0.35;
-        p.material.opacity -= 0.02;
-        if (p.material.opacity <= 0) {
-          this.mesh.remove(p);
-          this.particles.splice(i, 1);
-        }
-      }
-    }
   };
 
   this.collect = function () {
     this.isCollected = true;
-    this.spawnParticles();
-  };
-
-  this.spawnParticles = function () {
-    for (let i = 0; i < 18; i++) {
-      let geom = new THREE.SphereGeometry(4, 8, 8);
-      let mat = new THREE.MeshBasicMaterial({
-        color: 0xffd700,
-        transparent: true,
-        opacity: 1
-      });
-      let spark = new THREE.Mesh(geom, mat);
-      spark.position.set(
-        (Math.random() - 0.5) * 60,
-        Math.random() * 60,
-        (Math.random() - 0.5) * 40
-      );
-      this.mesh.add(spark);
-      this.particles.push(spark);
-    }
-  };
-}
-
-export function HammerAndSickleUpScale(x, y, z, s) {
-  var self = this;
-  this.mesh = new THREE.Object3D();
-
-  // ===== BUFF SYSTEM =====
-  this.buffs = { trust: 0, justice: 0, unity: 0 };
-  this.buffValue = 10;
-
-  // ===== MATERIAL =====
-  const goldMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-
-  // ===== SCALE FIX FACTOR =====
-  // Tree ~1150 units tall → scale hammer/sickle up by ~5x
-  const SCALE_FIX = 5;
-
-  // ===== HAMMER =====
-  const handleGeom = new THREE.CylinderGeometry(
-    3.5 * SCALE_FIX,
-    3.5 * SCALE_FIX,
-    130 * SCALE_FIX,
-    12
-  );
-  const handle = new THREE.Mesh(handleGeom, goldMaterial);
-  handle.rotation.z = Math.PI * 0.3;
-  handle.position.set(-8 * SCALE_FIX, -10 * SCALE_FIX, 5 * SCALE_FIX);
-
-  const headGeom = new THREE.BoxGeometry(45 * SCALE_FIX, 18 * SCALE_FIX, 20 * SCALE_FIX);
-  const head = new THREE.Mesh(headGeom, goldMaterial);
-  head.rotation.z = Math.PI * 0.3;
-  head.position.set(28 * SCALE_FIX, 22 * SCALE_FIX, 5 * SCALE_FIX);
-
-  const neckGeom = new THREE.BoxGeometry(10 * SCALE_FIX, 20 * SCALE_FIX, 10 * SCALE_FIX);
-  const neck = new THREE.Mesh(neckGeom, goldMaterial);
-  neck.rotation.z = Math.PI * 0.3;
-  neck.position.set(10 * SCALE_FIX, 5 * SCALE_FIX, 5 * SCALE_FIX);
-
-  // ===== SICKLE =====
-  const sickleGeom = new THREE.TorusGeometry(
-    90 * SCALE_FIX,
-    8 * SCALE_FIX,
-    24,
-    200,
-    Math.PI * 1.55
-  );
-  const sickle = new THREE.Mesh(sickleGeom, goldMaterial);
-  sickle.rotation.set(Math.PI / 2, 0, -Math.PI * 0.25);
-  sickle.position.set(-10 * SCALE_FIX, 5 * SCALE_FIX, 0);
-
-  const innerGeom = new THREE.TorusGeometry(75 * SCALE_FIX, 5 * SCALE_FIX, 16, 180, Math.PI * 1.5);
-  const inner = new THREE.Mesh(innerGeom, goldMaterial);
-  inner.rotation.set(Math.PI / 2, 0, -Math.PI * 0.25);
-  inner.position.set(-10 * SCALE_FIX, 5 * SCALE_FIX, 0);
-
-  const bladeGeom = new THREE.ConeGeometry(9 * SCALE_FIX, 30 * SCALE_FIX, 12);
-  const blade = new THREE.Mesh(bladeGeom, goldMaterial);
-  blade.position.set(-78 * SCALE_FIX, 38 * SCALE_FIX, 0);
-  blade.rotation.set(0, 0, -Math.PI * 0.6);
-
-  this.mesh.add(sickle, inner, blade, handle, neck, head);
-  this.mesh.rotation.z = Math.PI * 0.5;
-  this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
-
-  this.scale = s;
-  this.type = 'hammerandsickle';
-  this.isCollected = false;
-  this.particles = [];
-
-  // ===== COLLISION BOX (adjusted for bigger size) =====
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var scaleFactor = Math.sqrt(this.scale) * SCALE_FIX * 1.2;
-    var obstMinX = self.mesh.position.x - scaleFactor * 100;
-    var obstMaxX = self.mesh.position.x + scaleFactor * 100;
-    var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + scaleFactor * 200;
-    var obstMinZ = self.mesh.position.z - scaleFactor * 100;
-    var obstMaxZ = self.mesh.position.z + scaleFactor * 100;
-    return (
-      obstMinX <= maxX &&
-      obstMaxX >= minX &&
-      obstMinY <= maxY &&
-      obstMaxY >= minY &&
-      obstMinZ <= maxZ &&
-      obstMaxZ >= minZ
-    );
-  };
-
-  // ===== UPDATE =====
-  this.update = function () {
-    this.mesh.rotation.y += 0.008;
-    if (this.isCollected) {
-      this.mesh.position.y += 0.6;
-      this.mesh.rotation.y += 0.06;
-    }
-    if (this.particles.length > 0) {
-      for (let i = this.particles.length - 1; i >= 0; i--) {
-        let p = this.particles[i];
-        p.position.y += 0.35;
-        p.material.opacity -= 0.02;
-        if (p.material.opacity <= 0) {
-          this.mesh.remove(p);
-          this.particles.splice(i, 1);
-        }
-      }
-    }
-  };
-
-  // ===== PARTICLE EFFECT =====
-  this.collect = function () {
-    this.isCollected = true;
-    this.spawnParticles();
-  };
-
-  this.spawnParticles = function () {
-    for (let i = 0; i < 18; i++) {
-      let geom = new THREE.SphereGeometry(4 * SCALE_FIX * 0.3, 8, 8);
-      let mat = new THREE.MeshBasicMaterial({
-        color: 0xffd700,
-        transparent: true,
-        opacity: 1
-      });
-      let spark = new THREE.Mesh(geom, mat);
-      spark.position.set(
-        (Math.random() - 0.5) * 60 * SCALE_FIX,
-        Math.random() * 60 * SCALE_FIX,
-        (Math.random() - 0.5) * 40 * SCALE_FIX
-      );
-      this.mesh.add(spark);
-      this.particles.push(spark);
-    }
   };
 }
 
@@ -318,6 +152,21 @@ export function BribeEnvelope(x, y, z, s) {
 
   var envelope = new THREE.Mesh(new THREE.BoxGeometry(120, 80, 6, 1, 1, 1), paperMat);
   envelope.position.set(0, 0, 0);
+
+  // ===== ADD PURPLE GLOW (DEBUFF) =====
+  addGlowEffect(this.mesh, 0x8b00ff, 1.5, 450); // Purple glow
+
+  // Add purple aura
+  const auraGeom = new THREE.SphereGeometry(80, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({
+    color: 0x8b00ff,
+    transparent: true,
+    opacity: 0.12,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(auraGeom, auraMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
 
   var flapShape = new THREE.Shape();
   flapShape.moveTo(-60, 0);
@@ -349,6 +198,7 @@ export function BribeEnvelope(x, y, z, s) {
 
   this.update = function () {
     this.mesh.rotation.y += 0.008;
+
     if (this.isCollected) {
       this.mesh.position.y += 0.5;
       this.mesh.rotation.y += 0.05;
@@ -408,6 +258,27 @@ export function BallotBox(x, y, z, s) {
   ballot.rotation.x = -Math.PI * 0.45;
   this.mesh.add(ballot);
 
+  // ===== ADD GLOW EFFECT =====
+  addGlowEffect(this.mesh, 0x90ff90, 1.5, 450); // Green-white glow
+
+  // Add subtle glow sphere
+  const particleGeom = new THREE.SphereGeometry(120, 16, 16);
+  const particleMat = new THREE.MeshBasicMaterial({
+    color: 0x90ff90,
+    transparent: true,
+    opacity: 0.1,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(particleGeom, particleMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
+
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(s, s, s);
+  this.scale = s;
+  this.type = 'ballotbox';
+  this.isCollected = false;
+
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
@@ -424,8 +295,6 @@ export function BallotBox(x, y, z, s) {
       this.mesh.rotation.y += 0.05;
     }
   };
-
-  // removed point light - flat materials
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
@@ -462,6 +331,21 @@ export function RuleOfLawState(x, y, z, s) {
   var goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
   var woodMat = new THREE.MeshBasicMaterial({ color: 0x8b5a2b });
   var bookMat = new THREE.MeshBasicMaterial({ color: 0xf3e5ab });
+
+  // ===== ADD STRONG GLOW EFFECT =====
+  addGlowEffect(this.mesh, 0xffd700, 2.5, 600); // Strong golden glow
+
+  // Add golden aura
+  const auraGeom = new THREE.SphereGeometry(150, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({
+    color: 0xffd700,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(auraGeom, auraMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
 
   var base = new THREE.Mesh(new THREE.BoxGeometry(220, 20, 120), woodMat);
   base.position.set(0, 10, 0);
@@ -570,8 +454,6 @@ export function RuleOfLawState(x, y, z, s) {
     star.position.y = 260 + Math.sin(Date.now() * 0.001) * 1.0;
   };
 
-  // removed point light - using flat MeshBasicMaterial
-
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     var scaleFactor = Math.sqrt(this.scale) * 1.2;
     var obstMinX = self.mesh.position.x - scaleFactor * 110;
@@ -611,6 +493,21 @@ export function ReformGears(x, y, z, s) {
   gearsGroup.position.set(0, 120, 0);
   gearsGroup.rotation.x = Math.PI / 2;
   this.mesh.add(gearsGroup);
+
+  // ===== ADD GLOW EFFECT =====
+  addGlowEffect(this.mesh, 0x90ff90, 1.5, 450); // Green-white glow
+
+  // Add subtle glow sphere
+  const particleGeom = new THREE.SphereGeometry(120, 16, 16);
+  const particleMat = new THREE.MeshBasicMaterial({
+    color: 0x90ff90,
+    transparent: true,
+    opacity: 0.1,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(particleGeom, particleMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
 
   function createGear(radius, thickness, teeth, colorMat) {
     var g = new THREE.Group();
@@ -670,8 +567,6 @@ export function ReformGears(x, y, z, s) {
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-
-  // removed point light - flat materials
 
   this.scale = s;
   this.type = 'reformgears';
@@ -858,7 +753,21 @@ export function CorruptedThrone(x, y, z, s) {
 
   this.mesh.add(seat, back, armL, armR, leg1, leg2, leg3, leg4);
 
-  // removed point light
+  // ===== ADD STRONG PURPLE GLOW (DEBUFF) =====
+  addGlowEffect(this.mesh, 0x8b00ff, 2.0, 500); // Strong purple glow
+
+  // Add dark aura
+  const auraGeom = new THREE.SphereGeometry(130, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({
+    color: 0x8b00ff,
+    transparent: true,
+    opacity: 0.18,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(auraGeom, auraMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
+
 
   function createWeb(size, pos, rot) {
     let web = new THREE.Mesh(new THREE.PlaneGeometry(size * SCALE, size * SCALE), webMat);
@@ -1055,6 +964,20 @@ export function PuppetManipulation(x, y, z, s) {
   handBar.rotation.x = -Math.PI * 0.1;
   this.mesh.add(handBar);
 
+  addGlowEffect(this.mesh, 0x8b00ff, 1.8, 480); // Purple glow
+
+  // Add ominous aura
+  const auraGeom = new THREE.SphereGeometry(110, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({
+    color: 0x8b00ff,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(auraGeom, auraMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
+
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.type = 'puppetManipulation';
@@ -1066,8 +989,6 @@ export function PuppetManipulation(x, y, z, s) {
     leftArm.rotation.z = Math.sin(Date.now() * 0.0015) * 0.3 + Math.PI / 4;
     rightArm.rotation.z = -Math.sin(Date.now() * 0.0015) * 0.3 - Math.PI / 4;
   };
-
-  // no point light - flat materials
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     let scaleFactor = Math.sqrt(s) * 1.2;
@@ -1154,6 +1075,21 @@ export function MisbalancedScale(x, y, z, s) {
     rightPan.add(gold);
   }
 
+  // ===== ADD PURPLE GLOW (DEBUFF) =====
+  addGlowEffect(this.mesh, 0x8b00ff, 1.7, 470); // Purple glow
+
+  // Add dark aura
+  const auraGeom = new THREE.SphereGeometry(140, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({
+    color: 0x8b00ff,
+    transparent: true,
+    opacity: 0.14,
+    side: THREE.BackSide
+  });
+  const glowSphere = new THREE.Mesh(auraGeom, auraMat);
+  this.mesh.add(glowSphere);
+  this.mesh.userData.glowSphere = glowSphere;
+
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.type = 'misbalancedScale';
@@ -1173,7 +1109,6 @@ export function MisbalancedScale(x, y, z, s) {
     pivot.rotation.z = this._tilt * 0.5;
     leftPan.rotation.z = -this._tilt * 1.2;
     rightPan.rotation.z = this._tilt * 1.2;
-
     this.collider.setFromObject(this.mesh);
   };
 
@@ -1209,7 +1144,7 @@ export function ColonialGate(x, y, z, s) {
 
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(12, 10, 4),
-    new THREE.MeshStandardMaterial({ color: 0x777777 })
+    new THREE.MeshStandardMaterial({ color: 0xd5d7d8 })
   );
   this.mesh.add(body);
 
@@ -1223,7 +1158,7 @@ export function ColonialGate(x, y, z, s) {
 
   const emblem = new THREE.Mesh(
     new THREE.CircleGeometry(1.2, 24),
-    new THREE.MeshStandardMaterial({ color: 0x444444 })
+    new THREE.MeshStandardMaterial({ color: 0xd5d7d8 })
   );
   emblem.position.set(0, 4.5, 2.3);
   this.mesh.add(emblem);
@@ -1253,6 +1188,95 @@ export function ColonialGate(x, y, z, s) {
       obstMaxY >= minY &&
       obstMinZ <= maxZ &&
       obstMaxZ >= minZ
+    );
+  };
+}
+
+export function CapitalistExpress(x, y, z, s) {
+  this.mesh = new THREE.Group();
+  this.type = "capitalistExpress";
+  this.speed = 200; // nhanh hơn, cảm giác như tàu lao tới
+
+  this.mesh.userData = { deadly: true };
+
+  // ⚙ KÍCH THƯỚC CƠ BẢN (scale lớn)
+  const BASE = 50; // hệ số gốc để train ≈ chiều rộng 500 của cây
+  const HEIGHT_SCALE = 3; // tăng chiều cao lên 3 lần
+
+  // Đầu tàu
+  const head = new THREE.Mesh(
+    new THREE.BoxGeometry(BASE * 6, BASE * 3.5 * HEIGHT_SCALE, BASE * 8),  // ~360 x 630 x 480
+    new THREE.MeshStandardMaterial({ color: 0x333333 })
+  );
+  head.position.y = BASE * 3.5 * (HEIGHT_SCALE - 1) / 2; // nâng đầu tàu lên cho đúng tâm
+  this.mesh.add(head);
+
+  // Mũi tàu (nhô phía trước)
+  const nose = new THREE.Mesh(
+    new THREE.ConeGeometry(BASE * 2.2, BASE * 3.5 * HEIGHT_SCALE, 6),
+    new THREE.MeshStandardMaterial({ color: 0x444444 })
+  );
+  nose.rotation.x = Math.PI / 2;
+  nose.position.z = BASE * 4.5;
+  nose.position.y = BASE * 3.5 * (HEIGHT_SCALE - 1) / 2;
+  this.mesh.add(nose);
+
+  // Dấu $ lớn phía trước
+  const dollar = createTextLabel('$', 200, 200, {
+    color: '#ffffff',
+    bg: 'rgba(0,0,0,0)',
+    font: 'Arial',
+    fontSize: 180,
+    pxPerUnit: 1
+  });
+  dollar.position.set(0, BASE * 3 * HEIGHT_SCALE, BASE * 2.5);
+  this.mesh.add(dollar);
+
+  // Đèn cảnh báo (giữ nguyên nhưng theo scale mới)
+  const lightLeft = new THREE.Mesh(
+    new THREE.SphereGeometry(BASE * 0.4, 16, 16),
+    new THREE.MeshStandardMaterial({ emissive: 0xff0000 })
+  );
+  lightLeft.position.set(-BASE * 2.5, BASE * 1.2 * HEIGHT_SCALE, BASE * 3.5);
+  this.mesh.add(lightLeft);
+
+  const lightRight = lightLeft.clone();
+  lightRight.position.x = BASE * 2.5;
+  this.mesh.add(lightRight);
+
+  // Vị trí + scale
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(s, s, s);
+  this.scale = s;
+
+  // Di chuyển
+  this.update = function () {
+    this.mesh.position.z += this.speed;
+    if (this.mesh.position.z > 2000) {
+      scene.remove(this.mesh);
+    }
+  };
+
+  // Va chạm - chỉnh hitbox tương đương Tree
+  this.collides = function (playerMinX, playerMaxX, playerMinY, playerMaxY, playerMinZ, playerMaxZ) {
+    const w = BASE * 6 * this.scale;   // ~360 * s
+    const h = BASE * 3.5 * HEIGHT_SCALE * this.scale; // ~630 * s
+    const d = BASE * 8 * this.scale;   // ~480 * s
+
+    const minX = this.mesh.position.x - w / 2;
+    const maxX = this.mesh.position.x + w / 2;
+    const minY = this.mesh.position.y;
+    const maxY = this.mesh.position.y + h;
+    const minZ = this.mesh.position.z - d / 2;
+    const maxZ = this.mesh.position.z + d / 2;
+
+    return (
+      minX <= playerMaxX &&
+      maxX >= playerMinX &&
+      minY <= playerMaxY &&
+      maxY >= playerMinY &&
+      minZ <= playerMaxZ &&
+      maxZ >= playerMinZ
     );
   };
 }

@@ -3,7 +3,7 @@ import {
   BallotBox,
   BribeEnvelope,
   ColonialGate,
-  ColonialRemnant,
+  CapitalistExpress,
   CorruptedThrone,
   HammerAndSickle,
   MisbalancedScale,
@@ -489,7 +489,7 @@ export function WorldMap(networkStrategy = null) {
       }
 
       // Spawn đường mới
-      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z > -80000) {
+      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z > -50000) {
         difficulty += 1;
         createRowOfObjects(objects[objects.length - 1].mesh.position.z - 3000);
       }
@@ -591,7 +591,9 @@ export function WorldMap(networkStrategy = null) {
         if (shouldSpawnDeadly) {
           var patternType = Math.random();
 
-          if (patternType < 0.4) {
+          if (score > 30000 && patternType < 0.2) {
+            spawnCapitalistTrain(position);
+          } else if (patternType < 0.4) {
             spawnSingleGate(position);
           } else if (patternType < 0.7) {
             for (let i = 0; i < 3; i++) {
@@ -729,6 +731,18 @@ export function WorldMap(networkStrategy = null) {
       scene.add(gate.mesh);
     }
   }
+
+  function spawnCapitalistTrain(zPos) {
+    // Chọn lane gần player (ví dụ lane 0 hoặc random)
+    var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
+
+    // Z spawn xa phía trước (vì train lao ngược về player)
+    var train = new CapitalistExpress(lane * 800, -300, zPos - 6000, 2.5);
+
+    objects.push(train);
+    scene.add(train.mesh);
+  }
+
 
   function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {

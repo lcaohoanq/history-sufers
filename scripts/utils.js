@@ -186,3 +186,35 @@ export function createCylinder(radiusTop, radiusBottom, height, radialSegments, 
   cylinder.position.set(x, y, z);
   return cylinder;
 }
+
+/**
+ * Helper function to add glow effect to objects
+ * @param {THREE.Object3D} mesh - The mesh to add glow to
+ * @param {number} color - Hex color (e.g., 0xffff00 for yellow)
+ * @param {number} intensity - Light intensity (default 1.5)
+ * @param {number} distance - Light distance (default 400)
+ */
+export function addGlowEffect(mesh, color, intensity = 1.5, distance = 400) {
+  // Create point light
+  const glowLight = new THREE.PointLight(color, intensity, distance);
+  glowLight.position.set(0, 0, 0);
+  mesh.add(glowLight);
+
+  // Store reference for animation
+  mesh.userData.glowLight = glowLight;
+  mesh.userData.glowIntensity = intensity;
+
+  return glowLight;
+}
+
+/**
+ * Animate glow effect (pulsing)
+ * @param {THREE.Object3D} mesh - The mesh with glow
+ * @param {number} time - Current time for animation
+ */
+export function animateGlow(mesh, time) {
+  if (mesh.userData.glowLight) {
+    const pulse = Math.sin(time * 0.003) * 0.3 + 0.7; // 0.4 to 1.0
+    mesh.userData.glowLight.intensity = mesh.userData.glowIntensity * pulse;
+  }
+}

@@ -2,14 +2,14 @@ import { Colors } from './colors.js';
 import { createBoxTexture } from './utils.js';
 
 export const GAME_CONSTANTS = {
-  START_LANE: -5,
-  END_LANE: 6,
+  START_LANE: -4,
+  END_LANE: 5,
   TOC_DO_LUOT_DAT: 0.025,
   SO_LUONG_LANE: 3,
   MILE_STONES: {
-    EASY: 25000,
-    MEDIUM: 5000,
-    HARD: 10000
+    EASY: 15000,
+    MEDIUM: 30000,
+    HARD: 50000
   }
 };
 
@@ -61,3 +61,28 @@ export let DUONG_GACH = createBoxTexture(
   true,
   GROUND_KIT.DUONG_GACH // path to your sand texture
 );
+
+export const SIDE_OBJECTS_BY_STAGE = {
+  1: [  // Nông thôn truyền thống (0 - 30k điểm)
+    { type: 'Tree', weight: 3 },
+    { type: 'VillageHut', weight: 1 },
+    { type: 'BambooTree', weight: 2 },
+    { type: 'WaterBuffalo', weight: 0.5 },
+    { type: 'RiceStorage', weight: 0.8 },
+    { type: 'WindPump', weight: 0.7 }
+  ],
+  2: [  // Công nghiệp hóa (30k - 60k điểm)
+    { type: 'Tree', weight: 1 },
+    { type: 'OldFactory', weight: 2 },
+    { type: 'OldApartmentBlock', weight: 2 },
+    { type: 'WindPump', weight: 1 },
+    { type: 'VillageHut', weight: 0.5 }
+  ],
+  3: [  // Hiện đại (60k+)
+    { type: 'Tree', weight: 0.5 },
+    { type: 'FiveGTower', weight: 2 },
+    { type: 'MetroStation', weight: 1.5 },
+    { type: 'Skyscraper', weight: 2.5 },
+    { type: 'HighTechFactory', weight: 0.5 }
+  ]
+};

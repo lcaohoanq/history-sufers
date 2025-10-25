@@ -7,34 +7,39 @@ import { Colors } from '../scripts/colors.js';
  * scale S.
  */
 export function Tree(x, y, z, s) {
-  // Explicit binding.
   var self = this;
-
-  // The object portrayed in the scene.
   this.mesh = new THREE.Object3D();
-  var top = createCylinder(1, 300, 300, 4, Colors.green, 0, 1000, 0);
-  var mid = createCylinder(1, 400, 400, 4, Colors.green, 0, 800, 0);
-  var bottom = createCylinder(1, 500, 500, 4, Colors.green, 0, 500, 0);
-  var trunk = createCylinder(100, 100, 250, 32, Colors.brownDark, 0, 125, 0);
+
+  // Đã thay thế: 300 → 180, 400 → 240, 500 → 300 (60% tán cây)
+  // Thân cây: 100 → 60, 250 → 150, 125 → 75
+
+  var top = createCylinder(1, 180, 180, 4, Colors.green, 0, 600, 0);
+  var mid = createCylinder(1, 240, 240, 4, Colors.green, 0, 480, 0);
+  var bottom = createCylinder(1, 300, 300, 4, Colors.green, 0, 300, 0);
+  var trunk = createCylinder(60, 60, 150, 32, Colors.brownDark, 0, 75, 0);
+
   this.mesh.add(top);
   this.mesh.add(mid);
   this.mesh.add(bottom);
   this.mesh.add(trunk);
+
+  // Gốc đặt theo tham số
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
+
+  // Lưu scale ngoài để dùng collision
   this.scale = s;
 
-  /**
-   * A method that detects whether this tree is colliding with the character,
-   * which is modelled as a box bounded by the given coordinate space.
-   */
+  // Fix lại luôn thông số collision theo kích thước mới (không cần *0.6 nữa)
+  // Tổng chiều cao = 690 (thay vì 1150)
+  // Bán kính tán cây = 300 (thay vì 500)
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var treeMinX = self.mesh.position.x - this.scale * 250;
-    var treeMaxX = self.mesh.position.x + this.scale * 250;
+    var treeMinX = self.mesh.position.x - this.scale * 300; // half width
+    var treeMaxX = self.mesh.position.x + this.scale * 300;
     var treeMinY = self.mesh.position.y;
-    var treeMaxY = self.mesh.position.y + this.scale * 1150;
-    var treeMinZ = self.mesh.position.z - this.scale * 250;
-    var treeMaxZ = self.mesh.position.z + this.scale * 250;
+    var treeMaxY = self.mesh.position.y + this.scale * 690; // tổng cao mới
+    var treeMinZ = self.mesh.position.z - this.scale * 300;
+    var treeMaxZ = self.mesh.position.z + this.scale * 300;
     return (
       treeMinX <= maxX &&
       treeMaxX >= minX &&
@@ -1194,7 +1199,6 @@ export function HighBarrier(x, y, z, s, scene) {
       // Tính bounding box gốc
       let bbox = new THREE.Box3().setFromObject(this.mesh);
 
-      // ✅ Expand ra 1 chút (tăng 0.2 đơn vị mỗi chiều — có thể chỉnh)
       let expandSize = 0.2;
       bbox.expandByScalar(expandSize);
 
@@ -1342,54 +1346,43 @@ export function CapitalistExpress(x, y, z, s, scene) {
 }
 
 export function VillageHut(x, y, z, s) {
+  const scaleFactor = 10 * s;
   this.mesh = new THREE.Group();
   this.type = "villageHut";
   this.mesh.userData = { sideElement: true };
 
   // Thân nhà (vách gỗ)
   const wall = new THREE.Mesh(
-    new THREE.BoxGeometry(300, 150, 200),
+    new THREE.BoxGeometry(40, 30, 40),
     new THREE.MeshStandardMaterial({ color: 0x8b5a2b })
   );
-  wall.position.y = 75;
   this.mesh.add(wall);
 
   // Mái nhà (rơm)
   const roof = new THREE.Mesh(
-    new THREE.ConeGeometry(200, 150, 4),
+    new THREE.ConeGeometry(32, 18, 4),
     new THREE.MeshStandardMaterial({ color: 0xd2b48c })
   );
-  roof.position.y = 200;
+  roof.position.y = 25;
   roof.rotation.y = Math.PI / 4;
   this.mesh.add(roof);
 
-  // 4 cột gỗ
-  const postGeo = new THREE.CylinderGeometry(5, 5, 150, 8);
-  const postMat = new THREE.MeshStandardMaterial({ color: 0x5a3e1b });
-  const coords = [
-    [-130, 75, -90],
-    [130, 75, -90],
-    [-130, 75, 90],
-    [130, 75, 90]
-  ];
-  coords.forEach(c => {
-    const post = new THREE.Mesh(postGeo, postMat);
-    post.position.set(c[0], c[1], c[2]);
-    this.mesh.add(post);
-  });
-
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.rotation.y = Math.PI / 2;
 }
 
 export function BambooTree(x, y, z, s) {
+  // Tree: width ~500, height ~1150 (scale s)
+  // Bamboo: cluster width ~160, height ~600, so scale up to match tree
+  const scaleFactor = (500 / 160) * s;
   this.mesh = new THREE.Group();
   this.type = "bambooTree";
   this.mesh.userData = { sideElement: true };
 
   // 5 cây tre nhỏ khác nhau để tạo cụm
   for (let i = 0; i < 5; i++) {
-    const height = 400 + Math.random() * 200;
+    const height = 300 + Math.random() * 200;
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(5, 5, height, 6),
       new THREE.MeshStandardMaterial({ color: 0x2e8b57 })
@@ -1399,7 +1392,7 @@ export function BambooTree(x, y, z, s) {
 
     // Lá tre trên ngọn
     const leaf = new THREE.Mesh(
-      new THREE.ConeGeometry(30, 60, 6),
+      new THREE.ConeGeometry(10, 60, 6),
       new THREE.MeshStandardMaterial({ color: 0x3cb371 })
     );
     leaf.position.set(trunk.position.x, height + 20, trunk.position.z);
@@ -1407,41 +1400,11 @@ export function BambooTree(x, y, z, s) {
   }
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
-}
-
-export function BrokenColonialGate(x, y, z, s) {
-  this.mesh = new THREE.Group();
-  this.type = "brokenGate";
-  this.mesh.userData = { deadly: true };
-
-  // Hai trụ
-  const pillarGeo = new THREE.BoxGeometry(80, 400, 80);
-  const pillarMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
-
-  const leftPillar = new THREE.Mesh(pillarGeo, pillarMat);
-  leftPillar.position.set(-150, 200, 0);
-  this.mesh.add(leftPillar);
-
-  const rightPillar = leftPillar.clone();
-  rightPillar.position.x = 150;
-  this.mesh.add(rightPillar);
-
-  // Thanh ngang bị sập (vỡ, nghiêng)
-  const brokenBar = new THREE.Mesh(
-    new THREE.BoxGeometry(350, 40, 60),
-    new THREE.MeshStandardMaterial({ color: 0x4b4b4b })
-  );
-  brokenBar.position.set(0, 380, 0);
-  brokenBar.rotation.z = 0.3; // nghiêng xuống
-  brokenBar.position.y = 300;
-  this.mesh.add(brokenBar);
-
-  this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 }
 
 export function WaterBuffalo(x, y, z, s) {
+  const scaleFactor = 5 * s;
   this.mesh = new THREE.Group();
   this.type = "waterBuffalo";
   this.mesh.userData = { deadly: false };
@@ -1500,11 +1463,12 @@ export function WaterBuffalo(x, y, z, s) {
 
   // Gán vị trí & scale
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
   this.scale = s;
 }
 
 export function RiceStorage(x, y, z, s) {
+  const scaleFactor = 10 * s;
   this.mesh = new THREE.Group();
   this.type = "riceStorage";
 
@@ -1536,17 +1500,21 @@ export function RiceStorage(x, y, z, s) {
   // Biển "KHO LÚA"
   const label = createTextLabel("KHO LÚA", 64, 20, {
     color: "#ffffff", bg: "rgba(0,0,0,0.5)",
-    font: "Arial", fontSize: 50, pxPerUnit: 1
+    font: "Arial", fontSize: 8, pxPerUnit: 1
   });
   label.position.set(0, 35, 27);
   this.mesh.add(label);
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
   this.scale = s;
+  this.mesh.rotation.y = Math.PI / 2;
 }
 
 export function WindPump(x, y, z, s) {
+  // Tree: width ~500, height ~1150 (scale s)
+  // WindPump: width ~20, so scale up to match tree width
+  const scaleFactor = 4 * s;
   this.mesh = new THREE.Group();
   this.type = "windPump";
 
@@ -1591,13 +1559,13 @@ export function WindPump(x, y, z, s) {
 
   // Đặt vị trí & scale chung
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
   this.scale = s;
 
   // ✅ Collision đơn giản (hình trụ đứng) – nếu bạn cần xử lý sau
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    const radius = 10 * this.scale;
-    const height = 80 * this.scale;
+    const radius = 10 * scaleFactor;
+    const height = 80 * scaleFactor;
 
     const pumpMinX = this.mesh.position.x - radius;
     const pumpMaxX = this.mesh.position.x + radius;
@@ -1618,18 +1586,21 @@ export function WindPump(x, y, z, s) {
 }
 
 export function OldFactory(x, y, z, s) {
+  // Tree: width ~500, height ~1150 (scale s)
+  // Factory: SCALE UP 2x để nổi bật
+  const scaleFactor = (500 / 120) * s * 2;
   this.mesh = new THREE.Group();
   this.type = "oldFactory";
 
   // 🧱 Khối nhà chính (tường gạch)
   const mainBuilding = new THREE.Mesh(
-    new THREE.BoxGeometry(120, 60, 80),
-    new THREE.MeshStandardMaterial({ color: 0x9b7653 }) // nâu gạch
+    new THREE.BoxGeometry(100, 60, 80),
+    new THREE.MeshStandardMaterial({ color: 0x9b7653 })
   );
   mainBuilding.position.set(0, 30, 0);
   this.mesh.add(mainBuilding);
 
-  // 🪟 Cửa sổ (chỉ mang tính thị giác 2D)
+  // 🪟 Cửa sổ
   const windowMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
   for (let i = -1; i <= 1; i++) {
     const window = new THREE.Mesh(new THREE.PlaneGeometry(20, 15), windowMaterial);
@@ -1637,7 +1608,7 @@ export function OldFactory(x, y, z, s) {
     this.mesh.add(window);
   }
 
-  // 🏭 Ống khói (chimney)
+  // 🏭 Ống khói
   const chimney = new THREE.Mesh(
     new THREE.CylinderGeometry(8, 10, 80, 16),
     new THREE.MeshStandardMaterial({ color: 0x4a4a4a })
@@ -1645,7 +1616,7 @@ export function OldFactory(x, y, z, s) {
   chimney.position.set(50, 80, -20);
   this.mesh.add(chimney);
 
-  // Khói đơn giản (tùy hoạt họa)
+  // Khói
   const smoke = new THREE.Mesh(
     new THREE.SphereGeometry(6, 8, 8),
     new THREE.MeshStandardMaterial({ color: 0x555555, transparent: true, opacity: 0.6 })
@@ -1664,17 +1635,21 @@ export function OldFactory(x, y, z, s) {
   };
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+  // Quay ngang sang phải (trục Y, 90 độ)
+  this.mesh.rotation.y = -Math.PI / 2;
 }
 
 export function OldApartmentBlock(x, y, z, s) {
+  const scaleFactor = 5 * s;
   this.mesh = new THREE.Group();
   this.type = "oldApartmentBlock";
 
   // Khối chính của chung cư
   const building = new THREE.Mesh(
     new THREE.BoxGeometry(250, 120, 80),
-    new THREE.MeshStandardMaterial({ color: 0xc9c9c9 }) // xám bê tông cũ
+    new THREE.MeshStandardMaterial({ color: 0xc9c9c9 })
   );
   building.position.y = 60;
   this.mesh.add(building);
@@ -1700,7 +1675,7 @@ export function OldApartmentBlock(x, y, z, s) {
     }
   }
 
-  // Cửa sổ tối giản
+  // Cửa sổ
   const windowMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
   for (let floor = 0; floor < 5; floor++) {
     for (let i = -2; i <= 2; i++) {
@@ -1711,143 +1686,231 @@ export function OldApartmentBlock(x, y, z, s) {
   }
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(s, s, s);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  // Quay ngang sang phải (trục Y, 90 độ)
+  this.mesh.rotation.y = -Math.PI / 2;
 }
 
-export function create5GTower() {
-  const tower = new THREE.Group();
+export function FiveGTower(x, y, z, s) {
+  // SCALE UP 100x để thấy rõ (từ 1-2 units lên ~500)
+  const scaleFactor = s * 100;
+  this.mesh = new THREE.Group();
+  this.type = "fiveGTower";
 
   // Trụ chính
-  const poleGeom = new THREE.CylinderGeometry(0.3, 0.5, 12, 12);
-  const poleMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.3 });
-  const pole = new THREE.Mesh(poleGeom, poleMat);
+  const pole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.5, 12, 12),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.3 })
+  );
   pole.position.y = 6;
-  tower.add(pole);
+  this.mesh.add(pole);
 
   // Đế trụ
-  const baseGeom = new THREE.CylinderGeometry(1.5, 2, 1, 16);
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
-  const base = new THREE.Mesh(baseGeom, baseMat);
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.5, 2, 1, 16),
+    new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
   base.position.y = 0.5;
-  tower.add(base);
+  this.mesh.add(base);
 
-  // Ăng-ten 5G (hộp chữ nhật gắn xung quanh)
+  // Ăng-ten 5G
   const antennaGeom = new THREE.BoxGeometry(0.6, 1.5, 0.3);
   const antennaMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-
   for (let i = 0; i < 3; i++) {
     const antenna = new THREE.Mesh(antennaGeom, antennaMat);
     const angle = (i / 3) * Math.PI * 2;
     antenna.position.set(Math.cos(angle) * 1, 10, Math.sin(angle) * 1);
     antenna.rotation.y = angle;
-    tower.add(antenna);
+    this.mesh.add(antenna);
   }
 
-  // Logo 5G
-  const textLoader = new THREE.FontLoader();
-  textLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textGeom = new THREE.TextGeometry('5G', {
-      font: font,
-      size: 1,
-      height: 0.2,
-    });
-    const textMat = new THREE.MeshStandardMaterial({ color: 0x00ffea });
-    const text = new THREE.Mesh(textGeom, textMat);
-    text.position.set(-0.8, 8, 0);
-    tower.add(text);
-  });
-
-  return tower;
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 }
 
-export function createMetroStation() {
-  const station = new THREE.Group();
+export function MetroStation(x, y, z, s) {
+  // SCALE UP 40x để match tree size
+  const scaleFactor = s * 40;
+  this.mesh = new THREE.Group();
+  this.type = "metroStation";
 
-  // Nền ga
-  const baseGeom = new THREE.BoxGeometry(20, 1, 6);
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-  const base = new THREE.Mesh(baseGeom, baseMat);
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(20, 1, 6),
+    new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
+  );
   base.position.y = 0.5;
-  station.add(base);
+  this.mesh.add(base);
 
-  // Mái cong
-  const roofGeom = new THREE.CylinderGeometry(10, 10, 2, 32, 1, true, 0, Math.PI);
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, side: THREE.DoubleSide });
-  const roof = new THREE.Mesh(roofGeom, roofMat);
+  const roof = new THREE.Mesh(
+    new THREE.CylinderGeometry(10, 10, 2, 32, 1, true, 0, Math.PI),
+    new THREE.MeshStandardMaterial({ color: 0xeeeeee, side: THREE.DoubleSide })
+  );
   roof.position.y = 2.5;
   roof.rotation.z = Math.PI / 2;
-  station.add(roof);
+  this.mesh.add(roof);
 
-  // Tường kính
-  const glassMat = new THREE.MeshStandardMaterial({ color: 0x99ccff, transparent: true, opacity: 0.4 });
-  const wallGeom = new THREE.BoxGeometry(20, 2, 0.2);
-  const frontWall = new THREE.Mesh(wallGeom, glassMat);
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x99ccff,
+    transparent: true,
+    opacity: 0.4
+  });
+  const frontWall = new THREE.Mesh(new THREE.BoxGeometry(20, 2, 0.2), glassMat);
   frontWall.position.set(0, 2, 3);
-  station.add(frontWall);
+  this.mesh.add(frontWall);
 
-  // Cột đỡ mái
   const pillarGeom = new THREE.CylinderGeometry(0.2, 0.2, 2.5, 12);
   const pillarMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
   for (let i = -8; i <= 8; i += 4) {
     const pillar = new THREE.Mesh(pillarGeom, pillarMat);
     pillar.position.set(i, 1.75, -2.5);
-    station.add(pillar);
+    this.mesh.add(pillar);
   }
 
-  // Biển "Metro"
-  const textLoader = new THREE.FontLoader();
-  textLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const textGeom = new THREE.TextGeometry('METRO', {
-      font: font,
-      size: 1,
-      height: 0.2,
+  if (typeof createTextLabel === "function") {
+    const label = createTextLabel('METRO', 32, 10, {
+      color: '#ff4444',
+      bg: 'rgba(0,0,0,0)',
+      font: 'Arial',
+      fontSize: 10,
+      pxPerUnit: 2
     });
-    const textMat = new THREE.MeshStandardMaterial({ color: 0xff4444 });
-    const text = new THREE.Mesh(textGeom, textMat);
-    text.position.set(-4, 3, 3.1);
-    station.add(text);
+    label.position.set(0, 3, 10);
+    this.mesh.add(label);
+  }
+
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  // Quay ngang sang phải (trục Y, 90 độ)
+  this.mesh.rotation.y = -Math.PI / 2;
+}
+
+export function Skyscraper(x, y, z, s, floors = 12, width = 8, depth = 6, floorHeight = 2) {
+  // SCALE UP 80x để match tree
+  const scaleFactor = s * 80;
+  this.mesh = new THREE.Group();
+  this.type = "skyscraper";
+
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0x556677,
+    metalness: 0.4,
+    roughness: 0.5
+  });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x99ccff,
+    transparent: true,
+    opacity: 0.5
   });
 
-  return station;
-}
-
-export function createSkyscraper({
-  floors = 12,        // Số tầng
-  width = 6,          // Chiều rộng
-  depth = 6,          // Chiều sâu
-  floorHeight = 1.2,  // Chiều cao mỗi tầng
-} = {}) {
-
-  const skyscraper = new THREE.Group();
-
-  // Vật liệu
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x556677, metalness: 0.4, roughness: 0.5 });
-  const glassMat = new THREE.MeshStandardMaterial({ color: 0x99ccff, transparent: true, opacity: 0.5 });
-
-  // Thân chính
-  const bodyGeom = new THREE.BoxGeometry(width, floors * floorHeight, depth);
-  const body = new THREE.Mesh(bodyGeom, wallMat);
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(width, floors * floorHeight, depth),
+    wallMat
+  );
   body.position.y = (floors * floorHeight) / 2;
-  skyscraper.add(body);
+  this.mesh.add(body);
 
-  // Các dải kính ngang (lan can / viền kính)
   for (let i = 1; i < floors; i++) {
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(width * 0.9, 0.1, depth * 0.9), glassMat);
+    const glass = new THREE.Mesh(
+      new THREE.BoxGeometry(width * 0.9, 0.1, depth * 0.9),
+      glassMat
+    );
     glass.position.set(0, i * floorHeight, 0);
-    skyscraper.add(glass);
+    this.mesh.add(glass);
   }
 
-  // Mái
-  const roofGeom = new THREE.BoxGeometry(width * 1.05, 0.5, depth * 1.05);
-  const roof = new THREE.Mesh(roofGeom, new THREE.MeshStandardMaterial({ color: 0x333333 }));
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(width * 1.05, 0.5, depth * 1.05),
+    new THREE.MeshStandardMaterial({ color: 0x333333 })
+  );
   roof.position.y = floors * floorHeight + 0.25;
-  skyscraper.add(roof);
+  this.mesh.add(roof);
 
-  // Ăng-ten hoặc thiết bị viễn thông trên mái
-  const antennaGeom = new THREE.CylinderGeometry(0.1, 0.2, 2, 8);
-  const antenna = new THREE.Mesh(antennaGeom, new THREE.MeshStandardMaterial({ color: 0xffffff }));
+  const antenna = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.2, 2, 8),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
   antenna.position.y = floors * floorHeight + 1.5;
-  skyscraper.add(antenna);
+  this.mesh.add(antenna);
 
-  return skyscraper;
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 }
+
+export function HighTechFactory(x, y, z, s) {
+  // Scale tương tự Tree (~500 width) nhưng mang phong cách hiện đại
+  const scaleFactor = (500 / 120) * s * 2;
+  this.mesh = new THREE.Group();
+  this.type = "highTechFactory";
+
+  // 🏢 Khối nhà chính – kính + kim loại (màu xám trắng)
+  const mainBuilding = new THREE.Mesh(
+    new THREE.BoxGeometry(110, 70, 90),
+    new THREE.MeshStandardMaterial({
+      color: 0xe0e0e0, // xám trắng
+      metalness: 0.2,
+      roughness: 0.3
+    })
+  );
+  mainBuilding.position.set(0, 35, 0);
+  this.mesh.add(mainBuilding);
+
+  // 🔳 Cửa kính dài (mặt trước)
+  const glassMaterial = new THREE.MeshStandardMaterial({
+    color: 0x88ccef,
+    metalness: 0.2,
+    roughness: 0.1,
+    transparent: true,
+    opacity: 0.6
+  });
+  for (let i = -1; i <= 1; i++) {
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(25, 20), glassMaterial);
+    glass.position.set(i * 35, 35, 46);
+    this.mesh.add(glass);
+  }
+
+  // 🔋 Tấm năng lượng mặt trời (phía bên hông phải)
+  const solarPanel = new THREE.Mesh(
+    new THREE.PlaneGeometry(60, 40),
+    new THREE.MeshStandardMaterial({
+      color: 0x1f2937, // xanh đen
+      metalness: 0.5,
+      roughness: 0.2
+    })
+  );
+  solarPanel.rotation.x = -Math.PI / 4;
+  solarPanel.position.set(70, 55, 0);
+  this.mesh.add(solarPanel);
+
+  // 📡 Anten vệ tinh – cảm giác "công nghệ cao"
+  const antennaBase = new THREE.Mesh(
+    new THREE.CylinderGeometry(2, 2, 15, 8),
+    new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
+  );
+  antennaBase.position.set(-40, 80, -20);
+  this.mesh.add(antennaBase);
+
+  const antennaDish = new THREE.Mesh(
+    new THREE.SphereGeometry(10, 16, 16, 0, Math.PI),
+    new THREE.MeshStandardMaterial({ color: 0xcfd3d6, metalness: 0.1 })
+  );
+  antennaDish.position.set(-40, 90, -25);
+  antennaDish.rotation.x = Math.PI / 4;
+  this.mesh.add(antennaDish);
+
+  // 💡 Đèn tín hiệu đỏ nhấp nháy
+  const warningLight = new THREE.Mesh(
+    new THREE.SphereGeometry(3, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 })
+  );
+  warningLight.position.set(0, 85, 0);
+  this.mesh.add(warningLight);
+
+  // Animation cho đèn công nghệ (nhấp nháy)
+  this.update = function () {
+    warningLight.material.emissiveIntensity = Math.abs(Math.sin(Date.now() * 0.005)) * 1.5;
+  };
+
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.rotation.y = -Math.PI / 2;
+}
+

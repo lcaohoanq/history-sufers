@@ -10,14 +10,6 @@ import {
   RuleOfLawState,
   Tree,
   UnityHands,
-  VillageHut,
-  BambooTree,
-  BrokenColonialGate,
-  WaterBuffalo,
-  RiceStorage,
-  WindPump,
-  OldFactory,
-  OldApartmentBlock,
   HighBarrier
 } from '../js/object.js';
 import * as THREE from 'three';

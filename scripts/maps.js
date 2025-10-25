@@ -12,10 +12,21 @@ import {
   RuleOfLawState,
   Tree,
   UnityHands,
-  HighBarrier
+  HighBarrier,
+  VillageHut,
+  BambooTree,
+  WaterBuffalo,
+  RiceStorage,
+  WindPump,
+  OldFactory,
+  OldApartmentBlock,
+  FiveGTower,
+  MetroStation,
+  Skyscraper,
+  HighTechFactory
 } from '../js/object.js';
 import { Character } from './characters.js';
-import { CAMERA_SETTINGS, DUONG_CHAY, DUONG_DAT, DUONG_GACH, GAME_CONSTANTS } from './constants.js';
+import { CAMERA_SETTINGS, DUONG_CHAY, DUONG_DAT, DUONG_GACH, GAME_CONSTANTS, SIDE_OBJECTS_BY_STAGE } from './constants.js';
 import { KEYCODE } from './keycode.js';
 import { SinglePlayerStrategy, MultiplayerStrategy } from './network-strategy.js';
 
@@ -57,18 +68,20 @@ export function WorldMap(networkStrategy = null) {
   var rowCounter = 0;
   var lastDeadlySpawn = 0;
   var lastBuffSpawn = 0;
+  var lastSideObjectSpawn = 0;
   var minRowsBetweenDeadly = 5;
   var minRowsBetweenBuff = 3;
+  var minRowsBetweenSideObject = 1;
   var lastSafeLane = 0;
-  var DEBUG_HITBOX = false; // Bật/tắt toàn bộ hitbox test
+  var DEBUG_HITBOX = false;
 
   // ===== DIFFICULTY SCALING =====
   var gameSpeed = 75; // Initial speed
   var deadlySpawnChance = 0.3; // Initial 30%
   var buffSpawnChance = 0.4; // Initial 40%
   var multiLaneDeadlyChance = 0.5; // Chance for multiple deadly objects
-  var minScale = 0.6; // Minimum scale for tree spawning
-  var maxScale = 1.2; // Maximum scale for tree spawning
+  var minScale = 2; // Minimum scale for tree spawning
+  var maxScale = 4; // Maximum scale for tree spawning
 
   // Use strategy pattern for network
   var network = networkStrategy || new SinglePlayerStrategy();
@@ -657,50 +670,98 @@ export function WorldMap(networkStrategy = null) {
 
     var rowsSinceDeadly = rowCounter - lastDeadlySpawn;
     var rowsSinceBuff = rowCounter - lastBuffSpawn;
+    var rowsSinceSideObject = rowCounter - lastSideObjectSpawn;
 
-    for (var lane = GAME_CONSTANTS.START_LANE; lane < GAME_CONSTANTS.END_LANE; lane++) {
-      if (lane == -1 || lane == 0 || lane == 1) {
-        // ===== DEADLY PATTERN =====
-        var shouldSpawnDeadly =
-          rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < deadlySpawnChance;
+    // Determine current stage based on score
+    var currentStage = 1;
+    if (score > GAME_CONSTANTS.MILE_STONES.HARD) {
+      currentStage = 3;
+    } else if (score > GAME_CONSTANTS.MILE_STONES.MEDIUM) {
+      currentStage = 2;
+    }
 
-        if (shouldSpawnDeadly) {
-          var patternType = Math.random();
+    // ===== SIDE OBJECTS (LUÔN SPAWN, BẤT KỂ CÓ DEADLY HAY KHÔNG) =====
+    var shouldSpawnSideObject = rowsSinceSideObject >= minRowsBetweenSideObject;
 
-          if (score > 30000 && patternType < 0.15) {
-            // Train
-            spawnCapitalistTrain(position);
-          } else if (patternType < 0.3) {
-            // Single gate
-            spawnSingleGate(position);
-          } else if (patternType < 0.5) {
-            spawnHighBarrierPattern(position);
-          } else if (patternType < 0.7) {
-            // 2 gates liên tiếp
-            for (let i = 0; i < 2; i++) {
-              spawnSingleGate(position - i * 1500);
-            }
-          } else if (patternType < 0.85) {
-            // Gate + coins
-            spawnSingleGate(position);
-            spawnHammerCoinPattern(position - 1000);
-          } else if (patternType < 0.95) {
-            // Two lane block
-            spawnTwoLaneBlock(position);
-          } else {
-            spawnHighBarrierPattern(position);
-            spawnSingleGate(position - 1500); // Gate thấp phía sau
-          }
+    if (shouldSpawnSideObject) {
+      var largeObjects = ['OldApartmentBlock', 'HighTechFactory', 'Skyscraper', 'MetroStation', 'OldFactory'];
 
-          lastDeadlySpawn = rowCounter;
-          return;
-        }
-      } else {
+      var objectType = getRandomSideObject(currentStage);
+      var isLargeObject = largeObjects.includes(objectType);
+
+      var playerLane = (character && typeof character.currentLane === 'number') ? character.currentLane : 0;
+
+      if (isLargeObject) {
+        var side = Math.random() < 0.5 ? 'left' : 'right'; // Chọn 1 bên
+        var lane = side === 'left' ? -4 : 4; // Lane ngoài cùng
         var scale = minScale + (maxScale - minScale) * Math.random();
-        var tree = new Tree(lane * 800, -400, position, scale);
-        objects.push(tree);
-        scene.add(tree.mesh);
+        var sideObject = createSideObject(objectType, lane * 800, -800, position, scale);
+
+        // Xoay object hướng về lane người chơi
+        if (sideObject && sideObject.mesh) {
+          // Nếu bên trái, xoay sang phải; bên phải xoay sang trái
+          // Nhưng hướng nhìn về lane người chơi
+          var dx = (playerLane * 800) - (lane * 800);
+          var dz = 0;
+          var angle = Math.atan2(dx, dz); // dz=0 nên sẽ là ±PI/2
+          sideObject.mesh.rotation.y = angle;
+        }
+
+        objects.push(sideObject);
+        scene.add(sideObject.mesh);
+      } else {
+        for (var lane = GAME_CONSTANTS.START_LANE; lane < GAME_CONSTANTS.END_LANE; lane++) {
+          if (lane < -3 || lane > 3) {
+            // Random spawn
+            if (Math.random() < 0.5) {
+              var scale = minScale + (maxScale - minScale) * Math.random();
+              var sideObject = createSideObject(objectType, lane * 800, -600, position, scale);
+
+              // Xoay object hướng về lane người chơi
+              if (sideObject && sideObject.mesh) {
+                var dx = (playerLane * 800) - (lane * 800);
+                var dz = 0;
+                var angle = Math.atan2(dx, dz);
+                sideObject.mesh.rotation.y = angle;
+              }
+
+              objects.push(sideObject);
+              scene.add(sideObject.mesh);
+            }
+          }
+        }
       }
+      lastSideObjectSpawn = rowCounter;
+    }
+
+    // ===== DEADLY PATTERN (CHỈ SPAWN Ở 3 LANE GIỮA) =====
+    var shouldSpawnDeadly =
+      rowsSinceDeadly >= minRowsBetweenDeadly && Math.random() < deadlySpawnChance;
+
+    if (shouldSpawnDeadly) {
+      var patternType = Math.random();
+
+      if (score > 30000 && patternType < 0.15) {
+        spawnCapitalistTrain(position);
+      } else if (patternType < 0.3) {
+        spawnSingleGate(position);
+      } else if (patternType < 0.5) {
+        spawnHighBarrierPattern(position);
+      } else if (patternType < 0.7) {
+        for (let i = 0; i < 2; i++) {
+          spawnSingleGate(position - i * 1500);
+        }
+      } else if (patternType < 0.85) {
+        spawnSingleGate(position);
+        spawnHammerCoinPattern(position - 1000);
+      } else if (patternType < 0.95) {
+        spawnTwoLaneBlock(position);
+      } else {
+        spawnHighBarrierPattern(position);
+        spawnSingleGate(position - 1500);
+      }
+
+      lastDeadlySpawn = rowCounter;
     }
 
     // ===== BUFF / COIN SPAWN =====
@@ -724,11 +785,11 @@ export function WorldMap(networkStrategy = null) {
       if (objectType === 'hammerandsickle') {
         spawnHammerCoinPattern(position);
         lastBuffSpawn = rowCounter;
-        return;
+        return; // Return sau khi spawn coin pattern
       }
 
       var lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
-      var scale = 0.8 + Math.random() * 0.4;
+      var scale = 1.5 + Math.random() * 0.4;
       var buffObject;
 
       switch (objectType) {
@@ -764,6 +825,130 @@ export function WorldMap(networkStrategy = null) {
         scene.add(buffObject.mesh);
         lastBuffSpawn = rowCounter;
       }
+    }
+  }
+
+  function createSideObject(type, x, y, z, scale) {
+    var adjustedX = x;
+    var adjustedY = y;
+
+    var largeObjects = ['OldApartmentBlock', 'HighTechFactory', 'Skyscraper', 'MetroStation', 'OldFactory'];
+    var mediumObjects = ['VillageHut', 'RiceStorage', 'WindPump'];
+
+    if (largeObjects.includes(type)) {
+      // Object lớn → đẩy rất xa + hạ thấp xuống đất
+      adjustedX = (x < 0) ? x - 3000 : x + 3000;
+      adjustedY = -600; // Hạ xuống sát đất hơn
+    } else if (mediumObjects.includes(type)) {
+      // Object vừa → đẩy xa vừa phải
+      adjustedX = (x < 0) ? x - 1500 : x + 1500;
+      adjustedY = -400;
+    } else {
+      // Object nhỏ (Tree, Bamboo, Buffalo) → gần hơn
+      adjustedX = (x < 0) ? x - 800 : x + 800;
+      adjustedY = -400;
+    }
+
+    var obj = null;
+    switch (type) {
+      case 'Tree':
+        obj = new Tree(adjustedX, adjustedY, z, scale);
+        break;
+      case 'VillageHut':
+        obj = new VillageHut(adjustedX, adjustedY, z, scale);
+        break;
+      case 'BambooTree':
+        obj = new BambooTree(adjustedX, adjustedY, z, scale);
+        break;
+      case 'WaterBuffalo':
+        obj = new WaterBuffalo(adjustedX, adjustedY, z, scale);
+        break;
+      case 'RiceStorage':
+        obj = new RiceStorage(adjustedX, adjustedY, z, scale);
+        break;
+      case 'WindPump':
+        obj = new WindPump(adjustedX, adjustedY, z, scale);
+        break;
+      case 'OldFactory':
+        obj = new OldFactory(adjustedX, adjustedY, z, scale);
+        break;
+      case 'OldApartmentBlock':
+        obj = new OldApartmentBlock(adjustedX, adjustedY, z, scale);
+        break;
+      case 'FiveGTower':
+        obj = new FiveGTower(adjustedX, adjustedY, z, scale);
+        break;
+      case 'MetroStation':
+        obj = new MetroStation(adjustedX, adjustedY, z, scale);
+        break;
+      case 'Skyscraper':
+        obj = new Skyscraper(adjustedX, adjustedY, z, scale);
+        break;
+      case 'HighTechFactory':
+        obj = new HighTechFactory(adjustedX, adjustedY, z, scale);
+        break;
+      default:
+        obj = new Tree(adjustedX, adjustedY, z, scale);
+    }
+
+    return obj;
+  }
+
+  /**
+ * Weighted random selection for side objects
+ */
+  function getRandomSideObject(stage) {
+    var objectPool = SIDE_OBJECTS_BY_STAGE[stage] || SIDE_OBJECTS_BY_STAGE[1];
+
+    var totalWeight = 0;
+    for (var i = 0; i < objectPool.length; i++) {
+      totalWeight += objectPool[i].weight;
+    }
+
+    var random = Math.random() * totalWeight;
+    var weightSum = 0;
+
+    for (var i = 0; i < objectPool.length; i++) {
+      weightSum += objectPool[i].weight;
+      if (random <= weightSum) {
+        return objectPool[i].type;
+      }
+    }
+
+    return 'Tree'; // Fallback
+  }
+
+  /**
+   * Create side object by type
+   */
+  function createSideObject(type, x, y, z, scale) {
+    switch (type) {
+      case 'Tree':
+        return new Tree(x, y, z, scale);
+      case 'VillageHut':
+        return new VillageHut(x, y, z, scale);
+      case 'BambooTree':
+        return new BambooTree(x, y, z, scale);
+      case 'WaterBuffalo':
+        return new WaterBuffalo(x, y, z, scale);
+      case 'RiceStorage':
+        return new RiceStorage(x, y, z, scale);
+      case 'WindPump':
+        return new WindPump(x, y, z, scale);
+      case 'OldFactory':
+        return new OldFactory(x, y, z, scale);
+      case 'OldApartmentBlock':
+        return new OldApartmentBlock(x, y, z, scale);
+      case 'FiveGTower':
+        return new FiveGTower(x, y, z, scale);
+      case 'MetroStation':
+        return new MetroStation(x, y, z, scale);
+      case 'Skyscraper':
+        return new Skyscraper(x, y, z, scale);
+      case 'HighTechFactory':
+        return new HighTechFactory(x, y, z, scale);
+      default:
+        return new Tree(x, y, z, scale);
     }
   }
 

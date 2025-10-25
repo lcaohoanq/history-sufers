@@ -1,38 +1,39 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sảnh chờ</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="js/network.js"></script>
-    <link rel="stylesheet" href="styles/lobby.style.css" />
-  </head>
-  <body>
-    <!-- Animated Background Orbs -->
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-    <div class="orb orb3"></div>
 
-    <!-- Food Pellets -->
-    <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
-    <div class="pellet" style="top: 25%; right: 15%; animation-delay: 0.5s"></div>
-    <div class="pellet" style="bottom: 20%; left: 20%; animation-delay: 1s"></div>
-    <div class="pellet" style="top: 60%; right: 25%; animation-delay: 1.5s"></div>
-    <div class="pellet" style="bottom: 30%; right: 10%; animation-delay: 2s"></div>
-    <div class="pellet" style="top: 40%; left: 15%; animation-delay: 0.7s"></div>
-    <div class="pellet" style="top: 70%; left: 40%; animation-delay: 1.2s"></div>
-    <div class="pellet" style="bottom: 40%; right: 40%; animation-delay: 1.8s"></div>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sảnh chờ</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/network.js"></script>
+  <link rel="stylesheet" href="styles/lobby.style.css" />
+</head>
 
-    <!-- Main Container -->
-    <div class="container">
-      <!-- Header -->
-      <!-- <div class="header">
+<body>
+  <!-- Animated Background Orbs -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <!-- Food Pellets -->
+  <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
+  <div class="pellet" style="top: 25%; right: 15%; animation-delay: 0.5s"></div>
+  <div class="pellet" style="bottom: 20%; left: 20%; animation-delay: 1s"></div>
+  <div class="pellet" style="top: 60%; right: 25%; animation-delay: 1.5s"></div>
+  <div class="pellet" style="bottom: 30%; right: 10%; animation-delay: 2s"></div>
+  <div class="pellet" style="top: 40%; left: 15%; animation-delay: 0.7s"></div>
+  <div class="pellet" style="top: 70%; left: 40%; animation-delay: 1.2s"></div>
+  <div class="pellet" style="bottom: 40%; right: 40%; animation-delay: 1.8s"></div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Header -->
+    <!-- <div class="header">
         <a href="index.html" class="back-btn">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
@@ -42,325 +43,228 @@
         <div class="badge">Sảnh chờ</div>
       </div> -->
 
-      <!-- Mode Selection -->
-      <div id="modeSelection">
-        <div class="card">
-          <h1 class="card-title">Chọn chế độ chơi</h1>
+    <!-- Mode Selection -->
+    <div id="modeSelection">
+      <div class="card">
+        <h1 class="card-title">Chọn chế độ chơi</h1>
 
-          <div class="mode-grid">
-            <div class="mode-card create" onclick="showCreateRoom()">
-              <svg
-                style="width: 50px; height: 50px; margin-bottom: 15px"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              <div class="mode-title">Tạo phòng</div>
-              <div class="mode-desc">Bắt đầu trò chơi</div>
-            </div>
-
-            <div class="mode-card join" onclick="showJoinRoom()">
-              <svg
-                style="width: 50px; height: 50px; margin-bottom: 15px"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                />
-              </svg>
-              <div class="mode-title">Tham gia phòng</div>
-              <div class="mode-desc">Nhập mã phòng</div>
-            </div>
-
-            <div class="mode-card browse" onclick="showBrowseRooms()">
-              <svg
-                style="width: 50px; height: 50px; margin-bottom: 15px"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <div class="mode-title">Tìm phòng</div>
-              <div class="mode-desc">Tìm các phòng đang mở</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Create Room Section -->
-      <div id="createRoomSection" class="hidden">
-        <div class="card" style="max-width: 600px; margin: 0 auto">
-          <h2 class="card-title">Tạo phòng chơi</h2>
-
-          <div class="form-group">
-            <label class="form-label">Tên người chơi</label>
-            <input
-              type="text"
-              id="createPlayerName"
-              class="form-input"
-              placeholder="Nhập tên của bạn"
-              maxlength="20"
-            />
-          </div>
-
-          <div class="btn-actions">
-            <button class="btn btn-primary" onclick="createRoom()">
-              <svg
-                style="width: 50px; height: 50px"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Tạo phòng
-            </button>
-            <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Join Room Section -->
-      <div id="joinRoomSection" class="hidden">
-        <div class="card" style="max-width: 600px; margin: 0 auto">
-          <h2 class="card-title">Tham gia phòng</h2>
-
-          <div class="form-group">
-            <label class="form-label">Tên người chơi</label>
-            <input
-              type="text"
-              id="joinPlayerName"
-              class="form-input"
-              placeholder="Nhập tên của bạn"
-              maxlength="20"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Mã phòng</label>
-            <input
-              type="text"
-              id="roomCode"
-              class="form-input"
-              placeholder="Nhập mã phòng"
-              maxlength="6"
-              style="text-transform: uppercase"
-            />
-          </div>
-
-          <div class="btn-actions">
-            <button class="btn btn-secondary" onclick="joinRoom()">
-              <svg
-                style="width: 50px; height: 50px"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                />
-              </svg>
-              Tham gia
-            </button>
-            <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Browse Rooms Section -->
-      <div id="browseRoomsSection" class="hidden">
-        <div class="card">
-          <h2 class="card-title">Các phòng đang mở</h2>
-
-          <div class="form-group" id="browsePlayerNameGroup">
-            <label class="form-label">Tên người chơi</label>
-            <input
-              type="text"
-              id="browsePlayerName"
-              class="form-input"
-              placeholder="Nhập tên của bạn"
-              maxlength="20"
-            />
-          </div>
-
-          <div id="roomList" class="room-list">
-            <div class="loading">
-              <div class="spinner"></div>
-              <p style="margin-top: 20px; color: #666">Đang tải...</p>
-            </div>
-          </div>
-
-          <div class="btn-actions">
-            <button class="btn btn-primary" onclick="refreshRooms()">
-              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Tải lại
-            </button>
-            <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Waiting Room -->
-      <div id="waitingRoom" class="hidden">
-        <!-- Room Code Card -->
-        <div class="card-lobby">
-          <div class="room-code-display">
-            <div class="room-code-label">Mã phòng</div>
-            <div class="room-code-value" id="displayRoomCode">ABCD12</div>
-            <div class="room-code-hint">Chia sẻ mã này với bạn bè!</div>
-          </div>
-        </div>
-
-        <!-- Players Card -->
-        <div class="card-lobby">
-          <div class="player-header">
-            <div class="player-count">
-              <span id="playerCount">0</span>
-              <svg
-                width="24px"
-                height="24px"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="12" cy="6" r="4" stroke="#ffffff" stroke-width="1.5" />
-                <path
-                  d="M20 17.5C20 19.9853 20 22 12 22C4 22 4 19.9853 4 17.5C4 15.0147 7.58172 13 12 13C16.4183 13 20 15.0147 20 17.5Z"
-                  stroke="#ffffff"
-                  stroke-width="1.5"
-                />
-              </svg>
-            </div>
-            <h2 class="card-title" style="margin: 0"></h2>
-          </div>
-
-          <div id="playerList" class="player-list"></div>
-
-          <div id="errorMessage" class="alert alert-error hidden">
-            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div class="mode-grid">
+          <div class="mode-card create" onclick="showCreateRoom()">
+            <svg style="width: 50px; height: 50px; margin-bottom: 15px" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            <span id="errorText"></span>
+            <div class="mode-title">Tạo phòng</div>
+            <div class="mode-desc">Bắt đầu trò chơi</div>
           </div>
 
-          <div id="startingMessage" class="alert alert-success hidden">
-            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div class="mode-card join" onclick="showJoinRoom()">
+            <svg style="width: 50px; height: 50px; margin-bottom: 15px" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
-            <span id="startingText">Đang chờ tất cả người chơi sẵn sàng...</span>
+            <div class="mode-title">Tham gia phòng</div>
+            <div class="mode-desc">Nhập mã phòng</div>
           </div>
 
-          <div class="btn-actions">
-            <button id="readyButton" class="btn btn-success" onclick="toggleReady()">
-              <svg
-                width="24px"
-                height="24px"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12.0004 18.5816V12.5M12.7976 18.754L15.8103 19.7625C17.4511 20.3118 18.2714 20.5864 18.7773 20.3893C19.2166 20.2182 19.5499 19.8505 19.6771 19.3965C19.8236 18.8737 19.4699 18.0843 18.7624 16.5053L14.2198 6.36709C13.5279 4.82299 13.182 4.05094 12.7001 3.81172C12.2814 3.60388 11.7898 3.60309 11.3705 3.80958C10.8878 4.04726 10.5394 4.8182 9.84259 6.36006L5.25633 16.5082C4.54325 18.086 4.18671 18.875 4.33169 19.3983C4.4576 19.8528 4.78992 20.2216 5.22888 20.394C5.73435 20.5926 6.55603 20.3198 8.19939 19.7744L11.2797 18.752C11.5614 18.6585 11.7023 18.6117 11.8464 18.5933C11.9742 18.5769 12.1036 18.5771 12.2314 18.5938C12.3754 18.6126 12.5162 18.6597 12.7976 18.754Z"
-                  stroke="#FFFFFF"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Sẵn sàng
-            </button>
-            <button class="btn btn-danger" onclick="leaveRoom()">
-              <svg
-                version="1.1"
-                id="Uploaded to svgrepo.com"
-                xmlns="http://www.w3.org/2000/svg"
-                xmlns:xlink="http://www.w3.org/1999/xlink"
-                width="24"
-                height="24"
-                viewBox="0 0 32 32"
-                xml:space="preserve"
-              >
-                <style type="text/css">
-                  .bentblocks_een {
-                    fill: #ffffff;
-                  }
-                </style>
-                <path
-                  class="bentblocks_een"
-                  d="M24.485,7.515c-4.686-4.686-12.284-4.686-16.971,0c-4.686,4.686-4.686,12.284,0,16.971
-	c4.686,4.686,12.284,4.686,16.971,0C29.172,19.799,29.172,12.201,24.485,7.515z M23.071,23.071c-3.908,3.908-10.234,3.908-14.142,0
-	c-3.899-3.899-3.899-10.243,0-14.142c3.908-3.908,10.234-3.909,14.142,0C24.96,10.818,26,13.329,26,16
-	C26,18.671,24.96,21.182,23.071,23.071z M21.657,11.757L17.414,16l4.243,4.243l-1.414,1.414L16,17.414l-4.243,4.243l-1.414-1.414
-	L14.586,16l-4.243-4.243l1.414-1.414L16,14.586l4.243-4.243L21.657,11.757z"
-                />
-              </svg>
-              Rời phòng
-            </button>
+          <div class="mode-card browse" onclick="showBrowseRooms()">
+            <svg style="width: 50px; height: 50px; margin-bottom: 15px" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <div class="mode-title">Tìm phòng</div>
+            <div class="mode-desc">Tìm các phòng đang mở</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="toast-container"></div>
+    <!-- Create Room Section -->
+    <div id="createRoomSection" class="hidden">
+      <div class="card" style="max-width: 600px; margin: 0 auto">
+        <h2 class="card-title">Tạo phòng chơi</h2>
 
-    <script>
-      const network = window.networkManager;
-      let isReady = false;
-      let currentPlayers = [];
-      let maxPlayersPerRoom = 50;
+        <div class="form-group">
+          <label class="form-label">Tên người chơi</label>
+          <input type="text" id="createPlayerName" class="form-input" placeholder="Nhập tên của bạn" maxlength="20" />
+        </div>
 
-      // Toast notification system
-      function showToast(notification) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
+        <div class="btn-actions">
+          <button class="btn btn-primary" onclick="createRoom()">
+            <svg style="width: 50px; height: 50px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Tạo phòng
+          </button>
+          <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
+        </div>
+      </div>
+    </div>
 
-        const typeClasses = {
-          success: 'toast-success',
-          error: 'toast-error',
-          warning: 'toast-warning',
-          info: 'toast-info'
-        };
+    <!-- Join Room Section -->
+    <div id="joinRoomSection" class="hidden">
+      <div class="card" style="max-width: 600px; margin: 0 auto">
+        <h2 class="card-title">Tham gia phòng</h2>
 
-        const icons = {
-          success: `<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-          error: `<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-          warning: `<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
-          info: `<path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
-        };
+        <div class="form-group">
+          <label class="form-label">Tên người chơi</label>
+          <input type="text" id="joinPlayerName" class="form-input" placeholder="Nhập tên của bạn" maxlength="20" />
+        </div>
 
-        toast.className = `toast ${typeClasses[notification.type] || 'toast-info'}`;
-        toast.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">Mã phòng</label>
+          <input type="text" id="roomCode" class="form-input" placeholder="Nhập mã phòng" maxlength="6"
+            style="text-transform: uppercase" />
+        </div>
+
+        <div class="btn-actions">
+          <button class="btn btn-secondary" onclick="joinRoom()">
+            <svg style="width: 50px; height: 50px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            Tham gia
+          </button>
+          <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Browse Rooms Section -->
+    <div id="browseRoomsSection" class="hidden">
+      <div class="card">
+        <h2 class="card-title">Các phòng đang mở</h2>
+
+        <div class="form-group" id="browsePlayerNameGroup">
+          <label class="form-label">Tên người chơi</label>
+          <input type="text" id="browsePlayerName" class="form-input" placeholder="Nhập tên của bạn" maxlength="20" />
+        </div>
+
+        <div id="roomList" class="room-list">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px; color: #666">Đang tải...</p>
+          </div>
+        </div>
+
+        <div class="btn-actions">
+          <button class="btn btn-primary" onclick="refreshRooms()">
+            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Tải lại
+          </button>
+          <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waiting Room -->
+    <div id="waitingRoom" class="hidden">
+      <!-- Room Code Card -->
+      <div class="card-lobby">
+        <div class="room-code-display">
+          <div class="room-code-label">Mã phòng</div>
+          <div class="room-code-value" id="displayRoomCode">ABCD12</div>
+          <div class="room-code-hint">Chia sẻ mã này với bạn bè!</div>
+        </div>
+      </div>
+
+      <!-- Players Card -->
+      <div class="card-lobby">
+        <div class="player-header">
+          <div class="player-count">
+            <span id="playerCount">0</span>
+            <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="6" r="4" stroke="#ffffff" stroke-width="1.5" />
+              <path
+                d="M20 17.5C20 19.9853 20 22 12 22C4 22 4 19.9853 4 17.5C4 15.0147 7.58172 13 12 13C16.4183 13 20 15.0147 20 17.5Z"
+                stroke="#ffffff" stroke-width="1.5" />
+            </svg>
+          </div>
+          <h2 class="card-title" style="margin: 0"></h2>
+        </div>
+
+        <div id="playerList" class="player-list"></div>
+
+        <div id="errorMessage" class="alert alert-error hidden">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span id="errorText"></span>
+        </div>
+
+        <div id="startingMessage" class="alert alert-success hidden">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span id="startingText">Đang chờ tất cả người chơi sẵn sàng...</span>
+        </div>
+
+        <div class="btn-actions">
+          <button id="readyButton" class="btn btn-success" onclick="toggleReady()">
+            <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12.0004 18.5816V12.5M12.7976 18.754L15.8103 19.7625C17.4511 20.3118 18.2714 20.5864 18.7773 20.3893C19.2166 20.2182 19.5499 19.8505 19.6771 19.3965C19.8236 18.8737 19.4699 18.0843 18.7624 16.5053L14.2198 6.36709C13.5279 4.82299 13.182 4.05094 12.7001 3.81172C12.2814 3.60388 11.7898 3.60309 11.3705 3.80958C10.8878 4.04726 10.5394 4.8182 9.84259 6.36006L5.25633 16.5082C4.54325 18.086 4.18671 18.875 4.33169 19.3983C4.4576 19.8528 4.78992 20.2216 5.22888 20.394C5.73435 20.5926 6.55603 20.3198 8.19939 19.7744L11.2797 18.752C11.5614 18.6585 11.7023 18.6117 11.8464 18.5933C11.9742 18.5769 12.1036 18.5771 12.2314 18.5938C12.3754 18.6126 12.5162 18.6597 12.7976 18.754Z"
+                stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Sẵn sàng
+          </button>
+          <button class="btn btn-danger" onclick="leaveRoom()">
+            <svg version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 32 32"
+              xml:space="preserve">
+              <style type="text/css">
+                .bentblocks_een {
+                  fill: #ffffff;
+                }
+              </style>
+              <path class="bentblocks_een" d="M24.485,7.515c-4.686-4.686-12.284-4.686-16.971,0c-4.686,4.686-4.686,12.284,0,16.971
+	c4.686,4.686,12.284,4.686,16.971,0C29.172,19.799,29.172,12.201,24.485,7.515z M23.071,23.071c-3.908,3.908-10.234,3.908-14.142,0
+	c-3.899-3.899-3.899-10.243,0-14.142c3.908-3.908,10.234-3.909,14.142,0C24.96,10.818,26,13.329,26,16
+	C26,18.671,24.96,21.182,23.071,23.071z M21.657,11.757L17.414,16l4.243,4.243l-1.414,1.414L16,17.414l-4.243,4.243l-1.414-1.414
+	L14.586,16l-4.243-4.243l1.414-1.414L16,14.586l4.243-4.243L21.657,11.757z" />
+            </svg>
+            Rời phòng
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const network = window.networkManager;
+    let isReady = false;
+    let currentPlayers = [];
+    let maxPlayersPerRoom = 50;
+
+    // Toast notification system
+    function showToast(notification) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const typeClasses = {
+        success: 'toast-success',
+        error: 'toast-error',
+        warning: 'toast-warning',
+        info: 'toast-info'
+      };
+
+      const icons = {
+        success: `<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+        error: `<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+        warning: `<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
+        info: `<path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
+      };
+
+      toast.className = `toast ${typeClasses[notification.type] || 'toast-info'}`;
+      toast.innerHTML = `
           <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
             ${icons[notification.type] || icons.info}
           </svg>
@@ -370,154 +274,154 @@
           </div>
         `;
 
-        container.appendChild(toast);
+      container.appendChild(toast);
 
-        const duration = notification.duration || 3000;
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transform = 'translateX(100%)';
-          setTimeout(() => toast.remove(), 300);
-        }, duration);
+      const duration = notification.duration || 3000;
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // Connect to server on load
+    window.addEventListener('load', async () => {
+      try {
+        await network.connect();
+        console.log('Connected to server');
+
+        network.socket.on('serverConfig', (config) => {
+          maxPlayersPerRoom = config.maxPlayersPerRoom;
+          document.getElementById('maxPlayers').textContent = config.maxPlayersPerRoom;
+          console.log('Server config received:', config);
+        });
+
+        network.socket.on('notification', (notification) => {
+          showToast(notification);
+        });
+      } catch (error) {
+        console.error('Failed to connect:', error);
+        showError('Failed to connect to server. Please refresh the page.');
+      }
+    });
+
+    function showCreateRoom() {
+      hideAllSections();
+      document.getElementById('createRoomSection').classList.remove('hidden');
+    }
+
+    function showJoinRoom() {
+      hideAllSections();
+      document.getElementById('joinRoomSection').classList.remove('hidden');
+    }
+
+    function showBrowseRooms() {
+      hideAllSections();
+      document.getElementById('browseRoomsSection').classList.remove('hidden');
+      refreshRooms();
+    }
+
+    function backToModeSelection() {
+      hideAllSections();
+      document.getElementById('modeSelection').classList.remove('hidden');
+    }
+
+    function hideAllSections() {
+      document.getElementById('modeSelection').classList.add('hidden');
+      document.getElementById('createRoomSection').classList.add('hidden');
+      document.getElementById('joinRoomSection').classList.add('hidden');
+      document.getElementById('browseRoomsSection').classList.add('hidden');
+      document.getElementById('waitingRoom').classList.add('hidden');
+    }
+
+    function createRoom() {
+      const playerName = document.getElementById('createPlayerName').value.trim() || 'Player';
+      network.createRoom(playerName);
+    }
+
+    function joinRoom(roomId) {
+      if (!roomId) {
+        roomId = document.getElementById('roomCode').value.trim().toUpperCase();
+      }
+      const playerName = document.getElementById('joinPlayerName').value.trim() || 'Player';
+
+      if (!roomId) {
+        showError('Please enter a room code');
+        return;
       }
 
-      // Connect to server on load
-      window.addEventListener('load', async () => {
-        try {
-          await network.connect();
-          console.log('Connected to server');
+      network.joinRoom(roomId, playerName);
+    }
 
-          network.socket.on('serverConfig', (config) => {
-            maxPlayersPerRoom = config.maxPlayersPerRoom;
-            document.getElementById('maxPlayers').textContent = config.maxPlayersPerRoom;
-            console.log('Server config received:', config);
-          });
+    function joinRoomFromBrowse(roomId) {
+      const playerName = document.getElementById('browsePlayerName').value.trim() || 'Player';
+      network.joinRoom(roomId, playerName);
+    }
 
-          network.socket.on('notification', (notification) => {
-            showToast(notification);
-          });
-        } catch (error) {
-          console.error('Failed to connect:', error);
-          showError('Failed to connect to server. Please refresh the page.');
-        }
-      });
+    function refreshRooms() {
+      network.listRooms();
+    }
 
-      function showCreateRoom() {
-        hideAllSections();
-        document.getElementById('createRoomSection').classList.remove('hidden');
-      }
+    function toggleReady() {
+      isReady = !isReady;
+      network.setReady(isReady);
 
-      function showJoinRoom() {
-        hideAllSections();
-        document.getElementById('joinRoomSection').classList.remove('hidden');
-      }
-
-      function showBrowseRooms() {
-        hideAllSections();
-        document.getElementById('browseRoomsSection').classList.remove('hidden');
-        refreshRooms();
-      }
-
-      function backToModeSelection() {
-        hideAllSections();
-        document.getElementById('modeSelection').classList.remove('hidden');
-      }
-
-      function hideAllSections() {
-        document.getElementById('modeSelection').classList.add('hidden');
-        document.getElementById('createRoomSection').classList.add('hidden');
-        document.getElementById('joinRoomSection').classList.add('hidden');
-        document.getElementById('browseRoomsSection').classList.add('hidden');
-        document.getElementById('waitingRoom').classList.add('hidden');
-      }
-
-      function createRoom() {
-        const playerName = document.getElementById('createPlayerName').value.trim() || 'Player';
-        network.createRoom(playerName);
-      }
-
-      function joinRoom(roomId) {
-        if (!roomId) {
-          roomId = document.getElementById('roomCode').value.trim().toUpperCase();
-        }
-        const playerName = document.getElementById('joinPlayerName').value.trim() || 'Player';
-
-        if (!roomId) {
-          showError('Please enter a room code');
-          return;
-        }
-
-        network.joinRoom(roomId, playerName);
-      }
-
-      function joinRoomFromBrowse(roomId) {
-        const playerName = document.getElementById('browsePlayerName').value.trim() || 'Player';
-        network.joinRoom(roomId, playerName);
-      }
-
-      function refreshRooms() {
-        network.listRooms();
-      }
-
-      function toggleReady() {
-        isReady = !isReady;
-        network.setReady(isReady);
-
-        const btn = document.getElementById('readyButton');
-        if (isReady) {
-          btn.innerHTML = `
+      const btn = document.getElementById('readyButton');
+      if (isReady) {
+        btn.innerHTML = `
             <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 18L18 6M6 6l12 12"/>
             </svg>
             Chưa sẵn sàng
           `;
-          btn.className = 'btn btn-warning';
-        } else {
-          btn.innerHTML = `
+        btn.className = 'btn btn-warning';
+      } else {
+        btn.innerHTML = `
             <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path d="M5 13l4 4L19 7"/>
             </svg>
             Sẵn sàng
           `;
-          btn.className = 'btn btn-success';
-        }
+        btn.className = 'btn btn-success';
       }
+    }
 
-      function leaveRoom() {
-        network.leaveRoom();
-        backToModeSelection();
+    function leaveRoom() {
+      network.leaveRoom();
+      backToModeSelection();
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const errorText = document.getElementById('errorText');
+      if (errorDiv && errorText) {
+        errorText.textContent = message;
+        errorDiv.classList.remove('hidden');
+        setTimeout(() => {
+          errorDiv.classList.add('hidden');
+        }, 5000);
+      } else {
+        alert(message);
       }
+    }
 
-      function showError(message) {
-        const errorDiv = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        if (errorDiv && errorText) {
-          errorText.textContent = message;
-          errorDiv.classList.remove('hidden');
-          setTimeout(() => {
-            errorDiv.classList.add('hidden');
-          }, 5000);
-        } else {
-          alert(message);
-        }
-      }
+    function updatePlayerList(players) {
+      currentPlayers = players;
+      const playerList = document.getElementById('playerList');
+      const playerCount = document.getElementById('playerCount');
 
-      function updatePlayerList(players) {
-        currentPlayers = players;
-        const playerList = document.getElementById('playerList');
-        const playerCount = document.getElementById('playerCount');
+      playerList.innerHTML = '';
+      playerCount.textContent = players.length;
 
-        playerList.innerHTML = '';
-        playerCount.textContent = players.length;
+      players.forEach((player) => {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'player-item';
 
-        players.forEach((player) => {
-          const playerDiv = document.createElement('div');
-          playerDiv.className = 'player-item';
+        const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
+          player.name
+        )}`;
 
-          const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
-            player.name
-          )}`;
-
-          playerDiv.innerHTML = `
+        playerDiv.innerHTML = `
             <div class="player-info">
               <img src="${avatarUrl}" alt="${player.name}" class="player-avatar" />
               <div>
@@ -528,59 +432,59 @@
               </div>
             </div>
           `;
-          playerList.appendChild(playerDiv);
-        });
+        playerList.appendChild(playerDiv);
+      });
 
-        const allReady = players.length >= 2 && players.every((p) => p.ready);
-        const startMsg = document.getElementById('startingMessage');
-        const startText = document.getElementById('startingText');
-        if (allReady) {
-          startText.textContent = 'All players ready! Starting race...';
-          startMsg.classList.remove('hidden');
-        } else {
-          startMsg.classList.add('hidden');
-        }
+      const allReady = players.length >= 2 && players.every((p) => p.ready);
+      const startMsg = document.getElementById('startingMessage');
+      const startText = document.getElementById('startingText');
+      if (allReady) {
+        startText.textContent = 'All players ready! Starting race...';
+        startMsg.classList.remove('hidden');
+      } else {
+        startMsg.classList.add('hidden');
       }
+    }
 
-      // Network event handlers
-      network.on('roomCreated', (data) => {
-        hideAllSections();
-        document.getElementById('displayRoomCode').textContent = data.roomId;
-        document.getElementById('waitingRoom').classList.remove('hidden');
-        updatePlayerList(data.players);
-      });
+    // Network event handlers
+    network.on('roomCreated', (data) => {
+      hideAllSections();
+      document.getElementById('displayRoomCode').textContent = data.roomId;
+      document.getElementById('waitingRoom').classList.remove('hidden');
+      updatePlayerList(data.players);
+    });
 
-      network.on('roomJoined', (data) => {
-        hideAllSections();
-        document.getElementById('displayRoomCode').textContent = data.roomId;
-        document.getElementById('waitingRoom').classList.remove('hidden');
-        updatePlayerList(data.players);
-      });
+    network.on('roomJoined', (data) => {
+      hideAllSections();
+      document.getElementById('displayRoomCode').textContent = data.roomId;
+      document.getElementById('waitingRoom').classList.remove('hidden');
+      updatePlayerList(data.players);
+    });
 
-      network.on('roomList', (rooms) => {
-        const roomList = document.getElementById('roomList');
-        const browsePlayerNameGroup = document.getElementById('browsePlayerNameGroup');
-        roomList.innerHTML = '';
+    network.on('roomList', (rooms) => {
+      const roomList = document.getElementById('roomList');
+      const browsePlayerNameGroup = document.getElementById('browsePlayerNameGroup');
+      roomList.innerHTML = '';
 
-        if (rooms.length === 0) {
-          browsePlayerNameGroup.classList.add('hidden');
-          roomList.innerHTML = `
+      if (rooms.length === 0) {
+        browsePlayerNameGroup.classList.add('hidden');
+        roomList.innerHTML = `
             <div class="alert alert-error">
               <span>Không có dữ liệu</span>
             </div>
           `;
-        } else {
-          browsePlayerNameGroup.classList.remove('hidden');
-          rooms.forEach((room) => {
-            const roomDiv = document.createElement('div');
-            roomDiv.className = 'room-item';
-            roomDiv.onclick = () => joinRoomFromBrowse(room.id);
+      } else {
+        browsePlayerNameGroup.classList.remove('hidden');
+        rooms.forEach((room) => {
+          const roomDiv = document.createElement('div');
+          roomDiv.className = 'room-item';
+          roomDiv.onclick = () => joinRoomFromBrowse(room.id);
 
-            const hostAvatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
-              room.hostName || 'Unknown'
-            )}`;
+          const hostAvatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
+            room.hostName || 'Unknown'
+          )}`;
 
-            roomDiv.innerHTML = `
+          roomDiv.innerHTML = `
               <div class="room-info">
                 <img src="${hostAvatarUrl}" alt="${room.hostName}" class="player-avatar" />
                 <div>
@@ -595,56 +499,63 @@
               </div>
 
             `;
-            roomList.appendChild(roomDiv);
-          });
-        }
-      });
+          roomList.appendChild(roomDiv);
+        });
+      }
+    });
 
-      network.on('playerJoined', (data) => {
-        updatePlayerList(data.players);
-      });
+    network.on('playerJoined', (data) => {
+      updatePlayerList(data.players);
+    });
 
-      network.on('playerLeft', (data) => {
-        updatePlayerList(data.players);
-      });
+    network.on('playerLeft', (data) => {
+      updatePlayerList(data.players);
+    });
 
-      network.on('playersUpdated', (data) => {
-        updatePlayerList(data.players);
-      });
+    network.on('playersUpdated', (data) => {
+      updatePlayerList(data.players);
+    });
 
-      network.on('raceCountdown', (data) => {
-        document.getElementById('startingText').textContent =
-          `Race starting in ${data.countdown}...`;
-      });
+    network.on('raceCountdown', (data) => {
+      document.getElementById('startingText').textContent =
+        `Race starting in ${data.countdown}...`;
+    });
 
-      network.on('raceStart', (data) => {
-        window.location.href = 'multiplayer.html';
-      });
+    network.on('raceStart', (data) => {
+      sessionStorage.setItem('multiplayerRoom', JSON.stringify({
+        roomId: network.roomId,
+        playerId: network.playerId,
+        playerName: network.playerName,
+        players: data.players || []
+      }));
+      window.location.href = 'multiplayer.html';
+    });
 
-      network.on('error', (data) => {
-        showError(data.message);
-      });
+    network.on('error', (data) => {
+      showError(data.message);
+    });
 
-      // Add floating animation to pellets
-      const pellets = document.querySelectorAll('.pellet');
-      pellets.forEach((pellet) => {
-        const randomX = Math.random() * 20 - 10;
-        const randomY = Math.random() * 20 - 10;
-        const randomDuration = 3 + Math.random() * 2;
+    // Add floating animation to pellets
+    const pellets = document.querySelectorAll('.pellet');
+    pellets.forEach((pellet) => {
+      const randomX = Math.random() * 20 - 10;
+      const randomY = Math.random() * 20 - 10;
+      const randomDuration = 3 + Math.random() * 2;
 
-        pellet.style.animation += `, floatPellet ${randomDuration}s infinite ease-in-out`;
-        pellet.style.setProperty('--x', randomX + 'px');
-        pellet.style.setProperty('--y', randomY + 'px');
-      });
+      pellet.style.animation += `, floatPellet ${randomDuration}s infinite ease-in-out`;
+      pellet.style.setProperty('--x', randomX + 'px');
+      pellet.style.setProperty('--y', randomY + 'px');
+    });
 
-      const style = document.createElement('style');
-      style.textContent = `
+    const style = document.createElement('style');
+    style.textContent = `
         @keyframes floatPellet {
           0%, 100% { transform: translate(0, 0); }
           50% { transform: translate(var(--x, 10px), var(--y, 10px)); }
         }
       `;
-      document.head.appendChild(style);
-    </script>
-  </body>
+    document.head.appendChild(style);
+  </script>
+</body>
+
 </html>

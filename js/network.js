@@ -1,5 +1,5 @@
 /**
- * HISTORY SUFERS - MULTIPLAYER NETWORKING
+ * HISTORY SURFERS - MULTIPLAYER NETWORKING
  *
  * Client-side Socket.IO networking for multiplayer functionality
  */
@@ -22,28 +22,48 @@ class NetworkManager {
   connect(serverUrl = '') {
     return new Promise((resolve, reject) => {
       try {
-        this.socket = io(serverUrl || window.location.origin);
+        // Tránh connect nhiều lần
+        if (this.socket && this.connected) {
+          console.log('Already connected');
+          resolve();
+          return;
+        }
+
+        this.socket = io(serverUrl || window.location.origin, {
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionAttempts: 5
+        });
 
         this.socket.on('connect', () => {
-          console.log('Connected to server');
+          console.log('✅ Connected to server, socket ID:', this.socket.id);
           this.connected = true;
           this.playerId = this.socket.id;
+          this.emit('connected');
           resolve();
         });
 
-        this.socket.on('disconnect', () => {
-          console.log('Disconnected from server');
+        this.socket.on('disconnect', (reason) => {
+          console.log('🔌 Disconnected from server, reason:', reason);
           this.connected = false;
-          this.emit('disconnected');
+          this.emit('disconnected', { reason });
+        });
+
+        this.socket.on('reconnect', (attemptNumber) => {
+          console.log('🔄 Reconnected after', attemptNumber, 'attempts');
+          this.connected = true;
+          this.playerId = this.socket.id;
+          this.emit('reconnected', { attemptNumber });
         });
 
         this.socket.on('error', (data) => {
-          console.error('Server error:', data.message);
+          console.error('❌ Server error:', data.message);
           this.emit('error', data);
         });
 
         // Room events
         this.socket.on('roomCreated', (data) => {
+          console.log('🎉 Room created:', data.roomId);
           this.roomId = data.roomId;
           this.playerId = data.playerId;
           this.isMultiplayer = true;
@@ -51,6 +71,7 @@ class NetworkManager {
         });
 
         this.socket.on('roomJoined', (data) => {
+          console.log('✅ Room joined:', data.roomId);
           this.roomId = data.roomId;
           this.playerId = data.playerId;
           this.isMultiplayer = true;
@@ -58,60 +79,84 @@ class NetworkManager {
         });
 
         this.socket.on('roomList', (rooms) => {
+          console.log('📋 Room list received:', rooms.length, 'rooms');
           this.emit('roomList', rooms);
         });
 
         this.socket.on('playerJoined', (data) => {
+          console.log('👤 Player joined:', data.playerName || data.name);
           this.emit('playerJoined', data);
         });
 
         this.socket.on('playerLeft', (data) => {
+          console.log('👋 Player left:', data.playerId);
           this.opponents.delete(data.playerId);
           this.emit('playerLeft', data);
         });
 
         this.socket.on('playersUpdated', (data) => {
+          console.log('📝 Players updated');
           this.emit('playersUpdated', data);
         });
 
         this.socket.on('newHost', (data) => {
+          console.log('👑 New host:', data.hostId);
           this.emit('newHost', data);
         });
 
         // Race events
         this.socket.on('raceCountdown', (data) => {
+          console.log('⏱️ Race countdown:', data.countdown);
           this.emit('raceCountdown', data);
         });
 
         this.socket.on('raceStart', (data) => {
+          console.log('🏁 Race started with', data.players?.length || 0, 'players');
           this.emit('raceStart', data);
         });
 
         this.socket.on('opponentUpdate', (data) => {
+          // Không log để tránh spam console
           this.opponents.set(data.playerId, data.data);
           this.emit('opponentUpdate', data);
         });
 
         this.socket.on('playerFinishedRace', (data) => {
+          console.log('🏆 Player finished:', data.playerName);
           this.emit('playerFinishedRace', data);
         });
 
         this.socket.on('raceEnded', (data) => {
+          console.log('🏁 Race ended, rankings:', data.rankings);
           this.emit('raceEnded', data);
         });
 
         this.socket.on('raceReset', (data) => {
+          console.log('🔄 Race reset');
           this.opponents.clear();
           this.emit('raceReset', data);
         });
 
+        // Notification system (optional)
+        this.socket.on('notification', (notification) => {
+          console.log('🔔 Notification:', notification.message);
+          this.emit('notification', notification);
+        });
+
+        // Server config (optional)
+        this.socket.on('serverConfig', (config) => {
+          console.log('⚙️ Server config received:', config);
+          this.emit('serverConfig', config);
+        });
+
+        // Connection timeout
         setTimeout(() => {
           if (!this.connected) {
             reject(new Error('Connection timeout'));
           }
         }, 5000);
       } catch (error) {
-        console.error('Connection error:', error);
+        console.error('❌ Connection error:', error);
         reject(error);
       }
     });
@@ -121,7 +166,12 @@ class NetworkManager {
    * Create a new room
    */
   createRoom(playerName) {
+    if (!this.connected) {
+      console.error('❌ Not connected to server');
+      return;
+    }
     this.playerName = playerName || 'Player';
+    console.log('🎮 Creating room with name:', this.playerName);
     this.socket.emit('createRoom', { playerName: this.playerName });
   }
 
@@ -129,8 +179,30 @@ class NetworkManager {
    * Join an existing room
    */
   joinRoom(roomId, playerName) {
+    if (!this.connected) {
+      console.error('❌ Not connected to server');
+      return;
+    }
     this.playerName = playerName || 'Player';
+    console.log('🚪 Joining room:', roomId, 'as', this.playerName);
     this.socket.emit('joinRoom', {
+      roomId: roomId,
+      playerName: this.playerName
+    });
+  }
+
+  /**
+   * 🆕 Rejoin a room after page reload/reconnect
+   */
+  rejoinRoom(roomId, playerName) {
+    if (!this.connected) {
+      console.error('❌ Not connected to server');
+      return;
+    }
+    this.playerName = playerName || 'Player';
+    console.log('🔄 Rejoining room:', roomId, 'as', this.playerName);
+
+    this.socket.emit('rejoinRoom', {
       roomId: roomId,
       playerName: this.playerName
     });
@@ -140,6 +212,11 @@ class NetworkManager {
    * Get list of available rooms
    */
   listRooms() {
+    if (!this.connected) {
+      console.error('❌ Not connected to server');
+      return;
+    }
+    console.log('📋 Requesting room list...');
     this.socket.emit('listRooms');
   }
 
@@ -147,6 +224,11 @@ class NetworkManager {
    * Toggle player ready state
    */
   setReady(ready) {
+    if (!this.connected || !this.roomId) {
+      console.error('❌ Not in a room');
+      return;
+    }
+    console.log('✅ Setting ready state:', ready);
     this.socket.emit('playerReady', { ready: ready });
   }
 
@@ -170,6 +252,7 @@ class NetworkManager {
    */
   sendPlayerFinished(score) {
     if (!this.isMultiplayer || !this.connected) return;
+    console.log('🏆 Sending finish with score:', score);
     this.socket.emit('playerFinished', { score: score });
   }
 
@@ -177,7 +260,8 @@ class NetworkManager {
    * Leave current room
    */
   leaveRoom() {
-    if (this.socket && this.connected) {
+    if (this.socket && this.connected && this.roomId) {
+      console.log('🚪 Leaving room:', this.roomId);
       this.socket.emit('leaveRoom');
       this.roomId = null;
       this.opponents.clear();
@@ -190,6 +274,7 @@ class NetworkManager {
    */
   disconnect() {
     if (this.socket) {
+      console.log('🔌 Disconnecting from server');
       this.socket.disconnect();
       this.socket = null;
       this.connected = false;
@@ -231,7 +316,7 @@ class NetworkManager {
         try {
           callback(data);
         } catch (error) {
-          console.error(`Error in event handler for ${event}:`, error);
+          console.error(`❌ Error in event handler for ${event}:`, error);
         }
       });
     }
@@ -260,10 +345,29 @@ class NetworkManager {
   isInMultiplayer() {
     return this.isMultiplayer && this.connected && this.roomId !== null;
   }
+
+  /**
+   * 🆕 Get current connection status
+   */
+  getStatus() {
+    return {
+      connected: this.connected,
+      isMultiplayer: this.isMultiplayer,
+      roomId: this.roomId,
+      playerId: this.playerId,
+      playerName: this.playerName,
+      opponentCount: this.opponents.size
+    };
+  }
 }
 
 // Create global instance
 if (typeof window !== 'undefined') {
   window.NetworkManager = NetworkManager;
   window.networkManager = new NetworkManager();
+
+  // Auto-connect on load (optional, có thể bỏ nếu muốn manual connect)
+  window.addEventListener('load', () => {
+    console.log('🚀 NetworkManager initialized');
+  });
 }

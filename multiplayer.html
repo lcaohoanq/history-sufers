@@ -1,150 +1,184 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Nhiều người chơi</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700"
-      rel="stylesheet"
-    />
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="importmap">
+
+<head>
+  <title>Nhiều người chơi</title>
+  <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="importmap">
       {
         "imports": {
           "three": "https://unpkg.com/three@0.180.0/build/three.module.js"
         }
       }
     </script>
-    <script type="text/javascript" src="js/audio-manager.js"></script>
-    <script type="text/javascript" src="js/network.js"></script>
-    <script type="module" src="js/game-multiplayer.js"></script>
-    <script type="module" src="scripts/network-strategy.js"></script>
-    <script type="module" src="js/object.js"></script>
-    <link href="style.css" rel="stylesheet" />
-    <link href="./styles/sound_toggle.css" rel="stylesheet" />
-    <link href="./styles/stat_panel.css" rel="stylesheet" />
-  </head>
+  <script type="text/javascript" src="js/audio-manager.js"></script>
+  <script type="text/javascript" src="js/network.js"></script>
+  <script type="module" src="js/game-multiplayer.js"></script>
+  <script type="module" src="scripts/network-strategy.js"></script>
+  <script type="module" src="js/object.js"></script>
+  <link href="style.css" rel="stylesheet" />
+  <link href="./styles/sound_toggle.css" rel="stylesheet" />
+  <link href="./styles/stat_panel.css" rel="stylesheet" />
+</head>
 
-  <body>
-    <!-- Sound Toggle Button -->
-    <button id="sound-toggle" class="sound-toggle" title="Toggle Sound">🔊</button>
+<body>
+  <!-- Sound Toggle Button -->
+  <button id="sound-toggle" class="sound-toggle" title="Toggle Sound">🔊</button>
 
-    <!-- Stats Panel (Left Side) -->
-    <div class="stats-panel" id="statsPanel">
-      <h3>ĐỘ DÂN CHỦ</h3>
+  <!-- Stats Panel (Left Side) -->
+  <div class="stats-panel" id="statsPanel">
+    <h3>ĐỘ DÂN CHỦ</h3>
 
-      <div class="stat-item">
-        <div class="stat-label">
-          <span class="stat-label-left">
-            <span>Niềm Tin</span>
-          </span>
-          <span class="stat-label-right" id="trust-value">50/100</span>
-        </div>
-        <div class="stat-bar-container" id="trust-container">
-          <div class="stat-bar-fill stat-bar-trust" id="trust-bar" style="width: 50%"></div>
-        </div>
+    <div class="stat-item">
+      <div class="stat-label">
+        <span class="stat-label-left">
+          <span>Niềm Tin</span>
+        </span>
+        <span class="stat-label-right" id="trust-value">50/100</span>
       </div>
-
-      <div class="stat-item">
-        <div class="stat-label">
-          <span class="stat-label-left">
-            <span>Công Bằng</span>
-          </span>
-          <span class="stat-label-right" id="justice-value">50/100</span>
-        </div>
-        <div class="stat-bar-container" id="justice-container">
-          <div class="stat-bar-fill stat-bar-justice" id="justice-bar" style="width: 50%"></div>
-        </div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-label">
-          <span class="stat-label-left">
-            <span>Đoàn Kết</span>
-          </span>
-          <span class="stat-label-right" id="unity-value">50/100</span>
-        </div>
-        <div class="stat-bar-container" id="unity-container">
-          <div class="stat-bar-fill stat-bar-unity" id="unity-bar" style="width: 50%"></div>
-        </div>
+      <div class="stat-bar-container" id="trust-container">
+        <div class="stat-bar-fill stat-bar-trust" id="trust-bar" style="width: 50%"></div>
       </div>
     </div>
 
-    <!-- Score Display (Top Right) -->
-    <div class="score-display">
-      <p id="score">0</p>
-    </div>
-
-    <!-- Game Start Panel (Center) -->
-    <div class="panel" id="gamePanel">
-      <div class="game-title">
-        <div class="title">Tạm dừng</div>
+    <div class="stat-item">
+      <div class="stat-label">
+        <span class="stat-label-left">
+          <span>Công Bằng</span>
+        </span>
+        <span class="stat-label-right" id="justice-value">50/100</span>
       </div>
-      <table id="controls">
-        <tr>
-          <td><strong>⬆️</strong></td>
-          <td>Nhảy</td>
-        </tr>
-        <tr>
-          <td><strong>⬅️</strong></td>
-          <td>Trái</td>
-        </tr>
-        <tr>
-          <td><strong>➡️</strong></td>
-          <td>Phải</td>
-        </tr>
-        <tr>
-          <td><strong>ESC</strong></td>
-          <td>Dừng trò chơi</td>
-        </tr>
-        <tr>
-          <td><strong>🇻</strong></td>
-          <td>Đổi góc nhìn</td>
-        </tr>
-        <tr>
-          <td><strong>🅿️</strong></td>
-          <td>Thay skin</td>
-        </tr>
-      </table>
-      <table id="ranks"></table>
-      <div class="animate-flicker" id="variable-content">Bấm phím bất kì để tiếp tục...</div>
+      <div class="stat-bar-container" id="justice-container">
+        <div class="stat-bar-fill stat-bar-justice" id="justice-bar" style="width: 50%"></div>
+      </div>
     </div>
 
-    <!-- Multiplayer HUD (Bottom Right) -->
-    <div class="multiplayer-hud" id="multiplayerHud" style="display: none">
-      <h3>🏁 Chặng đua 🏁</h3>
-      <div id="playerScores"></div>
+    <div class="stat-item">
+      <div class="stat-label">
+        <span class="stat-label-left">
+          <span>Đoàn Kết</span>
+        </span>
+        <span class="stat-label-right" id="unity-value">50/100</span>
+      </div>
+      <div class="stat-bar-container" id="unity-container">
+        <div class="stat-bar-fill stat-bar-unity" id="unity-bar" style="width: 50%"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast toast-top toast-end z-50"></div>
+  <!-- Score Display (Top Right) -->
+  <div class="score-display">
+    <p id="score">0</p>
+  </div>
 
-    <div id="world"></div>
+  <!-- Game Start Panel (Center) -->
+  <div class="panel" id="gamePanel">
+    <div class="game-title">
+      <div class="title">Tạm dừng</div>
+    </div>
+    <table id="controls">
+      <tr>
+        <td><strong>⬆️</strong></td>
+        <td>Nhảy</td>
+      </tr>
+      <tr>
+        <td><strong>⬅️</strong></td>
+        <td>Trái</td>
+      </tr>
+      <tr>
+        <td><strong>➡️</strong></td>
+        <td>Phải</td>
+      </tr>
+      <tr>
+        <td><strong>ESC</strong></td>
+        <td>Dừng trò chơi</td>
+      </tr>
+      <tr>
+        <td><strong>🇻</strong></td>
+        <td>Đổi góc nhìn</td>
+      </tr>
+      <tr>
+        <td><strong>🅿️</strong></td>
+        <td>Thay skin</td>
+      </tr>
+    </table>
+    <table id="ranks"></table>
+    <div class="animate-flicker" id="variable-content">Bấm phím bất kì để tiếp tục...</div>
+  </div>
 
-    <script>
-      // Toast notification system
-      function showToast(notification) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
+  <!-- Multiplayer HUD (Bottom Right) -->
+  <div class="multiplayer-hud" id="multiplayerHud" style="display: none">
+    <h3>🏁 Chặng đua 🏁</h3>
+    <div id="playerScores"></div>
+  </div>
 
-        const typeClasses = {
-          success: 'alert-success',
-          error: 'alert-error',
-          warning: 'alert-warning',
-          info: 'alert-info'
-        };
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast toast-top toast-end z-50"></div>
 
-        const icons = {
-          success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
-          error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
-          warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`,
-          info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`
-        };
+  <div id="world"></div>
 
-        toast.className = `alert ${typeClasses[notification.type] || 'alert-info'} shadow-lg animate-slide-in-right`;
-        toast.innerHTML = `
+  <script>
+    window.addEventListener('load', async function () {
+      const roomData = sessionStorage.getItem('multiplayerRoom');
+
+      if (roomData && window.networkManager) {
+        try {
+          const { roomId, playerId, playerName, players } = JSON.parse(roomData);
+
+          console.log('Reconnecting to room:', roomId);
+
+          // Kết nối lại server
+          if (!window.networkManager.connected) {
+            await window.networkManager.connect();
+          }
+
+          // Rejoin room
+          window.networkManager.socket.emit('rejoinRoom', {
+            roomId: roomId,
+            playerName: playerName
+          });
+
+          // Set lại các thuộc tính
+          window.networkManager.roomId = roomId;
+          window.networkManager.playerName = playerName;
+          window.networkManager.isMultiplayer = true;
+
+          console.log('Reconnected successfully');
+
+        } catch (error) {
+          console.error('Failed to reconnect:', error);
+          // Nếu reconnect fail, quay về lobby
+          sessionStorage.removeItem('multiplayerRoom');
+          window.location.href = 'lobby.html';
+        }
+      }
+    });
+
+    // Toast notification system
+    function showToast(notification) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const typeClasses = {
+        success: 'alert-success',
+        error: 'alert-error',
+        warning: 'alert-warning',
+        info: 'alert-info'
+      };
+
+      const icons = {
+        success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+        error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />`,
+        warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />`,
+        info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`
+      };
+
+      toast.className = `alert ${typeClasses[notification.type] || 'alert-info'} shadow-lg animate-slide-in-right`;
+      toast.innerHTML = `
         <div>
           <svg class="stroke-current flex-shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
             ${icons[notification.type] || icons.info}
@@ -156,125 +190,126 @@
         </div>
       `;
 
-        container.appendChild(toast);
+      container.appendChild(toast);
 
-        const duration = notification.duration || 3000;
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transform = 'translateX(100%)';
-          setTimeout(() => toast.remove(), 300);
-        }, duration);
+      const duration = notification.duration || 3000;
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // Listen for notifications from server
+    if (window.networkManager && window.networkManager.socket) {
+      window.networkManager.socket.on('notification', (notification) => {
+        showToast(notification);
+      });
+    }
+
+    // Update multiplayer standings
+    function updateMultiplayerStandings() {
+      const scoresDiv = document.getElementById('playerScores');
+      const hudElement = document.getElementById('multiplayerHud');
+
+      if (!scoresDiv || !window.networkManager || !window.networkManager.isInMultiplayer()) {
+        if (hudElement) hudElement.style.display = 'none';
+        return;
       }
 
-      // Listen for notifications from server
-      if (window.networkManager && window.networkManager.socket) {
-        window.networkManager.socket.on('notification', (notification) => {
-          showToast(notification);
-        });
-      }
+      hudElement.style.display = 'block';
 
-      // Update multiplayer standings
-      function updateMultiplayerStandings() {
-        const scoresDiv = document.getElementById('playerScores');
-        const hudElement = document.getElementById('multiplayerHud');
+      const myScore = parseInt(document.getElementById('score')?.textContent || 0);
+      const players = [];
 
-        if (!scoresDiv || !window.networkManager || !window.networkManager.isInMultiplayer()) {
-          if (hudElement) hudElement.style.display = 'none';
-          return;
-        }
+      players.push({
+        name: window.networkManager.playerName,
+        score: myScore,
+        isSelf: true,
+        id: window.networkManager.playerId
+      });
 
-        hudElement.style.display = 'block';
-
-        const myScore = parseInt(document.getElementById('score')?.textContent || 0);
-        const players = [];
-
+      const opponents = window.networkManager.getAllOpponents();
+      opponents.forEach((opp) => {
         players.push({
-          name: window.networkManager.playerName,
-          score: myScore,
-          isSelf: true,
-          id: window.networkManager.playerId
+          name: opp.playerName || 'Opponent',
+          score: opp.score || 0,
+          isSelf: false,
+          id: opp.id
         });
+      });
 
-        const opponents = window.networkManager.getAllOpponents();
-        opponents.forEach((opp) => {
-          players.push({
-            name: opp.playerName || 'Opponent',
-            score: opp.score || 0,
-            isSelf: false,
-            id: opp.id
-          });
-        });
+      players.sort((a, b) => b.score - a.score);
 
-        players.sort((a, b) => b.score - a.score);
+      scoresDiv.innerHTML = '';
+      players.forEach((player, index) => {
+        const div = document.createElement('div');
+        div.className = 'player-score-item' + (player.isSelf ? ' self' : '');
 
-        scoresDiv.innerHTML = '';
-        players.forEach((player, index) => {
-          const div = document.createElement('div');
-          div.className = 'player-score-item' + (player.isSelf ? ' self' : '');
+        const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(player.name)}`;
 
-          const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(player.name)}`;
-
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'player-score-name';
-          nameSpan.innerHTML = `
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'player-score-name';
+        nameSpan.innerHTML = `
           <img src="${avatarUrl}" alt="${player.name} avatar" class="player-score-avatar" />
           <span>${index + 1}. ${player.name}</span>
         `;
 
-          const scoreSpan = document.createElement('span');
-          scoreSpan.className = 'player-score-value';
-          scoreSpan.textContent = player.score;
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'player-score-value';
+        scoreSpan.textContent = player.score;
 
-          div.appendChild(nameSpan);
-          div.appendChild(scoreSpan);
-          scoresDiv.appendChild(div);
-        });
+        div.appendChild(nameSpan);
+        div.appendChild(scoreSpan);
+        scoresDiv.appendChild(div);
+      });
+    }
+
+    setInterval(updateMultiplayerStandings, 500);
+    setTimeout(updateMultiplayerStandings, 1000);
+
+    // Helper function to update stat bars (called from game.js)
+    window.updateStatBar = function (statName, value) {
+      const clampedValue = Math.max(0, Math.min(100, value));
+      const valueElement = document.getElementById(statName + '-value');
+      const barElement = document.getElementById(statName + '-bar');
+      const containerElement = document.getElementById(statName + '-container');
+
+      if (valueElement) {
+        valueElement.textContent = Math.round(clampedValue) + '/100';
       }
 
-      setInterval(updateMultiplayerStandings, 500);
-      setTimeout(updateMultiplayerStandings, 1000);
+      if (barElement) {
+        barElement.style.width = clampedValue + '%';
 
-      // Helper function to update stat bars (called from game.js)
-      window.updateStatBar = function (statName, value) {
-        const clampedValue = Math.max(0, Math.min(100, value));
-        const valueElement = document.getElementById(statName + '-value');
-        const barElement = document.getElementById(statName + '-bar');
-        const containerElement = document.getElementById(statName + '-container');
+        // Remove existing classes
+        barElement.classList.remove('low', 'medium');
 
-        if (valueElement) {
-          valueElement.textContent = Math.round(clampedValue) + '/100';
+        // Add appropriate class based on value
+        if (clampedValue < 25) {
+          barElement.classList.add('low');
+          if (containerElement) containerElement.classList.add('critical');
+        } else if (clampedValue < 50) {
+          barElement.classList.add('medium');
+          if (containerElement) containerElement.classList.remove('critical');
+        } else {
+          if (containerElement) containerElement.classList.remove('critical');
         }
+      }
+    };
 
-        if (barElement) {
-          barElement.style.width = clampedValue + '%';
+    // Hide game panel when game starts
+    window.hideGamePanel = function () {
+      const panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'none';
+    };
 
-          // Remove existing classes
-          barElement.classList.remove('low', 'medium');
+    // Show game panel
+    window.showGamePanel = function () {
+      const panel = document.getElementById('gamePanel');
+      if (panel) panel.style.display = 'block';
+    };
+  </script>
+</body>
 
-          // Add appropriate class based on value
-          if (clampedValue < 25) {
-            barElement.classList.add('low');
-            if (containerElement) containerElement.classList.add('critical');
-          } else if (clampedValue < 50) {
-            barElement.classList.add('medium');
-            if (containerElement) containerElement.classList.remove('critical');
-          } else {
-            if (containerElement) containerElement.classList.remove('critical');
-          }
-        }
-      };
-
-      // Hide game panel when game starts
-      window.hideGamePanel = function () {
-        const panel = document.getElementById('gamePanel');
-        if (panel) panel.style.display = 'none';
-      };
-
-      // Show game panel
-      window.showGamePanel = function () {
-        const panel = document.getElementById('gamePanel');
-        if (panel) panel.style.display = 'block';
-      };
-    </script>
-  </body>
 </html>

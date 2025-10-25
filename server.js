@@ -29,6 +29,7 @@ const io = new SocketIOServer(httpServer, {
 
 const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS_PER_ROOM = parseInt(process.env.MAX_PLAYERS) || 50;
+const DISCONNECT_TIMEOUT = 10000; // 10 seconds to rejoin
 
 // Serve static files
 app.use(express.static(path.join(__dirname)));
@@ -59,6 +60,7 @@ app.get('/api/info', (req, res) => {
 // Game rooms and players
 const rooms = new Map();
 const playerRooms = new Map();
+const disconnectTimers = new Map(); // 🔥 Track disconnect timers
 
 // Extended player colors for up to 50 players
 const PLAYER_COLORS = [
@@ -164,7 +166,8 @@ class Room {
       ready: false,
       finished: false,
       finishTime: null,
-      joinedAt: Date.now()
+      joinedAt: Date.now(),
+      status: 'online' // 🔥 online, offline
     });
 
     return { success: true, playerCount: this.players.size };
@@ -268,6 +271,21 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Check if username already exists in the room
+    const nameExists = Array.from(room.players.values()).some(
+      (p) => p.name === playerName
+    );
+    if (nameExists) {
+      socket.emit('error', { message: 'Username already taken in this room' });
+      socket.emit('notification', {
+        type: 'error',
+        title: 'Username Taken',
+        message: `The name "${playerName}" is already used in this room. Please choose another.`,
+        duration: 5000
+      });
+      return;
+    }
+
     if (room.players.has(socket.id)) {
       console.log(`🔄 Player ${socket.id} rejoining room ${roomId}`);
 
@@ -342,6 +360,81 @@ io.on('connection', (socket) => {
         duration: 5000
       });
     }
+  });
+
+  // 🔥 NEW: Rejoin room after page reload
+  socket.on('rejoinRoom', (data) => {
+    const { roomId, playerName } = data;
+    const room = rooms.get(roomId);
+
+    if (!room) {
+      socket.emit('error', { message: 'Room not found' });
+      console.log(`❌ Rejoin failed: Room ${roomId} not found`);
+      return;
+    }
+
+    console.log(`🔄 ${playerName} attempting to rejoin room ${roomId}`);
+
+    // Cancel any pending disconnect timer
+    const timerKey = `${roomId}:${playerName}`;
+    if (disconnectTimers.has(timerKey)) {
+      clearTimeout(disconnectTimers.get(timerKey));
+      disconnectTimers.delete(timerKey);
+      console.log(`⏸️  Cancelled disconnect timer for ${playerName}`);
+    }
+
+    // Find player by name (vì socket ID đã thay đổi)
+    let player = null;
+    let oldSocketId = null;
+
+    room.players.forEach((p, sid) => {
+      if (p.name === playerName) {
+        player = p;
+        oldSocketId = sid;
+      }
+    });
+
+    if (player && oldSocketId) {
+      // Update socket ID
+      console.log(`✅ Updating ${playerName} socket ID: ${oldSocketId} → ${socket.id}`);
+
+      // Remove old socket ID entry
+      room.players.delete(oldSocketId);
+      playerRooms.delete(oldSocketId);
+
+      // Add with new socket ID
+      player.id = socket.id;
+      player.status = 'online';
+      room.players.set(socket.id, player);
+      playerRooms.set(socket.id, roomId);
+    } else {
+      // New player (shouldn't happen but handle anyway)
+      console.log(`⚠️ ${playerName} not found in room, adding as new player`);
+      const result = room.addPlayer(socket.id, playerName);
+      if (!result.success) {
+        socket.emit('error', { message: 'Failed to rejoin room' });
+        return;
+      }
+      playerRooms.set(socket.id, roomId);
+    }
+
+    socket.join(roomId);
+
+    // Send confirmation
+    socket.emit('roomJoined', {
+      roomId: roomId,
+      playerId: socket.id,
+      players: room.getPlayersArray(),
+      raceInProgress: room.state === 'racing' // 🔥 Tell client if race is running
+    });
+
+    // Notify others
+    socket.to(roomId).emit('playerRejoined', {
+      playerId: socket.id,
+      playerName: playerName
+    });
+
+    console.log(`✅ ${playerName} rejoined room ${roomId} successfully`);
   });
 
   // Get list of available rooms
@@ -465,13 +558,13 @@ io.on('connection', (socket) => {
 
   // Leave room
   socket.on('leaveRoom', () => {
-    handlePlayerLeave(socket.id);
+    handlePlayerLeave(socket.id, true); // Immediate leave
   });
 
-  // Handle disconnect
+  // 🔥 Handle disconnect with timeout
   socket.on('disconnect', () => {
-    console.log(`Player disconnected: ${socket.id}`);
-    handlePlayerLeave(socket.id);
+    console.log(`🔌 Player disconnected: ${socket.id}`);
+    handlePlayerLeave(socket.id, false); // Delayed leave
   });
 });
 
@@ -488,30 +581,30 @@ function startRace(roomId, room) {
     player.finishTime = null;
   });
 
-  // Countdown notifications
-  io.to(roomId).emit('raceCountdown', { countdown: 3 });
-  io.to(roomId).emit('notification', {
-    type: 'warning',
-    title: 'Race Starting!',
-    message: `Get ready! ${playerCount} racers competing...`,
-    duration: 3000
-  });
+  // Countdown
+  let countdown = 3;
+  const countdownInterval = setInterval(() => {
+    io.to(roomId).emit('raceCountdown', { countdown });
+    countdown--;
 
-  setTimeout(() => {
-    io.to(roomId).emit('raceStart', {
-      startTime: room.startTime,
-      players: room.getPlayersArray()
-    });
+    if (countdown < 0) {
+      clearInterval(countdownInterval);
 
-    io.to(roomId).emit('notification', {
-      type: 'success',
-      title: 'GO! 🏁',
-      message: 'Race has started! Good luck!',
-      duration: 2000
-    });
+      io.to(roomId).emit('raceStart', {
+        startTime: room.startTime,
+        players: room.getPlayersArray()
+      });
 
-    console.log(`🏁 Race started in room ${roomId} with ${playerCount} players`);
-  }, 3000);
+      io.to(roomId).emit('notification', {
+        type: 'success',
+        title: 'GO! 🏁',
+        message: 'Race has started! Good luck!',
+        duration: 2000
+      });
+
+      console.log(`🏁 Race started in room ${roomId} with ${playerCount} players`);
+    }
+  }, 1000);
 }
 
 function endRace(roomId, room) {
@@ -530,7 +623,7 @@ function endRace(roomId, room) {
 
   io.to(roomId).emit('raceEnded', { rankings });
 
-  console.log(`Race ended in room ${roomId}`);
+  console.log(`🏁 Race ended in room ${roomId}`);
 
   // Reset room after 10 seconds
   setTimeout(() => {
@@ -549,7 +642,7 @@ function endRace(roomId, room) {
   }, 10000);
 }
 
-function handlePlayerLeave(socketId) {
+function handlePlayerLeave(socketId, immediate = true) {
   const roomId = playerRooms.get(socketId);
   if (!roomId) return;
 
@@ -557,9 +650,48 @@ function handlePlayerLeave(socketId) {
   if (!room) return;
 
   const player = room.players.get(socketId);
-  const playerName = player ? player.name : 'A player';
-  const wasReady = player ? player.ready : false;
+  if (!player) return;
 
+  const playerName = player.name;
+
+  if (immediate) {
+    // Immediate leave (manual leaveRoom)
+    console.log(`👋 Player ${socketId} (${playerName}) left room ${roomId} immediately`);
+    removePlayerFromRoom(socketId, roomId, room, playerName);
+  } else {
+    // Delayed leave (disconnect) - give time to reconnect
+    console.log(`⏳ Player ${socketId} (${playerName}) disconnected, waiting ${DISCONNECT_TIMEOUT / 1000}s for rejoin...`);
+
+    player.status = 'offline';
+
+    const timerKey = `${roomId}:${playerName}`;
+    const timer = setTimeout(() => {
+      console.log(`⏰ Timeout reached for ${playerName}, removing from room ${roomId}`);
+      disconnectTimers.delete(timerKey);
+
+      // Check if player still hasn't reconnected
+      const currentRoom = rooms.get(roomId);
+      if (!currentRoom) return;
+
+      // Find player by name (socket ID might have changed)
+      let stillDisconnected = false;
+      currentRoom.players.forEach((p, sid) => {
+        if (p.name === playerName && p.status === 'offline') {
+          stillDisconnected = true;
+          removePlayerFromRoom(sid, roomId, currentRoom, playerName);
+        }
+      });
+
+      if (!stillDisconnected) {
+        console.log(`✅ Player ${playerName} has reconnected, keeping in room`);
+      }
+    }, DISCONNECT_TIMEOUT);
+
+    disconnectTimers.set(timerKey, timer);
+  }
+}
+
+function removePlayerFromRoom(socketId, roomId, room, playerName) {
   room.removePlayer(socketId);
   playerRooms.delete(socketId);
 
@@ -583,7 +715,7 @@ function handlePlayerLeave(socketId) {
   // Delete room if empty
   if (room.isEmpty()) {
     rooms.delete(roomId);
-    console.log(`🗑️  Room ${roomId} deleted (empty)`);
+    console.log(`🗑️ Room ${roomId} deleted (empty)`);
   } else if (room.hostId === socketId && room.players.size > 0) {
     // Assign new host
     const newHostId = room.players.keys().next().value;
@@ -601,7 +733,7 @@ function handlePlayerLeave(socketId) {
     console.log(`👑 New host assigned in room ${roomId}: ${newHostId}`);
   }
 
-  console.log(`👋 Player ${socketId} (${playerName}) left room ${roomId}`);
+  console.log(`❌ Player ${socketId} (${playerName}) removed from room ${roomId}`);
 }
 
 function generateRoomId() {
@@ -632,9 +764,10 @@ httpServer.listen(PORT, () => {
 ║                                                        ║
 ║   🎮  HISTORY SUFERS - MULTIPLAYER SERVER              ║
 ║                                                        ║
-║   🚀  Server running on port ${PORT}                   ║
-║   🌐  URL: http://localhost:${PORT}                    ║
-║   👥  Max players per room: ${MAX_PLAYERS_PER_ROOM}    ║
+║   🚀  Server running on port ${PORT}                      ║
+║   🌐  URL: http://localhost:${PORT}                       ║
+║   👥  Max players per room: ${MAX_PLAYERS_PER_ROOM}       ║
+║   ⏱️   Disconnect timeout: ${DISCONNECT_TIMEOUT / 1000}s    ║
 ║   📊  Server version: 2.0.0                            ║
 ║                                                        ║
 ╚════════════════════════════════════════════════════════╝

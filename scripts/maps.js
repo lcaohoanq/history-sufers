@@ -26,7 +26,15 @@ import {
   HighTechFactory
 } from '../js/object.js';
 import { Character } from './characters.js';
-import { CAMERA_SETTINGS, DUONG_CHAY, DUONG_DAT, DUONG_GACH, GAME_CONSTANTS, SIDE_OBJECTS_BY_STAGE } from './constants.js';
+import {
+  CAMERA_SETTING_LIVE,
+  CAMERA_SETTINGS,
+  DUONG_CHAY,
+  DUONG_DAT,
+  DUONG_GACH,
+  GAME_CONSTANTS,
+  SIDE_OBJECTS_BY_STAGE
+} from './constants.js';
 import { KEYCODE } from './keycode.js';
 import { SinglePlayerStrategy, MultiplayerStrategy } from './network-strategy.js';
 
@@ -90,13 +98,12 @@ export function WorldMap(networkStrategy = null) {
   const GROUNDS = {
     1: DUONG_DAT,
     2: DUONG_GACH,
-    3: DUONG_CHAY,
+    3: DUONG_CHAY
   };
 
   // Đường hiện tại đang active trong scene
   let activeGround = null;
   let groundStage = 1;
-
 
   // Initialize the world.
   init();
@@ -161,7 +168,7 @@ export function WorldMap(networkStrategy = null) {
       character = new Character();
       scene.add(character.element);
 
-      [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach(g => {
+      [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach((g) => {
         if (g?.material?.map) {
           g.material.map.wrapS = THREE.RepeatWrapping;
           g.material.map.wrapT = THREE.RepeatWrapping;
@@ -175,7 +182,6 @@ export function WorldMap(networkStrategy = null) {
 
       const background = new THREE.TextureLoader().load('../assets/road.jpg');
       scene.background = background;
-
 
       objects = [];
       for (var i = 10; i < 40; i++) {
@@ -221,9 +227,33 @@ export function WorldMap(networkStrategy = null) {
             }
             if (key == KEYCODE.LEFT && !paused) {
               character.onLeftKeyPressed();
+
+              if (currentCameraIndex === 2) {
+                // Choose live target based on current lane — prefer explicit CENTER if available
+                const live = CAMERA_SETTING_LIVE;
+                const center = live.CENTER || {
+                  x: (live.LEFT.x + live.RIGHT.x) / 2,
+                  y: (live.LEFT.y + live.RIGHT.y) / 2,
+                  z: (live.LEFT.z + live.RIGHT.z) / 2
+                };
+                const target = character && character.currentLane < 0 ? live.LEFT : center;
+                // Smoothly animate camera to target
+                setCameraPosition(target, 200);
+              }
             }
             if (key == KEYCODE.RIGHT && !paused) {
               character.onRightKeyPressed();
+
+              if (currentCameraIndex === 2) {
+                const live = CAMERA_SETTING_LIVE;
+                const center = live.CENTER || {
+                  x: (live.LEFT.x + live.RIGHT.x) / 2,
+                  y: (live.LEFT.y + live.RIGHT.y) / 2,
+                  z: (live.LEFT.z + live.RIGHT.z) / 2
+                };
+                const target = character && character.currentLane > 0 ? live.RIGHT : center;
+                setCameraPosition(target, 200);
+              }
             }
             if (key == KEYCODE.DOWN && !paused) {
               character.onDownKeyPressed();
@@ -582,6 +612,22 @@ export function WorldMap(networkStrategy = null) {
       // Update nhân vật
       character.update();
 
+      // Smooth camera transition for LIVE mode
+      if (currentCameraIndex === 2 && character) {
+        const live = CAMERA_SETTING_LIVE;
+        const center = live.CENTER || {
+          x: (live.LEFT.x + live.RIGHT.x) / 2,
+          y: (live.LEFT.y + live.RIGHT.y) / 2,
+          z: (live.LEFT.z + live.RIGHT.z) / 2
+        };
+        const desired =
+          character.currentLane < 0 ? live.LEFT : character.currentLane > 0 ? live.RIGHT : center;
+        const desiredVec = new THREE.Vector3(desired.x, desired.y, desired.z);
+        camera.position.lerp(desiredVec, 0.08); // adjust smoothing factor
+        const lookAtTarget = desired.lookAt || { x: 0, y: 600, z: -5000 };
+        camera.lookAt(new THREE.Vector3(lookAtTarget.x, lookAtTarget.y, lookAtTarget.z));
+      }
+
       // Send network updates via strategy
       network.onGameLoop({
         position: {
@@ -635,7 +681,7 @@ export function WorldMap(networkStrategy = null) {
       try {
         scene.remove(activeGround);
       } catch (e) {
-        console.warn("Remove ground failed", e);
+        console.warn('Remove ground failed', e);
       }
     }
 
@@ -652,7 +698,6 @@ export function WorldMap(networkStrategy = null) {
 
     groundStage = newStage;
   }
-
 
   /**
    * A method called when window is resized.
@@ -684,12 +729,19 @@ export function WorldMap(networkStrategy = null) {
     var shouldSpawnSideObject = rowsSinceSideObject >= minRowsBetweenSideObject;
 
     if (shouldSpawnSideObject) {
-      var largeObjects = ['OldApartmentBlock', 'HighTechFactory', 'Skyscraper', 'MetroStation', 'OldFactory'];
+      var largeObjects = [
+        'OldApartmentBlock',
+        'HighTechFactory',
+        'Skyscraper',
+        'MetroStation',
+        'OldFactory'
+      ];
 
       var objectType = getRandomSideObject(currentStage);
       var isLargeObject = largeObjects.includes(objectType);
 
-      var playerLane = (character && typeof character.currentLane === 'number') ? character.currentLane : 0;
+      var playerLane =
+        character && typeof character.currentLane === 'number' ? character.currentLane : 0;
 
       if (isLargeObject) {
         var side = Math.random() < 0.5 ? 'left' : 'right'; // Chọn 1 bên
@@ -701,7 +753,7 @@ export function WorldMap(networkStrategy = null) {
         if (sideObject && sideObject.mesh) {
           // Nếu bên trái, xoay sang phải; bên phải xoay sang trái
           // Nhưng hướng nhìn về lane người chơi
-          var dx = (playerLane * 800) - (lane * 800);
+          var dx = playerLane * 800 - lane * 800;
           var dz = 0;
           var angle = Math.atan2(dx, dz); // dz=0 nên sẽ là ±PI/2
           sideObject.mesh.rotation.y = angle;
@@ -719,7 +771,7 @@ export function WorldMap(networkStrategy = null) {
 
               // Xoay object hướng về lane người chơi
               if (sideObject && sideObject.mesh) {
-                var dx = (playerLane * 800) - (lane * 800);
+                var dx = playerLane * 800 - lane * 800;
                 var dz = 0;
                 var angle = Math.atan2(dx, dz);
                 sideObject.mesh.rotation.y = angle;
@@ -832,20 +884,26 @@ export function WorldMap(networkStrategy = null) {
     var adjustedX = x;
     var adjustedY = y;
 
-    var largeObjects = ['OldApartmentBlock', 'HighTechFactory', 'Skyscraper', 'MetroStation', 'OldFactory'];
+    var largeObjects = [
+      'OldApartmentBlock',
+      'HighTechFactory',
+      'Skyscraper',
+      'MetroStation',
+      'OldFactory'
+    ];
     var mediumObjects = ['VillageHut', 'RiceStorage', 'WindPump'];
 
     if (largeObjects.includes(type)) {
       // Object lớn → đẩy rất xa + hạ thấp xuống đất
-      adjustedX = (x < 0) ? x - 3000 : x + 3000;
+      adjustedX = x < 0 ? x - 3000 : x + 3000;
       adjustedY = -600; // Hạ xuống sát đất hơn
     } else if (mediumObjects.includes(type)) {
       // Object vừa → đẩy xa vừa phải
-      adjustedX = (x < 0) ? x - 1500 : x + 1500;
+      adjustedX = x < 0 ? x - 1500 : x + 1500;
       adjustedY = -400;
     } else {
       // Object nhỏ (Tree, Bamboo, Buffalo) → gần hơn
-      adjustedX = (x < 0) ? x - 800 : x + 800;
+      adjustedX = x < 0 ? x - 800 : x + 800;
       adjustedY = -400;
     }
 
@@ -895,8 +953,8 @@ export function WorldMap(networkStrategy = null) {
   }
 
   /**
- * Weighted random selection for side objects
- */
+   * Weighted random selection for side objects
+   */
   function getRandomSideObject(stage) {
     var objectPool = SIDE_OBJECTS_BY_STAGE[stage] || SIDE_OBJECTS_BY_STAGE[1];
 
@@ -1078,10 +1136,14 @@ export function WorldMap(networkStrategy = null) {
         if (objects[i].buffs && !objects[i].mesh.userData.deadly) {
           if (
             objects[i].collides(
-              hitbox.minX, hitbox.maxX,
-              hitbox.minY, hitbox.maxY,
-              hitbox.minZ, hitbox.maxZ
-            ) && !objects[i].isCollected
+              hitbox.minX,
+              hitbox.maxX,
+              hitbox.minY,
+              hitbox.maxY,
+              hitbox.minZ,
+              hitbox.maxZ
+            ) &&
+            !objects[i].isCollected
           ) {
             collidedObjects.push(i);
           }
@@ -1099,11 +1161,16 @@ export function WorldMap(networkStrategy = null) {
     for (var i = 0; i < objects.length; i++) {
       if (objects[i] && typeof objects[i].collides === 'function') {
         if (objects[i].mesh.userData.deadly) {
-          if (objects[i].collides(
-            hitbox.minX, hitbox.maxX,
-            hitbox.minY, hitbox.maxY,
-            hitbox.minZ, hitbox.maxZ
-          )) {
+          if (
+            objects[i].collides(
+              hitbox.minX,
+              hitbox.maxX,
+              hitbox.minY,
+              hitbox.maxY,
+              hitbox.minZ,
+              hitbox.maxZ
+            )
+          ) {
             return true;
           }
         }
@@ -1318,7 +1385,6 @@ export function WorldMap(networkStrategy = null) {
       opponentCount: opponents.size
     };
   };
-
 
   return self;
 }

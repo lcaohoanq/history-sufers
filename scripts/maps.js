@@ -62,7 +62,6 @@ export function WorldMap(networkStrategy = null) {
   // LIVE camera override state (when player presses UP/DOWN)
   var cameraLiveOverride = null; // 'UP' | 'DOWN' | null
   var cameraLiveOverrideTimer = null;
-  const CAMERA_LIVE_OVERRIDE_MS = 2500; // how long the UP/DOWN preset persists
 
   // ===== BUFF STATS =====
   var playerStats = {
@@ -71,11 +70,7 @@ export function WorldMap(networkStrategy = null) {
     unity: 50
   };
 
-  // Multiplayer variables
-  var isMultiplayer = false;
   var opponents = new Map();
-  var lastUpdateTime = 0;
-  var updateInterval = 50;
 
   // ===== SPAWN CONTROL =====
   var rowCounter = 0;
@@ -185,7 +180,7 @@ export function WorldMap(networkStrategy = null) {
       activeGround = null;
       switchGround(1);
 
-      const background = new THREE.TextureLoader().load('../assets/road.jpg');
+      const background = new THREE.TextureLoader().load('../assets/xp.jpg');
       scene.background = background;
 
       objects = [];
@@ -223,6 +218,7 @@ export function WorldMap(networkStrategy = null) {
               document.getElementById('variable-content').style.visibility = 'visible';
               document.getElementById('variable-content').innerHTML =
                 '<h2>PAUSED</h2><p>Nhấn phím bất kỳ để tiếp tục.</p>';
+              document.getElementById('controls').style.display = 'block';
 
               // Pause music when game is paused
               AudioManager.pause();
@@ -233,10 +229,14 @@ export function WorldMap(networkStrategy = null) {
               if (currentCameraIndex === 2) {
                 // apply UP preset and set a short-lived override so per-frame logic respects it
                 const live = CAMERA_SETTING_LIVE;
-                const target = live.UP || {
-                  x: (live.LEFT.x + live.RIGHT.x) / 2,
-                  y: (live.LEFT.y + live.RIGHT.y) / 2 + 300,
-                  z: (live.LEFT.z + live.RIGHT.z) / 2 + 800
+                // Dùng currentLane thay vì position.x để tránh timing issue
+                const currentX = character.currentLane * 800;
+
+                const target = {
+                  x: currentX,
+                  y: live.UP.y,
+                  z: live.UP.z,
+                  lookAt: { x: currentX, y: live.UP.lookAt.y, z: live.UP.lookAt.z }
                 };
                 setCameraPosition(target, 200);
 
@@ -260,10 +260,14 @@ export function WorldMap(networkStrategy = null) {
 
               if (currentCameraIndex === 2) {
                 const live = CAMERA_SETTING_LIVE;
-                const target = live.LEFT || {
-                  x: (live.CENTER.x + live.LEFT.x) / 2,
-                  y: (live.CENTER.y + live.LEFT.y) / 2,
-                  z: (live.CENTER.z + live.LEFT.z) / 2
+                const targetLane = Math.max(character.currentLane - 1, -1);
+                const targetX = targetLane * 800; // mỗi lane cách nhau 800 units
+
+                const target = {
+                  x: targetX,
+                  y: live.CENTER.y,
+                  z: live.CENTER.z,
+                  lookAt: { x: targetX, y: live.CENTER.lookAt.y, z: live.CENTER.lookAt.z }
                 };
                 setCameraPosition(target, 200);
               }
@@ -279,10 +283,14 @@ export function WorldMap(networkStrategy = null) {
 
               if (currentCameraIndex === 2) {
                 const live = CAMERA_SETTING_LIVE;
-                const target = live.RIGHT || {
-                  x: (live.CENTER.x + live.RIGHT.x) / 2,
-                  y: (live.CENTER.y + live.RIGHT.y) / 2,
-                  z: (live.CENTER.z + live.RIGHT.z) / 2
+                const targetLane = Math.min(character.currentLane + 1, 1);
+                const targetX = targetLane * 800;
+
+                const target = {
+                  x: targetX,
+                  y: live.CENTER.y,
+                  z: live.CENTER.z,
+                  lookAt: { x: targetX, y: live.CENTER.lookAt.y, z: live.CENTER.lookAt.z }
                 };
                 setCameraPosition(target, 200);
               }
@@ -292,27 +300,19 @@ export function WorldMap(networkStrategy = null) {
 
               if (currentCameraIndex === 2) {
                 const live = CAMERA_SETTING_LIVE;
-                const target = live.DOWN || {
-                  x: (live.LEFT.x + live.RIGHT.x) / 2,
-                  y: (live.LEFT.y + live.RIGHT.y) / 2 - 300,
-                  z: (live.LEFT.z + live.RIGHT.z) / 2 - 800
+                // Dùng currentLane thay vì position.x để tránh timing issue
+                const currentX = character.currentLane * 800;
+
+                const target = {
+                  x: currentX,
+                  y: live.DOWN.y,
+                  z: live.DOWN.z,
+                  lookAt: { x: currentX, y: live.DOWN.lookAt.y, z: live.DOWN.lookAt.z }
                 };
                 setCameraPosition(target, 200);
-
-                // cameraLiveOverride = 'DOWN';
-                // if (cameraLiveOverrideTimer) clearTimeout(cameraLiveOverrideTimer);
-                // cameraLiveOverrideTimer = setTimeout(() => {
-                //   cameraLiveOverride = null;
-                //   cameraLiveOverrideTimer = null;
-                // }, CAMERA_LIVE_OVERRIDE_MS);
               }
             }
             if (key === KEYCODE.V && !paused) {
-              // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
-              //   setCameraPosition(CAMERA_SETTINGS.NGANG);
-              // } else {
-              //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
-              // }
               currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
               const mode = cameraModes[currentCameraIndex];
               setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
@@ -567,7 +567,8 @@ export function WorldMap(networkStrategy = null) {
   function triggerGameOver(message, reason) {
     gameOver = true;
     paused = true;
-    AudioManager.stop();
+
+    AudioManager.playGameOver(); // Thay đổi này
 
     // Notify network
     network.onGameOver(score);
@@ -650,6 +651,36 @@ export function WorldMap(networkStrategy = null) {
 
       for (let obj of objects) {
         if (obj.updateHitbox) obj.updateHitbox();
+      }
+
+      // Smooth camera transition for LIVE mode với head bobbing
+      if (currentCameraIndex === 2 && camera && character) {
+        const live = CAMERA_SETTING_LIVE;
+        const currentX = character.currentLane * 800;
+
+        // Tính toán head bobbing dựa trên character.element.position.y
+        // character.element.position.y dao động khi chạy (từ sinusoid)
+        const bobAmount = character.element.position.y * 1.8; // Scale down để không rung quá mạnh
+
+        // Base position từ preset CENTER
+        let targetY = live.CENTER.y + bobAmount;
+        let targetZ = live.CENTER.z;
+
+        // Nếu có override (UP/DOWN khi nhảy/trượt), ưu tiên override
+        if (cameraLiveOverride && live[cameraLiveOverride]) {
+          const desired = live[cameraLiveOverride];
+          targetY = desired.y + bobAmount;
+          targetZ = desired.z;
+        }
+
+        // Smooth transition
+        const targetVec = new THREE.Vector3(currentX, targetY, targetZ);
+        camera.position.lerp(targetVec, 1); // Tăng lerp factor để mượt hơn
+
+        // LookAt với bobbing nhẹ
+        const lookY = live.CENTER.lookAt.y + bobAmount * 0.5;
+        const look = new THREE.Vector3(currentX, lookY, live.CENTER.lookAt.z);
+        camera.lookAt(look);
       }
 
       // Xóa object khi ra khỏi màn
@@ -1078,7 +1109,7 @@ export function WorldMap(networkStrategy = null) {
 
   function spawnHammerCoinPattern(zPos) {
     var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
-    var coinCount = 7;
+    var coinCount = 12 + Math.floor(Math.random() * 5); // 12-16 coins
     var lanes = [-1, 0, 1];
     var startLane = lanes[Math.floor(Math.random() * 3)];
 

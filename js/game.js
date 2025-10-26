@@ -10,20 +10,23 @@ window.addEventListener('load', function () {
   // Initialize audio manager
   AudioManager.init();
 
-  // Set up sound toggle button
-  var soundToggleBtn = document.getElementById('sound-toggle');
-  if (soundToggleBtn) {
-    updateSoundButtonUI();
+  AudioManager.loadAll().then(function () {
+    // nếu người chơi đã tương tác ở lobby, gọi:
+    AudioManager.playIntro(); // intro sẽ loop perfectly
 
-    soundToggleBtn.addEventListener('click', function () {
-      var isMuted = AudioManager.toggleMute();
-      updateSoundButtonUI();
-
-      if (!isMuted && AudioManager.isPlaying()) {
-        AudioManager.play();
-      }
-    });
-  }
+    // setup UI toggle
+    var soundToggleBtn = document.getElementById('sound-toggle');
+    if (soundToggleBtn) {
+      updateSoundButtonUI(); // your function
+      soundToggleBtn.addEventListener('click', function () {
+        AudioManager.toggleMute();
+        updateSoundButtonUI();
+      });
+    }
+  }).catch(function (e) {
+    console.error('Audio preload failed', e);
+    // fallback: you may call AudioManager.playIntro() later after user gesture
+  });
 
   // Create single player strategy
   const networkStrategy = new SinglePlayerStrategy();
@@ -39,5 +42,8 @@ window.addEventListener('load', function () {
     if (window.currentWorld && typeof window.currentWorld.cleanup === 'function') {
       window.currentWorld.cleanup();
     }
+
+    // Stop all audio when leaving
+    AudioManager.stop();
   });
 });

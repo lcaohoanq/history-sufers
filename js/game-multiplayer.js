@@ -164,6 +164,12 @@ function setupMultiplayerEventHandlers() {
   // Listen for race ended
   networkManager.on('raceEnded', function (data) {
     console.log('🏁 Race ended:', data.rankings);
+
+    // Play game over music
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.playGameOver();
+    }
+
     displayRaceResults(data.rankings);
   });
 
@@ -177,6 +183,11 @@ function setupMultiplayerEventHandlers() {
   networkManager.on('disconnected', function () {
     console.log('🔌 Disconnected from server');
     showNotification('Disconnected from server', 'error');
+
+    // Stop audio
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.stop();
+    }
 
     // Clean up and redirect
     sessionStorage.removeItem('multiplayerRoom');
@@ -207,6 +218,13 @@ function displayCountdown(count) {
   if (count === 0) {
     countdownElement.innerHTML = 'GO!';
     countdownElement.style.color = '#4CAF50';
+
+    // Remove countdown after "GO!"
+    setTimeout(() => {
+      if (countdownElement && countdownElement.parentNode) {
+        countdownElement.parentNode.removeChild(countdownElement);
+      }
+    }, 1000);
   } else {
     countdownElement.innerHTML = count;
     countdownElement.style.color = '#FFF';
@@ -258,6 +276,11 @@ function startMultiplayerGame() {
     console.log('✅ Multiplayer game started successfully');
     showNotification('Race started!', 'success');
 
+    // Play game music (intro -> loop) when race actually starts
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.play();
+    }
+
   } catch (error) {
     console.error('❌ Failed to start game:', error);
     showNotification('Failed to start game', 'error');
@@ -279,7 +302,7 @@ function displayRaceResults(rankings) {
       rank.name + '</td><td>' + rank.score + '</td></tr>';
   });
 
-  resultsHtml += '</table><p style="margin-top: 20px;">Press R to return to lobby</p>';
+  resultsHtml += '</table><p style="margin-top: 20px;">Press ESC to return to lobby</p>';
 
   var variableContent = document.getElementById('variable-content');
   if (variableContent) {
@@ -294,6 +317,11 @@ function displayRaceResults(rankings) {
 
       if (window.currentWorld && typeof window.currentWorld.cleanup === 'function') {
         window.currentWorld.cleanup();
+      }
+
+      // Stop audio
+      if (typeof AudioManager !== 'undefined') {
+        AudioManager.stop();
       }
 
       sessionStorage.removeItem('multiplayerRoom');
@@ -355,10 +383,14 @@ function showNotification(message, type = 'info') {
  */
 window.addEventListener('load', function () {
   console.log('🚀 Page loaded, initializing...');
+  // Initialize audio manager
+  AudioManager.init();
 
   // Initialize audio manager
   if (typeof AudioManager !== 'undefined') {
     AudioManager.init();
+    // Play intro music khi vào lobby multiplayer
+    AudioManager.playIntro();
   }
 
   // Set up sound toggle button
@@ -370,9 +402,7 @@ window.addEventListener('load', function () {
       var isMuted = AudioManager.toggleMute();
       updateSoundButtonUI();
 
-      if (!isMuted && AudioManager.isPlaying()) {
-        AudioManager.play();
-      }
+      // Không cần gọi play() ở đây vì toggle sẽ tự động resume nếu đang phát
     });
   }
 
@@ -386,6 +416,11 @@ window.addEventListener('load', function () {
     }
     if (networkManager && networkManager.isInMultiplayer()) {
       networkManager.leaveRoom();
+    }
+
+    // Stop all audio when leaving
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.stop();
     }
   });
 });

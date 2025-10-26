@@ -150,6 +150,7 @@ export function Character() {
     self.isJumping = false;
     self.isSwitchingLeft = false;
     self.isSwitchingRight = false;
+    self.stepToggle = false;
     self.currentLane = 0;
     self.runningStartTime = new Date() / 1000;
     self.pauseStartTime = new Date() / 1000;
@@ -297,8 +298,8 @@ export function Character() {
       // 1. Hạ người xuống thấp hơn
       self.element.position.y = THREE.MathUtils.lerp(0, -200, t);
 
-      // 2. DI CHUYỂN TOÀN BỘ NGƯỜI VỀ PHÍA SAU (trượt lùi)
-      self.element.position.z = THREE.MathUtils.lerp(-4000, -4200, t);
+      // 2. KHÔNG di chuyển Z - chỉ làm hiệu ứng visual bằng rotation
+      // self.element.position.z giữ nguyên ở -4000
 
       // 3. Ngả đầu ra sau (chỉ xoay, không dịch)
       self.head.rotation.x = THREE.MathUtils.lerp(0, -30 * deg2Rad, t);
@@ -331,42 +332,40 @@ export function Character() {
       let twitch = Math.sin(currentTime * 30) * 1 * deg2Rad;
       self.torso.rotation.x += twitch;
 
-      // 10. Reset khi hết slide
+      // 10. Reset khi hết slide - HARD RESET để tránh tích lũy sai số
       if (slideClock > self.slideDuration) {
         self.isSliding = false;
 
-        const smoothBack = (current, target) => THREE.MathUtils.lerp(current, target, 0.3);
+        // Reset về giá trị mặc định CHÍNH XÁC
+        self.element.position.y = 0;
+        // KHÔNG thay đổi Z - giữ nguyên -4000
 
-        // Reset position tổng thể
-        self.element.position.y = smoothBack(self.element.position.y, 0);
-        self.element.position.z = smoothBack(self.element.position.z, -4000); // ⭐ Reset Z
+        // Reset head
+        self.head.rotation.x = 0;
 
-        // Reset head (chỉ rotation, không có position.z)
-        self.head.rotation.x = smoothBack(self.head.rotation.x, 0);
-
-        // Reset torso (chỉ rotation và Y, không có position.z)
-        self.torso.rotation.x = smoothBack(self.torso.rotation.x, 0);
-        self.torso.position.y = smoothBack(self.torso.position.y, 100);
+        // Reset torso
+        self.torso.rotation.x = 0;
+        self.torso.position.y = 100;
 
         // Reset arms
-        self.leftArm.rotation.x = smoothBack(self.leftArm.rotation.x, 0);
-        self.rightArm.rotation.x = smoothBack(self.rightArm.rotation.x, 0);
-        self.leftArm.position.y = smoothBack(self.leftArm.position.y, 190);
-        self.rightArm.position.y = smoothBack(self.rightArm.position.y, 190);
+        self.leftArm.rotation.x = 0;
+        self.rightArm.rotation.x = 0;
+        self.leftArm.position.y = 190;
+        self.rightArm.position.y = 190;
 
         // Reset lower arms
-        self.leftLowerArm.rotation.x = smoothBack(self.leftLowerArm.rotation.x, 0);
-        self.rightLowerArm.rotation.x = smoothBack(self.rightLowerArm.rotation.x, 0);
+        self.leftLowerArm.rotation.x = 0;
+        self.rightLowerArm.rotation.x = 0;
 
         // Reset legs
-        self.leftLeg.rotation.x = smoothBack(self.leftLeg.rotation.x, 0);
-        self.rightLeg.rotation.x = smoothBack(self.rightLeg.rotation.x, 0);
-        self.leftLeg.position.y = smoothBack(self.leftLeg.position.y, -10);
-        self.rightLeg.position.y = smoothBack(self.rightLeg.position.y, -10);
+        self.leftLeg.rotation.x = 0;
+        self.rightLeg.rotation.x = 0;
+        self.leftLeg.position.y = -10;
+        self.rightLeg.position.y = -10;
 
         // Reset lower legs
-        self.leftLowerLeg.rotation.x = smoothBack(self.leftLowerLeg.rotation.x, 0);
-        self.rightLowerLeg.rotation.x = smoothBack(self.rightLowerLeg.rotation.x, 0);
+        self.leftLowerLeg.rotation.x = 0;
+        self.rightLowerLeg.rotation.x = 0;
       }
     }
     else {

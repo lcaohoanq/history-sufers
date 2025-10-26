@@ -19,6 +19,13 @@ export const GROUND_KIT = {
   DUONG_GACH: 'textures/brick/Bricks075A_1K-JPG_Color.jpg'
 };
 
+export const SIDEWALK_KIT = {
+  DUONG_DAT: 'textures/ground/co.jpg',
+  DUONG_GACH: 'textures/brick/leda.jpg',
+  DUONG_NHUA: 'textures/road/viahe.jpg'
+};
+
+
 export const CAMERA_SETTINGS = {
   NORMAL: { x: 0, y: 700, z: -2000, lookAt: { x: 0, y: 600, z: -5000 } },
   NGANG: { x: 2000, y: 700, z: -2000, lookAt: { x: 0, y: 600, z: -5000 } },
@@ -27,12 +34,14 @@ export const CAMERA_SETTINGS = {
 };
 
 export const CAMERA_SETTING_LIVE = {
-  LEFT: { x: -1000, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
-  CENTER: { x: 0, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
-  RIGHT: { x: 1000, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
-  // Optional up / down presets: tweak values to taste (closer / higher = UP, farther / lower = DOWN)
-  UP: { x: 0, y: 400, z: -3200, lookAt: { x: 0, y: 600, z: -60000 } },
-  DOWN: { x: 0, y: 600, z: -6400, lookAt: { x: 0, y: 0, z: -60000 } }
+  // Camera ở đầu character (y: 250) và phía sau một chút (z: -4300)
+  LEFT: { x: -800, y: 250, z: -4300, lookAt: { x: -800, y: 200, z: -60000 } },
+  CENTER: { x: 0, y: 250, z: -4300, lookAt: { x: 0, y: 200, z: -60000 } },
+  RIGHT: { x: 800, y: 250, z: -4300, lookAt: { x: 800, y: 200, z: -60000 } },
+  // UP: nhìn cao hơn và gần hơn
+  UP: { x: 0, y: 450, z: -4200, lookAt: { x: 100, y: 400, z: -60000 } },
+  // DOWN: nhìn thấp hơn và xa hơn
+  DOWN: { x: 0, y: 150, z: -4200, lookAt: { x: 100, y: 100, z: -60000 } }
 };
 
 export let DUONG_CHAY = createBoxTexture(

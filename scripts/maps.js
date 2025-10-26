@@ -515,6 +515,9 @@ export function WorldMap(networkStrategy = null) {
     // Show buff notification
     showBuffNotification(buffs);
 
+    // Play coin/buff SFX (respect mute setting)
+    AudioManager.playSoundEffect('sounds/subway-surfers-coin-collect.mp3');
+
     // Check for game over conditions
     checkGameOverConditions();
   }
@@ -702,6 +705,9 @@ export function WorldMap(networkStrategy = null) {
 
       // Check deadly collisions
       if (!gameOver && checkDeadlyCollisions()) {
+        // Play coin/buff SFX (respect mute setting)
+        AudioManager.playSoundEffect('sounds/error.mp3');
+
         triggerGameOver('Va chạm với chướng ngại vật!', 'collision');
       }
 

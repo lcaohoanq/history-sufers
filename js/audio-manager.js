@@ -5,7 +5,7 @@
  * Handles play, pause, mute, and volume control.
  */
 
-var AudioManager = (function() {
+var AudioManager = (function () {
   'use strict';
 
   var audio = null;
@@ -47,11 +47,13 @@ var AudioManager = (function() {
       var playPromise = audio.play();
 
       if (playPromise !== undefined) {
-        playPromise.then(function() {
-          console.log('Background music started playing');
-        }).catch(function(error) {
-          console.warn('Autoplay prevented. User interaction required:', error);
-        });
+        playPromise
+          .then(function () {
+            console.log('Background music started playing');
+          })
+          .catch(function (error) {
+            console.warn('Autoplay prevented. User interaction required:', error);
+          });
       }
     }
   }
@@ -129,6 +131,21 @@ var AudioManager = (function() {
     return audio ? !audio.paused : false;
   }
 
+  function playSoundEffect(src, volume = 1.0) {
+    if (isMuted) return;
+
+    try {
+      var soundEffect = new Audio(src);
+      soundEffect.preload = 'auto';
+      soundEffect.volume = Math.max(0, Math.min(1, volume));
+      soundEffect.play().catch(function (error) {
+        console.warn('Sound effect playback failed:', error);
+      });
+    } catch (err) {
+      console.warn('Sound effect could not be played:', err);
+    }
+  }
+
   // Public API
   return {
     init: init,
@@ -139,6 +156,7 @@ var AudioManager = (function() {
     getMuteState: getMuteState,
     setVolume: setVolume,
     getVolume: getVolume,
-    isPlaying: isPlaying
+    isPlaying: isPlaying,
+    playSoundEffect: playSoundEffect
   };
 })();

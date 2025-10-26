@@ -22,17 +22,17 @@ export const GROUND_KIT = {
 export const CAMERA_SETTINGS = {
   NORMAL: { x: 0, y: 700, z: -2000, lookAt: { x: 0, y: 600, z: -5000 } },
   NGANG: { x: 2000, y: 700, z: -2000, lookAt: { x: 0, y: 600, z: -5000 } },
-  LIVE: { x: 0, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
+  LIVE: { x: 0, y: 0, z: -5000, lookAt: { x: 0, y: 0, z: -60000 } },
   HARD_CORE: { x: 0, y: 200, z: -7000, lookAt: { x: 0, y: 0, z: -5000 } }
 };
 
 export const CAMERA_SETTING_LIVE = {
-  LEFT: { x: -2000, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
+  LEFT: { x: -1000, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
   CENTER: { x: 0, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
-  RIGHT: { x: 2000, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
+  RIGHT: { x: 1000, y: 0, z: -4000, lookAt: { x: 0, y: 0, z: -60000 } },
   // Optional up / down presets: tweak values to taste (closer / higher = UP, farther / lower = DOWN)
-  UP: { x: 0, y: 400, z: -3200, lookAt: { x: 0, y: 300, z: -60000 } },
-  DOWN: { x: 0, y: -200, z: -4800, lookAt: { x: 0, y: 0, z: -60000 } }
+  UP: { x: 0, y: 400, z: -3200, lookAt: { x: 0, y: 600, z: -60000 } },
+  DOWN: { x: 0, y: 600, z: -6400, lookAt: { x: 0, y: 0, z: -60000 } }
 };
 
 export let DUONG_CHAY = createBoxTexture(

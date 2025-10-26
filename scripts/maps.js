@@ -59,6 +59,11 @@ export function WorldMap(networkStrategy = null) {
     difficulty,
     gameOver;
 
+  // LIVE camera override state (when player presses UP/DOWN)
+  var cameraLiveOverride = null; // 'UP' | 'DOWN' | null
+  var cameraLiveOverrideTimer = null;
+  const CAMERA_LIVE_OVERRIDE_MS = 2500; // how long the UP/DOWN preset persists
+
   // ===== BUFF STATS =====
   var playerStats = {
     trust: 50,
@@ -224,39 +229,83 @@ export function WorldMap(networkStrategy = null) {
             }
             if (key == KEYCODE.UP && !paused) {
               character.onUpKeyPressed();
+
+              if (currentCameraIndex === 2) {
+                // apply UP preset and set a short-lived override so per-frame logic respects it
+                const live = CAMERA_SETTING_LIVE;
+                const target = live.UP || {
+                  x: (live.LEFT.x + live.RIGHT.x) / 2,
+                  y: (live.LEFT.y + live.RIGHT.y) / 2 + 300,
+                  z: (live.LEFT.z + live.RIGHT.z) / 2 + 800
+                };
+                setCameraPosition(target, 200);
+
+                // cameraLiveOverride = 'UP';
+                // if (cameraLiveOverrideTimer) clearTimeout(cameraLiveOverrideTimer);
+                // cameraLiveOverrideTimer = setTimeout(() => {
+                //   cameraLiveOverride = null;
+                //   cameraLiveOverrideTimer = null;
+                // }, CAMERA_LIVE_OVERRIDE_MS);
+              }
             }
             if (key == KEYCODE.LEFT && !paused) {
               character.onLeftKeyPressed();
 
+              // moving lanes should clear any UP/DOWN override so LIVE mode follows lane again
+              if (cameraLiveOverrideTimer) {
+                clearTimeout(cameraLiveOverrideTimer);
+                cameraLiveOverrideTimer = null;
+              }
+              cameraLiveOverride = null;
+
               if (currentCameraIndex === 2) {
-                // Choose live target based on current lane — prefer explicit CENTER if available
                 const live = CAMERA_SETTING_LIVE;
-                const center = live.CENTER || {
-                  x: (live.LEFT.x + live.RIGHT.x) / 2,
-                  y: (live.LEFT.y + live.RIGHT.y) / 2,
-                  z: (live.LEFT.z + live.RIGHT.z) / 2
+                const target = live.LEFT || {
+                  x: (live.CENTER.x + live.LEFT.x) / 2,
+                  y: (live.CENTER.y + live.LEFT.y) / 2,
+                  z: (live.CENTER.z + live.LEFT.z) / 2
                 };
-                const target = character && character.currentLane < 0 ? live.LEFT : center;
-                // Smoothly animate camera to target
                 setCameraPosition(target, 200);
               }
             }
             if (key == KEYCODE.RIGHT && !paused) {
               character.onRightKeyPressed();
 
+              if (cameraLiveOverrideTimer) {
+                clearTimeout(cameraLiveOverrideTimer);
+                cameraLiveOverrideTimer = null;
+              }
+              cameraLiveOverride = null;
+
               if (currentCameraIndex === 2) {
                 const live = CAMERA_SETTING_LIVE;
-                const center = live.CENTER || {
-                  x: (live.LEFT.x + live.RIGHT.x) / 2,
-                  y: (live.LEFT.y + live.RIGHT.y) / 2,
-                  z: (live.LEFT.z + live.RIGHT.z) / 2
+                const target = live.RIGHT || {
+                  x: (live.CENTER.x + live.RIGHT.x) / 2,
+                  y: (live.CENTER.y + live.RIGHT.y) / 2,
+                  z: (live.CENTER.z + live.RIGHT.z) / 2
                 };
-                const target = character && character.currentLane > 0 ? live.RIGHT : center;
                 setCameraPosition(target, 200);
               }
             }
             if (key == KEYCODE.DOWN && !paused) {
               character.onDownKeyPressed();
+
+              if (currentCameraIndex === 2) {
+                const live = CAMERA_SETTING_LIVE;
+                const target = live.DOWN || {
+                  x: (live.LEFT.x + live.RIGHT.x) / 2,
+                  y: (live.LEFT.y + live.RIGHT.y) / 2 - 300,
+                  z: (live.LEFT.z + live.RIGHT.z) / 2 - 800
+                };
+                setCameraPosition(target, 200);
+
+                // cameraLiveOverride = 'DOWN';
+                // if (cameraLiveOverrideTimer) clearTimeout(cameraLiveOverrideTimer);
+                // cameraLiveOverrideTimer = setTimeout(() => {
+                //   cameraLiveOverride = null;
+                //   cameraLiveOverrideTimer = null;
+                // }, CAMERA_LIVE_OVERRIDE_MS);
+              }
             }
             if (key === KEYCODE.V && !paused) {
               // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
@@ -613,19 +662,30 @@ export function WorldMap(networkStrategy = null) {
       character.update();
 
       // Smooth camera transition for LIVE mode
-      if (currentCameraIndex === 2 && character) {
+      if (currentCameraIndex === 2 && camera && character) {
+        // choose desired target: override (UP/DOWN) wins, otherwise lane-based target
         const live = CAMERA_SETTING_LIVE;
-        const center = live.CENTER || {
-          x: (live.LEFT.x + live.RIGHT.x) / 2,
-          y: (live.LEFT.y + live.RIGHT.y) / 2,
-          z: (live.LEFT.z + live.RIGHT.z) / 2
-        };
-        const desired =
-          character.currentLane < 0 ? live.LEFT : character.currentLane > 0 ? live.RIGHT : center;
-        const desiredVec = new THREE.Vector3(desired.x, desired.y, desired.z);
-        camera.position.lerp(desiredVec, 0.08); // adjust smoothing factor
-        const lookAtTarget = desired.lookAt || { x: 0, y: 600, z: -5000 };
-        camera.lookAt(new THREE.Vector3(lookAtTarget.x, lookAtTarget.y, lookAtTarget.z));
+        let desired = live.CENTER || { x: 0, y: 0, z: -4000 };
+
+        if (cameraLiveOverride && live[cameraLiveOverride]) {
+          desired = live[cameraLiveOverride];
+        } else {
+          // determine lane: character.currentLane expected to be -1/0/1 or similar
+          const lane = character.currentLane || 0;
+          if (lane < 0 && live.LEFT) desired = live.LEFT;
+          else if (lane > 0 && live.RIGHT) desired = live.RIGHT;
+          else if (live.CENTER) desired = live.CENTER;
+        }
+
+        // smooth the camera toward desired
+        const targetVec = new THREE.Vector3(desired.x, desired.y, desired.z);
+        camera.position.lerp(targetVec, 0.08);
+
+        // smooth lookAt if provided
+        if (desired.lookAt) {
+          const look = new THREE.Vector3(desired.lookAt.x, desired.lookAt.y, desired.lookAt.z);
+          camera.lookAt(look);
+        }
       }
 
       // Send network updates via strategy

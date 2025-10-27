@@ -337,7 +337,6 @@ export function World() {
         }
       } else {
         var scale = minScale + (maxScale - minScale) * Math.random();
-        console.log(`Tree scale: ${scale}`);
         var tree = new Tree(lane * 800, -400, position, scale);
         objects.push(tree);
         scene.add(tree.mesh);

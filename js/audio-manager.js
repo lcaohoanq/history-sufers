@@ -69,13 +69,19 @@ var AudioManager = (function () {
   function fetchAndDecode(url) {
     ensureAudioContext();
     return fetch(url)
-      .then(function (r) { return r.arrayBuffer(); })
+      .then(function (r) {
+        return r.arrayBuffer();
+      })
       .then(function (ab) {
         return new Promise(function (resolve, reject) {
           audioCtx.decodeAudioData(
             ab,
-            function (decoded) { resolve(decoded); },
-            function (err) { reject(err); }
+            function (decoded) {
+              resolve(decoded);
+            },
+            function (err) {
+              reject(err);
+            }
           );
         });
       });
@@ -111,7 +117,6 @@ var AudioManager = (function () {
         toObj.gain.gain.setValueAtTime(0, now);
         toObj.startTime = now; // Track start time
         toObj.source.start(now);
-        console.log('🎵 Started audio source at', now.toFixed(2));
       } catch (e) {
         console.warn('start toObj failed', e);
       }
@@ -129,14 +134,21 @@ var AudioManager = (function () {
         fromObj.gain.gain.linearRampToValueAtTime(0, now + sec);
         // schedule stop a little after fade completes
         (function (f, stopAt) {
-          setTimeout(function () {
-            try {
-              f.source.stop();
-              console.log('🛑 Stopped audio source');
-            } catch (e) { }
-            try { f.source.disconnect(); } catch (e) { }
-            try { f.gain.disconnect(); } catch (e) { }
-          }, Math.max(0, (stopAt - audioCtx.currentTime) * 1000 + 50));
+          setTimeout(
+            function () {
+              try {
+                f.source.stop();
+                console.log('🛑 Stopped audio source');
+              } catch (e) {}
+              try {
+                f.source.disconnect();
+              } catch (e) {}
+              try {
+                f.gain.disconnect();
+              } catch (e) {}
+            },
+            Math.max(0, (stopAt - audioCtx.currentTime) * 1000 + 50)
+          );
         })(fromObj, now + sec);
       } catch (e) {
         console.warn('fade out fromObj failed', e);
@@ -150,9 +162,13 @@ var AudioManager = (function () {
     if (!obj) return;
     try {
       obj.source.stop();
-    } catch (e) { }
-    try { obj.source.disconnect(); } catch (e) { }
-    try { obj.gain.disconnect(); } catch (e) { }
+    } catch (e) {}
+    try {
+      obj.source.disconnect();
+    } catch (e) {}
+    try {
+      obj.gain.disconnect();
+    } catch (e) {}
     active[slotName] = null;
   }
 
@@ -172,12 +188,16 @@ var AudioManager = (function () {
 
     // add resume on user gesture (helpful if audio context suspended)
     ['pointerdown', 'keydown', 'click', 'touchstart'].forEach(function (ev) {
-      window.addEventListener(ev, function resumeOnce() {
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume().catch(function (e) { });
-        }
-        window.removeEventListener(ev, resumeOnce);
-      }, { once: true });
+      window.addEventListener(
+        ev,
+        function resumeOnce() {
+          if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(function (e) {});
+          }
+          window.removeEventListener(ev, resumeOnce);
+        },
+        { once: true }
+      );
     });
   }
 
@@ -191,9 +211,15 @@ var AudioManager = (function () {
     var gameoverPath = paths.gameover || 'sounds/gameover.mp3';
 
     return Promise.all([
-      fetchAndDecode(introPath).then(function (b) { buffers.intro = b; }),
-      fetchAndDecode(loopPath).then(function (b) { buffers.loop = b; }),
-      fetchAndDecode(gameoverPath).then(function (b) { buffers.gameover = b; })
+      fetchAndDecode(introPath).then(function (b) {
+        buffers.intro = b;
+      }),
+      fetchAndDecode(loopPath).then(function (b) {
+        buffers.loop = b;
+      }),
+      fetchAndDecode(gameoverPath).then(function (b) {
+        buffers.gameover = b;
+      })
     ]);
   }
 
@@ -300,13 +326,16 @@ var AudioManager = (function () {
     // for one-shot, ensure we clear the gameover after it ends
     // schedule clearing after duration of buffer + small margin
     try {
-      var dur = toObj.source.buffer ? (toObj.source.buffer.duration * 1000) : 0;
-      setTimeout(function () {
-        // stop and cleanup after finished playing
-        stopAndClearSlot('gameover');
-        // go back to menu if desired (not automatic); caller can call playIntro()
-      }, dur + (CROSSFADE_SEC * 1000) + 100);
-    } catch (e) { }
+      var dur = toObj.source.buffer ? toObj.source.buffer.duration * 1000 : 0;
+      setTimeout(
+        function () {
+          // stop and cleanup after finished playing
+          stopAndClearSlot('gameover');
+          // go back to menu if desired (not automatic); caller can call playIntro()
+        },
+        dur + CROSSFADE_SEC * 1000 + 100
+      );
+    } catch (e) {}
   }
 
   // PUBLIC: pause immediately (no fade)
@@ -329,27 +358,37 @@ var AudioManager = (function () {
     scheduleCrossfade(currentObj, null, CROSSFADE_SEC);
 
     // clear active slots after fade
-    setTimeout(function () {
-      try {
-        ['intro', 'loop', 'gameover'].forEach(function (k) {
-          if (active[k]) {
-            try {
-              active[k].source.stop();
-            } catch (e) { }
-            try { active[k].source.disconnect(); } catch (e) { }
-            try { active[k].gain.disconnect(); } catch (e) { }
-            active[k] = null;
-          }
-        });
-      } catch (e) { }
-    }, (CROSSFADE_SEC + 0.05) * 1000);
+    setTimeout(
+      function () {
+        try {
+          ['intro', 'loop', 'gameover'].forEach(function (k) {
+            if (active[k]) {
+              try {
+                active[k].source.stop();
+              } catch (e) {}
+              try {
+                active[k].source.disconnect();
+              } catch (e) {}
+              try {
+                active[k].gain.disconnect();
+              } catch (e) {}
+              active[k] = null;
+            }
+          });
+        } catch (e) {}
+      },
+      (CROSSFADE_SEC + 0.05) * 1000
+    );
   }
 
   // PUBLIC: toggle mute (immediate)
   function toggleMute() {
     isMuted = !isMuted;
     if (masterGain) {
-      masterGain.gain.setValueAtTime(isMuted ? 0 : masterVolume, audioCtx ? audioCtx.currentTime : 0);
+      masterGain.gain.setValueAtTime(
+        isMuted ? 0 : masterVolume,
+        audioCtx ? audioCtx.currentTime : 0
+      );
     }
     localStorage.setItem(KEY_MUTE, isMuted ? 'true' : 'false');
     return isMuted;
@@ -363,8 +402,12 @@ var AudioManager = (function () {
     localStorage.setItem(KEY_VOL, masterVolume.toString());
   }
 
-  function getVolume() { return masterVolume; }
-  function getMuteState() { return isMuted; }
+  function getVolume() {
+    return masterVolume;
+  }
+  function getMuteState() {
+    return isMuted;
+  }
 
   // PUBLIC: play short sound effect (uses a small buffer decode each time or <audio> fallback)
   function playSoundEffect(url, volume) {
@@ -372,8 +415,13 @@ var AudioManager = (function () {
     ensureAudioContext();
     if (isMuted) return;
     // simple approach: decode once then play — for simplicity we'll fetch+decode each time here
-    fetch(url).then(function (r) { return r.arrayBuffer(); })
-      .then(function (ab) { return audioCtx.decodeAudioData(ab); })
+    fetch(url)
+      .then(function (r) {
+        return r.arrayBuffer();
+      })
+      .then(function (ab) {
+        return audioCtx.decodeAudioData(ab);
+      })
       .then(function (buf) {
         var s = audioCtx.createBufferSource();
         var g = audioCtx.createGain();
@@ -383,18 +431,28 @@ var AudioManager = (function () {
         g.connect(masterGain);
         s.start();
         // cleanup
-        setTimeout(function () {
-          try { s.stop(); } catch (e) { }
-          try { s.disconnect(); } catch (e) { }
-          try { g.disconnect(); } catch (e) { }
-        }, (buf.duration + 0.1) * 1000);
-      }).catch(function (e) {
+        setTimeout(
+          function () {
+            try {
+              s.stop();
+            } catch (e) {}
+            try {
+              s.disconnect();
+            } catch (e) {}
+            try {
+              g.disconnect();
+            } catch (e) {}
+          },
+          (buf.duration + 0.1) * 1000
+        );
+      })
+      .catch(function (e) {
         // fallback to <audio> element if decode fails
         try {
           var a = new Audio(url);
           a.volume = volume;
-          a.play().catch(function () { });
-        } catch (er) { }
+          a.play().catch(function () {});
+        } catch (er) {}
       });
   }
 
@@ -414,8 +472,14 @@ var AudioManager = (function () {
     playSoundEffect: playSoundEffect,
 
     // internals exposed for debugging (optional)
-    _audioCtx: function () { return audioCtx; },
-    _buffers: function () { return buffers; },
-    _active: function () { return active; }
+    _audioCtx: function () {
+      return audioCtx;
+    },
+    _buffers: function () {
+      return buffers;
+    },
+    _active: function () {
+      return active;
+    }
   };
 })();

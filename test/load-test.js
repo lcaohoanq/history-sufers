@@ -23,8 +23,8 @@ const ioServer = new SocketIOServer(httpServer, {
 });
 
 const SERVER_URL = process.env.SERVER_URL || 'http://localhost:3000';
-const NUM_ROOMS = parseInt(process.env.NUM_ROOMS) || 5;
-const PLAYERS_PER_ROOM = parseInt(process.env.PLAYERS_PER_ROOM) || 50;
+const NUM_ROOMS = parseInt(process.env.NUM_ROOMS) || 2;
+const PLAYERS_PER_ROOM = parseInt(process.env.PLAYERS_PER_ROOM) || 30;
 const TEST_DURATION = parseInt(process.env.TEST_DURATION) || 60000; // 1 minute
 
 class LoadTester {

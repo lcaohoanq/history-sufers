@@ -350,6 +350,7 @@ export function WorldMap(networkStrategy = null) {
             }
             if (key == KEYCODE.DOWN && !paused) {
               character.onDownKeyPressed();
+              AudioManager.playSoundEffect('sounds/siu.mp3');
 
               if (currentCameraIndex === 2) {
                 const live = CAMERA_SETTING_LIVE;
@@ -578,7 +579,7 @@ export function WorldMap(networkStrategy = null) {
   function showBuffNotification(buffs) {
     var notification = document.createElement('div');
     notification.style.cssText =
-      'position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 1s;';
+      'position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0); color: white; padding: 20px 40px; border-radius: 10px; font-size: 1.2rem; z-index: 1000; animation: fadeInOut 1s;';
 
     var messages = [];
     if (buffs.trust !== 0)
@@ -595,7 +596,7 @@ export function WorldMap(networkStrategy = null) {
 
     setTimeout(function () {
       notification.remove();
-    }, 2000);
+    }, 1000);
 
     // Add CSS animation
     if (!document.getElementById('buff-animation-style')) {
@@ -989,7 +990,7 @@ export function WorldMap(networkStrategy = null) {
         var side = Math.random() < 0.5 ? 'left' : 'right'; // Chọn 1 bên
         var lane = side === 'left' ? -4 : 4; // Lane ngoài cùng
         var scale = minScale + (maxScale - minScale) * Math.random();
-        var sideObject = createSideObject(objectType, lane * 800, -400, position, scale);
+        var sideObject = createSideObject(objectType, lane * 800, -300, position, scale);
 
         // Xoay object hướng về lane người chơi
         if (sideObject && sideObject.mesh) {
@@ -1009,7 +1010,7 @@ export function WorldMap(networkStrategy = null) {
             // Random spawn
             if (Math.random() < 0.5) {
               var scale = minScale + (maxScale - minScale) * Math.random();
-              var sideObject = createSideObject(objectType, lane * 800, -100, position, scale);
+              var sideObject = createSideObject(objectType, lane * 800, -200, position, scale);
 
               // Xoay object hướng về lane người chơi
               if (sideObject && sideObject.mesh) {

@@ -201,35 +201,35 @@ export function Character() {
     }
 
     // For testing: show the hitbox as a visible wireframe box
-    if (!self._hitboxHelper) {
-      const boxGeom = new THREE.BoxGeometry(
-        baseWidth * 2,
-        baseHeightMin + baseHeightMax,
-        baseDepth * 2
-      );
-      const boxMat = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
-        wireframe: true,
-        transparent: true,
-        opacity: 1,
-        depthTest: false
-      });
-      self._hitboxHelper = new THREE.Mesh(boxGeom, boxMat);
-      self._hitboxHelper.name = 'HitboxHelper';
-      self.element.add(self._hitboxHelper);
-    }
-    // Update hitbox helper size and position
-    self._hitboxHelper.scale.set(
-      (baseWidth * 2) / self._hitboxHelper.geometry.parameters.width,
-      (baseHeightMin + baseHeightMax) / self._hitboxHelper.geometry.parameters.height,
-      (baseDepth * 2) / self._hitboxHelper.geometry.parameters.depth
-    );
-    self._hitboxHelper.position.set(
-      0,
-      (baseHeightMax - baseHeightMin) / 2,
-      0
-    );
-    self._hitboxHelper.visible = true;
+    // if (!self._hitboxHelper) {
+    //   const boxGeom = new THREE.BoxGeometry(
+    //     baseWidth * 2,
+    //     baseHeightMin + baseHeightMax,
+    //     baseDepth * 2
+    //   );
+    //   const boxMat = new THREE.MeshBasicMaterial({
+    //     color: 0xff0000,
+    //     wireframe: true,
+    //     transparent: true,
+    //     opacity: 1,
+    //     depthTest: false
+    //   });
+    //   self._hitboxHelper = new THREE.Mesh(boxGeom, boxMat);
+    //   self._hitboxHelper.name = 'HitboxHelper';
+    //   self.element.add(self._hitboxHelper);
+    // }
+    // // Update hitbox helper size and position
+    // self._hitboxHelper.scale.set(
+    //   (baseWidth * 2) / self._hitboxHelper.geometry.parameters.width,
+    //   (baseHeightMin + baseHeightMax) / self._hitboxHelper.geometry.parameters.height,
+    //   (baseDepth * 2) / self._hitboxHelper.geometry.parameters.depth
+    // );
+    // self._hitboxHelper.position.set(
+    //   0,
+    //   (baseHeightMax - baseHeightMin) / 2,
+    //   0
+    // );
+    // self._hitboxHelper.visible = true;
 
     return {
       minX: self.element.position.x - baseWidth,

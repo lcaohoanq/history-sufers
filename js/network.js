@@ -17,6 +17,52 @@ class NetworkManager {
   }
 
   /**
+   * Merge incoming opponent data while preserving known fields
+   */
+  _mergeOpponentData(playerId, data = {}) {
+    if (!playerId || playerId === this.playerId) {
+      return;
+    }
+
+    const existing = this.opponents.get(playerId) || {};
+    const merged = { ...existing };
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        merged[key] = value;
+      }
+    });
+
+    if (!merged.playerName) {
+      merged.playerName = data.playerName || data.name || existing.playerName;
+    }
+
+    merged.id = playerId;
+    this.opponents.set(playerId, merged);
+  }
+
+  /**
+   * Update opponent cache using full player list payloads
+   */
+  _updateOpponentsFromList(players = []) {
+    players.forEach((player) => {
+      if (!player || player.id === this.playerId) {
+        return;
+      }
+
+      this._mergeOpponentData(player.id, {
+        playerName: player.name,
+        score: player.score,
+        lane: player.lane,
+        isJumping: player.isJumping,
+        position: player.position,
+        colors: player.colors,
+        status: player.status
+      });
+    });
+  }
+
+  /**
    * Connect to the multiplayer server
    */
   connect(serverUrl = '') {
@@ -67,6 +113,9 @@ class NetworkManager {
           this.roomId = data.roomId;
           this.playerId = data.playerId;
           this.isMultiplayer = true;
+          if (data.players) {
+            this._updateOpponentsFromList(data.players);
+          }
           this.emit('roomCreated', data);
         });
 
@@ -75,6 +124,9 @@ class NetworkManager {
           this.roomId = data.roomId;
           this.playerId = data.playerId;
           this.isMultiplayer = true;
+          if (data.players) {
+            this._updateOpponentsFromList(data.players);
+          }
           this.emit('roomJoined', data);
         });
 
@@ -84,7 +136,11 @@ class NetworkManager {
         });
 
         this.socket.on('playerJoined', (data) => {
-          console.log('👤 Player joined:', data.playerName || data.name);
+          const playerName = data.playerName || data.name || 'Unknown';
+          console.log('👤 Player joined:', playerName);
+          if (data.players) {
+            this._updateOpponentsFromList(data.players);
+          }
           this.emit('playerJoined', data);
         });
 
@@ -96,6 +152,9 @@ class NetworkManager {
 
         this.socket.on('playersUpdated', (data) => {
           console.log('📝 Players updated');
+          if (data.players) {
+            this._updateOpponentsFromList(data.players);
+          }
           this.emit('playersUpdated', data);
         });
 
@@ -112,12 +171,15 @@ class NetworkManager {
 
         this.socket.on('raceStart', (data) => {
           console.log('🏁 Race started with', data.players?.length || 0, 'players');
+          if (data.players) {
+            this._updateOpponentsFromList(data.players);
+          }
           this.emit('raceStart', data);
         });
 
         this.socket.on('opponentUpdate', (data) => {
           // Không log để tránh spam console
-          this.opponents.set(data.playerId, data.data);
+          this._mergeOpponentData(data.playerId, data.data);
           this.emit('opponentUpdate', data);
         });
 

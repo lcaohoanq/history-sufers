@@ -26,7 +26,29 @@ import {
   HighTechFactory
 } from '../js/object.js';
 import { Character } from './characters.js';
-import { CAMERA_SETTINGS, DUONG_CHAY, DUONG_DAT, DUONG_GACH, GAME_CONSTANTS, SIDE_OBJECTS_BY_STAGE } from './constants.js';
+import {
+  CAMERA_SETTING_LIVE,
+  CAMERA_SETTINGS,
+  CURB_LEFT_CHAY,
+  CURB_LEFT_DAT,
+  CURB_LEFT_GACH,
+  CURB_LEFT_INNER,
+  CURB_RIGHT_CHAY,
+  CURB_RIGHT_DAT,
+  CURB_RIGHT_GACH,
+  CURB_RIGHT_INNER,
+  DUONG_CHAY,
+  DUONG_DAT,
+  DUONG_GACH,
+  GAME_CONSTANTS,
+  SIDE_OBJECTS_BY_STAGE,
+  SIDEWALK_LEFT_CHAY,
+  SIDEWALK_LEFT_DAT,
+  SIDEWALK_LEFT_GACH,
+  SIDEWALK_RIGHT_CHAY,
+  SIDEWALK_RIGHT_DAT,
+  SIDEWALK_RIGHT_GACH
+} from './constants.js';
 import { KEYCODE } from './keycode.js';
 import { SinglePlayerStrategy, MultiplayerStrategy } from './network-strategy.js';
 
@@ -51,6 +73,10 @@ export function WorldMap(networkStrategy = null) {
     difficulty,
     gameOver;
 
+  // LIVE camera override state (when player presses UP/DOWN)
+  var cameraLiveOverride = null; // 'UP' | 'DOWN' | null
+  var cameraLiveOverrideTimer = null;
+
   // ===== BUFF STATS =====
   var playerStats = {
     trust: 50,
@@ -58,11 +84,7 @@ export function WorldMap(networkStrategy = null) {
     unity: 50
   };
 
-  // Multiplayer variables
-  var isMultiplayer = false;
   var opponents = new Map();
-  var lastUpdateTime = 0;
-  var updateInterval = 50;
 
   // ===== SPAWN CONTROL =====
   var rowCounter = 0;
@@ -88,15 +110,37 @@ export function WorldMap(networkStrategy = null) {
   var opponents = new Map();
 
   const GROUNDS = {
-    1: DUONG_DAT,
-    2: DUONG_GACH,
-    3: DUONG_CHAY,
+    1: {
+      main: DUONG_DAT,
+      leftSidewalk: SIDEWALK_LEFT_DAT,
+      rightSidewalk: SIDEWALK_RIGHT_DAT,
+      leftCurbs: CURB_LEFT_DAT,
+      rightCurbs: CURB_RIGHT_DAT,
+      curbs: [CURB_LEFT_DAT, CURB_RIGHT_DAT]
+    },
+    2: {
+      main: DUONG_GACH,
+      leftSidewalk: SIDEWALK_LEFT_GACH,
+      rightSidewalk: SIDEWALK_RIGHT_GACH,
+      leftCurbs: CURB_LEFT_GACH,
+      rightCurbs: CURB_RIGHT_GACH,
+      curbs: [CURB_LEFT_GACH, CURB_RIGHT_GACH]
+    },
+    3: {
+      main: DUONG_CHAY,
+      leftSidewalk: SIDEWALK_LEFT_CHAY,
+      rightSidewalk: SIDEWALK_RIGHT_CHAY,
+      leftCurbs: CURB_LEFT_CHAY,
+      rightCurbs: CURB_RIGHT_CHAY,
+      curbs: [CURB_LEFT_CHAY, CURB_RIGHT_CHAY]
+    }
   };
 
   // Đường hiện tại đang active trong scene
   let activeGround = null;
+  let activeSidewalks = { left: null, right: null };
+  let activeCurbs = { left: null, right: null };
   let groundStage = 1;
-
 
   // Initialize the world.
   init();
@@ -161,11 +205,27 @@ export function WorldMap(networkStrategy = null) {
       character = new Character();
       scene.add(character.element);
 
-      [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach(g => {
+      // Xử lý repeat cho các loại ground/sidewalk/curb phù hợp với kích thước thực tế
+      [
+        DUONG_DAT, DUONG_GACH, DUONG_CHAY,
+        SIDEWALK_LEFT_DAT, SIDEWALK_LEFT_GACH, SIDEWALK_LEFT_CHAY,
+        SIDEWALK_RIGHT_DAT, SIDEWALK_RIGHT_GACH, SIDEWALK_RIGHT_CHAY,
+        CURB_LEFT_DAT, CURB_LEFT_GACH, CURB_LEFT_CHAY,
+        CURB_RIGHT_DAT, CURB_RIGHT_GACH, CURB_RIGHT_CHAY,
+      ].forEach((g) => {
         if (g?.material?.map) {
           g.material.map.wrapS = THREE.RepeatWrapping;
           g.material.map.wrapT = THREE.RepeatWrapping;
-          g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+          // Curb chỉ là dải nhỏ nên repeat X chỉ để 1, repeat Y dài để không bị kéo dãn
+          if (
+            g === CURB_LEFT_DAT || g === CURB_LEFT_GACH || g === CURB_LEFT_CHAY ||
+            g === CURB_RIGHT_DAT || g === CURB_RIGHT_GACH || g === CURB_RIGHT_CHAY
+          ) {
+            g.material.map.repeat.set(0.5, 200);
+          } else {
+            // Đường chính và vỉa hè rộng bằng số lane
+            g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+          }
         }
       });
 
@@ -173,9 +233,8 @@ export function WorldMap(networkStrategy = null) {
       activeGround = null;
       switchGround(1);
 
-      const background = new THREE.TextureLoader().load('../assets/road.jpg');
+      const background = new THREE.TextureLoader().load('../assets/xp.jpg');
       scene.background = background;
-
 
       objects = [];
       for (var i = 10; i < 40; i++) {
@@ -212,28 +271,102 @@ export function WorldMap(networkStrategy = null) {
               document.getElementById('variable-content').style.visibility = 'visible';
               document.getElementById('variable-content').innerHTML =
                 '<h2>PAUSED</h2><p>Nhấn phím bất kỳ để tiếp tục.</p>';
+              document.getElementById('controls').style.display = 'block';
 
               // Pause music when game is paused
               AudioManager.pause();
             }
             if (key == KEYCODE.UP && !paused) {
               character.onUpKeyPressed();
+
+              if (currentCameraIndex === 2) {
+                // apply UP preset and set a short-lived override so per-frame logic respects it
+                const live = CAMERA_SETTING_LIVE;
+                // Dùng currentLane thay vì position.x để tránh timing issue
+                const currentX = character.currentLane * 800;
+
+                const target = {
+                  x: currentX,
+                  y: live.UP.y,
+                  z: live.UP.z,
+                  lookAt: { x: currentX, y: live.UP.lookAt.y, z: live.UP.lookAt.z }
+                };
+                setCameraPosition(target, 200);
+
+                // cameraLiveOverride = 'UP';
+                // if (cameraLiveOverrideTimer) clearTimeout(cameraLiveOverrideTimer);
+                // cameraLiveOverrideTimer = setTimeout(() => {
+                //   cameraLiveOverride = null;
+                //   cameraLiveOverrideTimer = null;
+                // }, CAMERA_LIVE_OVERRIDE_MS);
+              }
             }
             if (key == KEYCODE.LEFT && !paused) {
               character.onLeftKeyPressed();
+
+              // moving lanes should clear any UP/DOWN override so LIVE mode follows lane again
+              if (cameraLiveOverrideTimer) {
+                clearTimeout(cameraLiveOverrideTimer);
+                cameraLiveOverrideTimer = null;
+              }
+              cameraLiveOverride = null;
+
+              if (currentCameraIndex === 2) {
+                const live = CAMERA_SETTING_LIVE;
+                const targetLane = Math.max(character.currentLane - 1, -1);
+                const targetX = targetLane * 800; // mỗi lane cách nhau 800 units
+
+                const target = {
+                  x: targetX,
+                  y: live.CENTER.y,
+                  z: live.CENTER.z,
+                  lookAt: { x: targetX, y: live.CENTER.lookAt.y, z: live.CENTER.lookAt.z }
+                };
+                setCameraPosition(target, 200);
+              }
             }
             if (key == KEYCODE.RIGHT && !paused) {
               character.onRightKeyPressed();
+
+              if (cameraLiveOverrideTimer) {
+                clearTimeout(cameraLiveOverrideTimer);
+                cameraLiveOverrideTimer = null;
+              }
+              cameraLiveOverride = null;
+
+              if (currentCameraIndex === 2) {
+                const live = CAMERA_SETTING_LIVE;
+                const targetLane = Math.min(character.currentLane + 1, 1);
+                const targetX = targetLane * 800;
+
+                const target = {
+                  x: targetX,
+                  y: live.CENTER.y,
+                  z: live.CENTER.z,
+                  lookAt: { x: targetX, y: live.CENTER.lookAt.y, z: live.CENTER.lookAt.z }
+                };
+                setCameraPosition(target, 200);
+              }
             }
             if (key == KEYCODE.DOWN && !paused) {
               character.onDownKeyPressed();
+              AudioManager.playSoundEffect('sounds/siu.mp3');
+
+              if (currentCameraIndex === 2) {
+                const live = CAMERA_SETTING_LIVE;
+                // Dùng currentLane thay vì position.x để tránh timing issue
+                const currentX = character.currentLane * 800;
+
+                const target = {
+                  x: currentX,
+                  y: live.DOWN.y,
+                  z: live.DOWN.z,
+                  lookAt: { x: currentX, y: live.DOWN.lookAt.y, z: live.DOWN.lookAt.z }
+                };
+                setCameraPosition(target, 200);
+              }
             }
             if (key === KEYCODE.V && !paused) {
-              // if (camera.position.x === CAMERA_SETTINGS.NORMAL.x) {
-              //   setCameraPosition(CAMERA_SETTINGS.NGANG);
-              // } else {
-              //   setCameraPosition(CAMERA_SETTINGS.NORMAL);
-              // }
               currentCameraIndex = (currentCameraIndex + 1) % cameraModes.length;
               const mode = cameraModes[currentCameraIndex];
               setCameraPosition(CAMERA_SETTINGS[mode], 400); // faster switch
@@ -436,6 +569,9 @@ export function WorldMap(networkStrategy = null) {
     // Show buff notification
     showBuffNotification(buffs);
 
+    // Play coin/buff SFX (respect mute setting)
+    AudioManager.playSoundEffect('sounds/subway-surfers-coin-collect.mp3');
+
     // Check for game over conditions
     checkGameOverConditions();
   }
@@ -443,7 +579,7 @@ export function WorldMap(networkStrategy = null) {
   function showBuffNotification(buffs) {
     var notification = document.createElement('div');
     notification.style.cssText =
-      'position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 10px; font-size: 18px; z-index: 1000; animation: fadeInOut 1s;';
+      'position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0); color: white; padding: 20px 40px; border-radius: 10px; font-size: 1.2rem; z-index: 1000; animation: fadeInOut 1s;';
 
     var messages = [];
     if (buffs.trust !== 0)
@@ -460,7 +596,7 @@ export function WorldMap(networkStrategy = null) {
 
     setTimeout(function () {
       notification.remove();
-    }, 2000);
+    }, 1000);
 
     // Add CSS animation
     if (!document.getElementById('buff-animation-style')) {
@@ -485,7 +621,8 @@ export function WorldMap(networkStrategy = null) {
   function triggerGameOver(message, reason) {
     gameOver = true;
     paused = true;
-    AudioManager.stop();
+
+    AudioManager.playGameOver(); // Thay đổi này
 
     // Notify network
     network.onGameOver(score);
@@ -565,9 +702,53 @@ export function WorldMap(networkStrategy = null) {
       if (activeGround?.material?.map) {
         activeGround.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
       }
+      // Animate sidewalk textures cùng tốc độ
+      if (activeSidewalks.left?.material?.map) {
+        activeSidewalks.left.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      }
+      if (activeSidewalks.right?.material?.map) {
+        activeSidewalks.right.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      }
+      // Animate curb textures
+      // if (activeCurbs.left?.material?.map) {
+      //   activeCurbs.left.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      // }
+      // if (activeCurbs.right?.material?.map) {
+      //   activeCurbs.right.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      // }
 
       for (let obj of objects) {
         if (obj.updateHitbox) obj.updateHitbox();
+      }
+
+      // Smooth camera transition for LIVE mode với head bobbing
+      if (currentCameraIndex === 2 && camera && character) {
+        const live = CAMERA_SETTING_LIVE;
+        const currentX = character.currentLane * 800;
+
+        // Tính toán head bobbing dựa trên character.element.position.y
+        // character.element.position.y dao động khi chạy (từ sinusoid)
+        const bobAmount = character.element.position.y * 1.8; // Scale down để không rung quá mạnh
+
+        // Base position từ preset CENTER
+        let targetY = live.CENTER.y + bobAmount;
+        let targetZ = live.CENTER.z;
+
+        // Nếu có override (UP/DOWN khi nhảy/trượt), ưu tiên override
+        if (cameraLiveOverride && live[cameraLiveOverride]) {
+          const desired = live[cameraLiveOverride];
+          targetY = desired.y + bobAmount;
+          targetZ = desired.z;
+        }
+
+        // Smooth transition
+        const targetVec = new THREE.Vector3(currentX, targetY, targetZ);
+        camera.position.lerp(targetVec, 1); // Tăng lerp factor để mượt hơn
+
+        // LookAt với bobbing nhẹ
+        const lookY = live.CENTER.lookAt.y + bobAmount * 0.5;
+        const look = new THREE.Vector3(currentX, lookY, live.CENTER.lookAt.z);
+        camera.lookAt(look);
       }
 
       // Xóa object khi ra khỏi màn
@@ -581,6 +762,33 @@ export function WorldMap(networkStrategy = null) {
 
       // Update nhân vật
       character.update();
+
+      // Smooth camera transition for LIVE mode
+      if (currentCameraIndex === 2 && camera && character) {
+        // choose desired target: override (UP/DOWN) wins, otherwise lane-based target
+        const live = CAMERA_SETTING_LIVE;
+        let desired = live.CENTER || { x: 0, y: 0, z: -4000 };
+
+        if (cameraLiveOverride && live[cameraLiveOverride]) {
+          desired = live[cameraLiveOverride];
+        } else {
+          // determine lane: character.currentLane expected to be -1/0/1 or similar
+          const lane = character.currentLane || 0;
+          if (lane < 0 && live.LEFT) desired = live.LEFT;
+          else if (lane > 0 && live.RIGHT) desired = live.RIGHT;
+          else if (live.CENTER) desired = live.CENTER;
+        }
+
+        // smooth the camera toward desired
+        const targetVec = new THREE.Vector3(desired.x, desired.y, desired.z);
+        camera.position.lerp(targetVec, 0.08);
+
+        // smooth lookAt if provided
+        if (desired.lookAt) {
+          const look = new THREE.Vector3(desired.lookAt.x, desired.lookAt.y, desired.lookAt.z);
+          camera.lookAt(look);
+        }
+      }
 
       // Send network updates via strategy
       network.onGameLoop({
@@ -596,6 +804,9 @@ export function WorldMap(networkStrategy = null) {
 
       // Check deadly collisions
       if (!gameOver && checkDeadlyCollisions()) {
+        // Play coin/buff SFX (respect mute setting)
+        AudioManager.playSoundEffect('sounds/error.mp3');
+
         triggerGameOver('Va chạm với chướng ngại vật!', 'collision');
       }
 
@@ -635,24 +846,101 @@ export function WorldMap(networkStrategy = null) {
       try {
         scene.remove(activeGround);
       } catch (e) {
-        console.warn("Remove ground failed", e);
+        console.warn('Remove ground failed', e);
       }
     }
+
+    // Remove sidewalks cũ
+    if (activeSidewalks.left && scene) {
+      try {
+        scene.remove(activeSidewalks.left);
+      } catch (e) {
+        console.warn('Remove left sidewalk failed', e);
+      }
+    }
+    if (activeSidewalks.right && scene) {
+      try {
+        scene.remove(activeSidewalks.right);
+      } catch (e) {
+        console.warn('Remove right sidewalk failed', e);
+      }
+    }
+
+    // // Remove curbs cũ
+    // if (activeCurbs.left && scene) {
+    //   try {
+    //     scene.remove(activeCurbs.left);
+    //   } catch (e) {
+    //     console.warn('Remove left curb failed', e);
+    //   }
+    // }
+    // if (activeCurbs.right && scene) {
+    //   try {
+    //     scene.remove(activeCurbs.right);
+    //   } catch (e) {
+    //     console.warn('Remove right curb failed', e);
+    //   }
+    // }
 
     // Set ground mới
-    activeGround = GROUNDS[newStage];
-    if (activeGround) {
-      if (activeGround.material?.map) {
-        activeGround.material.map.wrapS = THREE.RepeatWrapping;
-        activeGround.material.map.wrapT = THREE.RepeatWrapping;
-        activeGround.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+    const groundSet = GROUNDS[newStage];
+    if (groundSet) {
+      // Main road
+      activeGround = groundSet.main;
+      if (activeGround) {
+        if (activeGround.material?.map) {
+          activeGround.material.map.wrapS = THREE.RepeatWrapping;
+          activeGround.material.map.wrapT = THREE.RepeatWrapping;
+          activeGround.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+        scene.add(activeGround);
       }
-      scene.add(activeGround);
-    }
 
+      // Left sidewalk
+      activeSidewalks.left = groundSet.leftSidewalk;
+      if (activeSidewalks.left) {
+        if (activeSidewalks.left.material?.map) {
+          activeSidewalks.left.material.map.wrapS = THREE.RepeatWrapping;
+          activeSidewalks.left.material.map.wrapT = THREE.RepeatWrapping;
+          activeSidewalks.left.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+        scene.add(activeSidewalks.left);
+      }
+
+      // Right sidewalk
+      activeSidewalks.right = groundSet.rightSidewalk;
+      if (activeSidewalks.right) {
+        if (activeSidewalks.right.material?.map) {
+          activeSidewalks.right.material.map.wrapS = THREE.RepeatWrapping;
+          activeSidewalks.right.material.map.wrapT = THREE.RepeatWrapping;
+          activeSidewalks.right.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+        scene.add(activeSidewalks.right);
+      }
+
+      // // Add curbs
+      // activeCurbs.left = groundSet.leftCurbs;
+      // if (activeCurbs.left) {
+      //   if (activeCurbs.left.material?.map) {
+      //     activeCurbs.left.material.map.wrapS = THREE.RepeatWrapping;
+      //     activeCurbs.left.material.map.wrapT = THREE.RepeatWrapping;
+      //     activeCurbs.left.material.map.repeat.set(0.5, 200);
+      //   }
+      //   scene.add(activeCurbs.left);
+      // }
+
+      // activeCurbs.right = groundSet.rightCurbs;
+      // if (activeCurbs.right) {
+      //   if (activeCurbs.right.material?.map) {
+      //     activeCurbs.right.material.map.wrapS = THREE.RepeatWrapping;
+      //     activeCurbs.right.material.map.wrapT = THREE.RepeatWrapping;
+      //     activeCurbs.right.material.map.repeat.set(0.5, 200);
+      //   }
+      //   scene.add(activeCurbs.right);
+      // }
+    }
     groundStage = newStage;
   }
-
 
   /**
    * A method called when window is resized.
@@ -684,24 +972,31 @@ export function WorldMap(networkStrategy = null) {
     var shouldSpawnSideObject = rowsSinceSideObject >= minRowsBetweenSideObject;
 
     if (shouldSpawnSideObject) {
-      var largeObjects = ['OldApartmentBlock', 'HighTechFactory', 'Skyscraper', 'MetroStation', 'OldFactory'];
+      var largeObjects = [
+        'OldApartmentBlock',
+        'HighTechFactory',
+        'Skyscraper',
+        'MetroStation',
+        'OldFactory'
+      ];
 
       var objectType = getRandomSideObject(currentStage);
       var isLargeObject = largeObjects.includes(objectType);
 
-      var playerLane = (character && typeof character.currentLane === 'number') ? character.currentLane : 0;
+      var playerLane =
+        character && typeof character.currentLane === 'number' ? character.currentLane : 0;
 
       if (isLargeObject) {
         var side = Math.random() < 0.5 ? 'left' : 'right'; // Chọn 1 bên
         var lane = side === 'left' ? -4 : 4; // Lane ngoài cùng
         var scale = minScale + (maxScale - minScale) * Math.random();
-        var sideObject = createSideObject(objectType, lane * 800, -800, position, scale);
+        var sideObject = createSideObject(objectType, lane * 800, -300, position, scale);
 
         // Xoay object hướng về lane người chơi
         if (sideObject && sideObject.mesh) {
           // Nếu bên trái, xoay sang phải; bên phải xoay sang trái
           // Nhưng hướng nhìn về lane người chơi
-          var dx = (playerLane * 800) - (lane * 800);
+          var dx = playerLane * 800 - lane * 800;
           var dz = 0;
           var angle = Math.atan2(dx, dz); // dz=0 nên sẽ là ±PI/2
           sideObject.mesh.rotation.y = angle;
@@ -715,11 +1010,11 @@ export function WorldMap(networkStrategy = null) {
             // Random spawn
             if (Math.random() < 0.5) {
               var scale = minScale + (maxScale - minScale) * Math.random();
-              var sideObject = createSideObject(objectType, lane * 800, -600, position, scale);
+              var sideObject = createSideObject(objectType, lane * 800, -200, position, scale);
 
               // Xoay object hướng về lane người chơi
               if (sideObject && sideObject.mesh) {
-                var dx = (playerLane * 800) - (lane * 800);
+                var dx = playerLane * 800 - lane * 800;
                 var dz = 0;
                 var angle = Math.atan2(dx, dz);
                 sideObject.mesh.rotation.y = angle;
@@ -832,20 +1127,26 @@ export function WorldMap(networkStrategy = null) {
     var adjustedX = x;
     var adjustedY = y;
 
-    var largeObjects = ['OldApartmentBlock', 'HighTechFactory', 'Skyscraper', 'MetroStation', 'OldFactory'];
+    var largeObjects = [
+      'OldApartmentBlock',
+      'HighTechFactory',
+      'Skyscraper',
+      'MetroStation',
+      'OldFactory'
+    ];
     var mediumObjects = ['VillageHut', 'RiceStorage', 'WindPump'];
 
     if (largeObjects.includes(type)) {
       // Object lớn → đẩy rất xa + hạ thấp xuống đất
-      adjustedX = (x < 0) ? x - 3000 : x + 3000;
+      adjustedX = x < 0 ? x - 3000 : x + 3000;
       adjustedY = -600; // Hạ xuống sát đất hơn
     } else if (mediumObjects.includes(type)) {
       // Object vừa → đẩy xa vừa phải
-      adjustedX = (x < 0) ? x - 1500 : x + 1500;
+      adjustedX = x < 0 ? x - 1500 : x + 1500;
       adjustedY = -400;
     } else {
       // Object nhỏ (Tree, Bamboo, Buffalo) → gần hơn
-      adjustedX = (x < 0) ? x - 800 : x + 800;
+      adjustedX = x < 0 ? x - 800 : x + 800;
       adjustedY = -400;
     }
 
@@ -895,8 +1196,8 @@ export function WorldMap(networkStrategy = null) {
   }
 
   /**
- * Weighted random selection for side objects
- */
+   * Weighted random selection for side objects
+   */
   function getRandomSideObject(stage) {
     var objectPool = SIDE_OBJECTS_BY_STAGE[stage] || SIDE_OBJECTS_BY_STAGE[1];
 
@@ -954,7 +1255,7 @@ export function WorldMap(networkStrategy = null) {
 
   function spawnHammerCoinPattern(zPos) {
     var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
-    var coinCount = 7;
+    var coinCount = 12 + Math.floor(Math.random() * 5); // 12-16 coins
     var lanes = [-1, 0, 1];
     var startLane = lanes[Math.floor(Math.random() * 3)];
 
@@ -1078,10 +1379,14 @@ export function WorldMap(networkStrategy = null) {
         if (objects[i].buffs && !objects[i].mesh.userData.deadly) {
           if (
             objects[i].collides(
-              hitbox.minX, hitbox.maxX,
-              hitbox.minY, hitbox.maxY,
-              hitbox.minZ, hitbox.maxZ
-            ) && !objects[i].isCollected
+              hitbox.minX,
+              hitbox.maxX,
+              hitbox.minY,
+              hitbox.maxY,
+              hitbox.minZ,
+              hitbox.maxZ
+            ) &&
+            !objects[i].isCollected
           ) {
             collidedObjects.push(i);
           }
@@ -1099,11 +1404,16 @@ export function WorldMap(networkStrategy = null) {
     for (var i = 0; i < objects.length; i++) {
       if (objects[i] && typeof objects[i].collides === 'function') {
         if (objects[i].mesh.userData.deadly) {
-          if (objects[i].collides(
-            hitbox.minX, hitbox.maxX,
-            hitbox.minY, hitbox.maxY,
-            hitbox.minZ, hitbox.maxZ
-          )) {
+          if (
+            objects[i].collides(
+              hitbox.minX,
+              hitbox.maxX,
+              hitbox.minY,
+              hitbox.maxY,
+              hitbox.minZ,
+              hitbox.maxZ
+            )
+          ) {
             return true;
           }
         }
@@ -1251,6 +1561,25 @@ export function WorldMap(networkStrategy = null) {
     });
     objects = [];
 
+    if (activeSidewalks.left && scene) {
+      scene.remove(activeSidewalks.left);
+    }
+    if (activeSidewalks.right && scene) {
+      scene.remove(activeSidewalks.right);
+    }
+
+    activeSidewalks = { left: null, right: null };
+
+    // // Remove curbs
+    // if (activeCurbs.left && scene) {
+    //   scene.remove(activeCurbs.left);
+    // }
+    // if (activeCurbs.right && scene) {
+    //   scene.remove(activeCurbs.right);
+    // }
+
+    // activeCurbs = { left: null, right: null };
+
     // Stop audio
     if (typeof AudioManager !== 'undefined') {
       AudioManager.stop();
@@ -1318,7 +1647,6 @@ export function WorldMap(networkStrategy = null) {
       opponentCount: opponents.size
     };
   };
-
 
   return self;
 }

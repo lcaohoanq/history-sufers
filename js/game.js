@@ -1,3 +1,7 @@
+/**
+ * game single player mode entry point
+ */
+
 import { WorldMap } from '../scripts/maps.js';
 import { SinglePlayerStrategy } from '../scripts/network-strategy.js';
 import { updateSoundButtonUI } from '../scripts/utils.js';

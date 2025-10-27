@@ -4,6 +4,7 @@
  * - 1s crossfade between intro -> loop -> gameover
  * - 1s fade-out on stop
  * - stores mute & volume to localStorage
+ * - PREVENTS DOUBLE LOOP CREATION
  *
  * Usage:
  *  AudioManager.init();
@@ -32,7 +33,7 @@ var AudioManager = (function () {
   };
 
   // active sources and their gain nodes
-  // { source: AudioBufferSourceNode, gain: GainNode }
+  // { source: AudioBufferSourceNode, gain: GainNode, startTime: number }
   var active = {
     intro: null,
     loop: null,
@@ -91,11 +92,11 @@ var AudioManager = (function () {
     g.gain.setValueAtTime(0, audioCtx.currentTime);
     src.connect(g);
     g.connect(masterGain);
-    return { source: src, gain: g };
+    return { source: src, gain: g, startTime: null };
   }
 
   // schedule crossfade from 'fromObj' to 'toObj' over sec seconds
-  // fromObj/toObj are {source, gain} or null
+  // fromObj/toObj are {source, gain, startTime} or null
   function scheduleCrossfade(fromObj, toObj, sec) {
     sec = typeof sec === 'number' ? sec : CROSSFADE_SEC;
     ensureAudioContext();
@@ -108,7 +109,9 @@ var AudioManager = (function () {
       try {
         toObj.gain.gain.cancelScheduledValues(now);
         toObj.gain.gain.setValueAtTime(0, now);
+        toObj.startTime = now; // Track start time
         toObj.source.start(now);
+        console.log('🎵 Started audio source at', now.toFixed(2));
       } catch (e) {
         console.warn('start toObj failed', e);
       }
@@ -129,6 +132,7 @@ var AudioManager = (function () {
           setTimeout(function () {
             try {
               f.source.stop();
+              console.log('🛑 Stopped audio source');
             } catch (e) { }
             try { f.source.disconnect(); } catch (e) { }
             try { f.gain.disconnect(); } catch (e) { }
@@ -172,8 +176,6 @@ var AudioManager = (function () {
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume().catch(function (e) { });
         }
-        // we don't auto-start music here; caller should call playIntro/play
-        // but if intro buffer is loaded and you want autoplay, you can call playIntro() after loadAll.
         window.removeEventListener(ev, resumeOnce);
       }, { once: true });
     });
@@ -201,28 +203,40 @@ var AudioManager = (function () {
     gameState = 'menu';
 
     // Đã chạy intro → không tạo thêm
-    if (active.intro) return;
+    if (active.intro) {
+      console.log('🎵 Intro already playing');
+      return;
+    }
 
-    // Tạo intro và cho chạy, nhưng KHÔNG crossfade từ đầu
+    // Tạo intro và cho chạy, KHÔNG crossfade từ đầu
     var toObj = createPlayingSource(buffers.intro || null, true);
     if (!toObj.source.buffer) {
       console.warn('intro buffer not loaded');
       return;
     }
+
     active.intro = toObj;
 
     // Mở intro với full volume (không fade-in từ 0)
     var now = audioCtx.currentTime;
     var volumeTarget = isMuted ? 0 : masterVolume;
     toObj.gain.gain.setValueAtTime(volumeTarget, now);
+    toObj.startTime = now; // Track start time
     toObj.source.start(now);
-  }
 
+    console.log('🎵 Intro started at:', toObj.startTime);
+  }
 
   // PUBLIC: start game — transition intro -> loop
   function play() {
     init();
     gameState = 'playing';
+
+    // 🔥 CRITICAL: Check if loop is already playing
+    if (active.loop) {
+      console.log('🎵 Loop already playing, skipping play() call');
+      return;
+    }
 
     // ensure loop buffer present
     if (!buffers.loop) {
@@ -236,24 +250,28 @@ var AudioManager = (function () {
       // fallback: if no buffer, we cannot play via WebAudio; exit
       return;
     }
+
+    console.log('🎵 Creating new loop audio source');
     active.loop = toObj;
 
     // find currently playing object to fade from: prefer intro then gameover
-    var fromObj = active.intro || active.loop === toObj ? null : active.loop || active.gameover;
+    var fromObj = active.intro || active.gameover || null;
 
     // If we are currently playing intro and it's active, crossfade intro -> loop
     if (active.intro) {
+      console.log('🎵 Crossfading intro -> loop');
       scheduleCrossfade(active.intro, toObj, CROSSFADE_SEC);
-      // clear intro after scheduled fade will stop it (stopAndClear handled by schedule)
-      active.intro = null; // will be stopped by scheduleCrossfade's internal schedule
+      // clear intro after scheduled fade will stop it
+      active.intro = null;
     } else if (fromObj) {
       // crossfade from whatever currently playing to loop
+      console.log('🎵 Crossfading from current audio -> loop');
       scheduleCrossfade(fromObj, toObj, CROSSFADE_SEC);
       // clear previous slot appropriately
       if (fromObj === active.gameover) active.gameover = null;
-      if (fromObj === active.loop) active.loop = null;
     } else {
       // nothing playing — fade in loop from 0
+      console.log('🎵 Fading in loop from silence');
       scheduleCrossfade(null, toObj, CROSSFADE_SEC);
     }
   }
@@ -274,6 +292,10 @@ var AudioManager = (function () {
 
     var fromObj = active.loop || active.intro || null;
     scheduleCrossfade(fromObj, toObj, CROSSFADE_SEC);
+
+    // Clear loop/intro slots
+    if (fromObj === active.loop) active.loop = null;
+    if (fromObj === active.intro) active.intro = null;
 
     // for one-shot, ensure we clear the gameover after it ends
     // schedule clearing after duration of buffer + small margin
@@ -374,29 +396,6 @@ var AudioManager = (function () {
           a.play().catch(function () { });
         } catch (er) { }
       });
-  }
-
-  function playAfterIntroLoop() {
-    init();
-    gameState = 'waiting';
-
-    if (!active.intro || !active.intro.source.buffer) {
-      // Nếu intro không đang phát – chuyển thẳng sang loop
-      play();
-      return;
-    }
-
-    var now = audioCtx.currentTime;
-    var introDur = active.intro.source.buffer.duration;
-    // thời điểm intro đã phát từ lúc start:
-    var playedTime = (now - active.intro.startTime) % introDur;
-    var timeLeft = introDur - playedTime;
-
-    console.log('⏳ Wait', timeLeft.toFixed(2), 's before starting loop');
-
-    setTimeout(function () {
-      play(); // chuyển sang loop (crossfade hoặc không nếu muốn chỉnh)
-    }, timeLeft * 1000);
   }
 
   // Expose public API

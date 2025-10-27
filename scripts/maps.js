@@ -29,11 +29,25 @@ import { Character } from './characters.js';
 import {
   CAMERA_SETTING_LIVE,
   CAMERA_SETTINGS,
+  CURB_LEFT_CHAY,
+  CURB_LEFT_DAT,
+  CURB_LEFT_GACH,
+  CURB_LEFT_INNER,
+  CURB_RIGHT_CHAY,
+  CURB_RIGHT_DAT,
+  CURB_RIGHT_GACH,
+  CURB_RIGHT_INNER,
   DUONG_CHAY,
   DUONG_DAT,
   DUONG_GACH,
   GAME_CONSTANTS,
-  SIDE_OBJECTS_BY_STAGE
+  SIDE_OBJECTS_BY_STAGE,
+  SIDEWALK_LEFT_CHAY,
+  SIDEWALK_LEFT_DAT,
+  SIDEWALK_LEFT_GACH,
+  SIDEWALK_RIGHT_CHAY,
+  SIDEWALK_RIGHT_DAT,
+  SIDEWALK_RIGHT_GACH
 } from './constants.js';
 import { KEYCODE } from './keycode.js';
 import { SinglePlayerStrategy, MultiplayerStrategy } from './network-strategy.js';
@@ -96,13 +110,36 @@ export function WorldMap(networkStrategy = null) {
   var opponents = new Map();
 
   const GROUNDS = {
-    1: DUONG_DAT,
-    2: DUONG_GACH,
-    3: DUONG_CHAY
+    1: {
+      main: DUONG_DAT,
+      leftSidewalk: SIDEWALK_LEFT_DAT,
+      rightSidewalk: SIDEWALK_RIGHT_DAT,
+      leftCurbs: CURB_LEFT_DAT,
+      rightCurbs: CURB_RIGHT_DAT,
+      curbs: [CURB_LEFT_DAT, CURB_RIGHT_DAT]
+    },
+    2: {
+      main: DUONG_GACH,
+      leftSidewalk: SIDEWALK_LEFT_GACH,
+      rightSidewalk: SIDEWALK_RIGHT_GACH,
+      leftCurbs: CURB_LEFT_GACH,
+      rightCurbs: CURB_RIGHT_GACH,
+      curbs: [CURB_LEFT_GACH, CURB_RIGHT_GACH]
+    },
+    3: {
+      main: DUONG_CHAY,
+      leftSidewalk: SIDEWALK_LEFT_CHAY,
+      rightSidewalk: SIDEWALK_RIGHT_CHAY,
+      leftCurbs: CURB_LEFT_CHAY,
+      rightCurbs: CURB_RIGHT_CHAY,
+      curbs: [CURB_LEFT_CHAY, CURB_RIGHT_CHAY]
+    }
   };
 
   // Đường hiện tại đang active trong scene
   let activeGround = null;
+  let activeSidewalks = { left: null, right: null };
+  let activeCurbs = { left: null, right: null };
   let groundStage = 1;
 
   // Initialize the world.
@@ -168,11 +205,27 @@ export function WorldMap(networkStrategy = null) {
       character = new Character();
       scene.add(character.element);
 
-      [DUONG_DAT, DUONG_GACH, DUONG_CHAY].forEach((g) => {
+      // Xử lý repeat cho các loại ground/sidewalk/curb phù hợp với kích thước thực tế
+      [
+        DUONG_DAT, DUONG_GACH, DUONG_CHAY,
+        SIDEWALK_LEFT_DAT, SIDEWALK_LEFT_GACH, SIDEWALK_LEFT_CHAY,
+        SIDEWALK_RIGHT_DAT, SIDEWALK_RIGHT_GACH, SIDEWALK_RIGHT_CHAY,
+        CURB_LEFT_DAT, CURB_LEFT_GACH, CURB_LEFT_CHAY,
+        CURB_RIGHT_DAT, CURB_RIGHT_GACH, CURB_RIGHT_CHAY,
+      ].forEach((g) => {
         if (g?.material?.map) {
           g.material.map.wrapS = THREE.RepeatWrapping;
           g.material.map.wrapT = THREE.RepeatWrapping;
-          g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+          // Curb chỉ là dải nhỏ nên repeat X chỉ để 1, repeat Y dài để không bị kéo dãn
+          if (
+            g === CURB_LEFT_DAT || g === CURB_LEFT_GACH || g === CURB_LEFT_CHAY ||
+            g === CURB_RIGHT_DAT || g === CURB_RIGHT_GACH || g === CURB_RIGHT_CHAY
+          ) {
+            g.material.map.repeat.set(0.5, 200);
+          } else {
+            // Đường chính và vỉa hè rộng bằng số lane
+            g.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+          }
         }
       });
 
@@ -648,6 +701,20 @@ export function WorldMap(networkStrategy = null) {
       if (activeGround?.material?.map) {
         activeGround.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
       }
+      // Animate sidewalk textures cùng tốc độ
+      if (activeSidewalks.left?.material?.map) {
+        activeSidewalks.left.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      }
+      if (activeSidewalks.right?.material?.map) {
+        activeSidewalks.right.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      }
+      // Animate curb textures
+      // if (activeCurbs.left?.material?.map) {
+      //   activeCurbs.left.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      // }
+      // if (activeCurbs.right?.material?.map) {
+      //   activeCurbs.right.material.map.offset.y += GAME_CONSTANTS.TOC_DO_LUOT_DAT;
+      // }
 
       for (let obj of objects) {
         if (obj.updateHitbox) obj.updateHitbox();
@@ -782,17 +849,95 @@ export function WorldMap(networkStrategy = null) {
       }
     }
 
-    // Set ground mới
-    activeGround = GROUNDS[newStage];
-    if (activeGround) {
-      if (activeGround.material?.map) {
-        activeGround.material.map.wrapS = THREE.RepeatWrapping;
-        activeGround.material.map.wrapT = THREE.RepeatWrapping;
-        activeGround.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+    // Remove sidewalks cũ
+    if (activeSidewalks.left && scene) {
+      try {
+        scene.remove(activeSidewalks.left);
+      } catch (e) {
+        console.warn('Remove left sidewalk failed', e);
       }
-      scene.add(activeGround);
+    }
+    if (activeSidewalks.right && scene) {
+      try {
+        scene.remove(activeSidewalks.right);
+      } catch (e) {
+        console.warn('Remove right sidewalk failed', e);
+      }
     }
 
+    // // Remove curbs cũ
+    // if (activeCurbs.left && scene) {
+    //   try {
+    //     scene.remove(activeCurbs.left);
+    //   } catch (e) {
+    //     console.warn('Remove left curb failed', e);
+    //   }
+    // }
+    // if (activeCurbs.right && scene) {
+    //   try {
+    //     scene.remove(activeCurbs.right);
+    //   } catch (e) {
+    //     console.warn('Remove right curb failed', e);
+    //   }
+    // }
+
+    // Set ground mới
+    const groundSet = GROUNDS[newStage];
+    if (groundSet) {
+      // Main road
+      activeGround = groundSet.main;
+      if (activeGround) {
+        if (activeGround.material?.map) {
+          activeGround.material.map.wrapS = THREE.RepeatWrapping;
+          activeGround.material.map.wrapT = THREE.RepeatWrapping;
+          activeGround.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+        scene.add(activeGround);
+      }
+
+      // Left sidewalk
+      activeSidewalks.left = groundSet.leftSidewalk;
+      if (activeSidewalks.left) {
+        if (activeSidewalks.left.material?.map) {
+          activeSidewalks.left.material.map.wrapS = THREE.RepeatWrapping;
+          activeSidewalks.left.material.map.wrapT = THREE.RepeatWrapping;
+          activeSidewalks.left.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+        scene.add(activeSidewalks.left);
+      }
+
+      // Right sidewalk
+      activeSidewalks.right = groundSet.rightSidewalk;
+      if (activeSidewalks.right) {
+        if (activeSidewalks.right.material?.map) {
+          activeSidewalks.right.material.map.wrapS = THREE.RepeatWrapping;
+          activeSidewalks.right.material.map.wrapT = THREE.RepeatWrapping;
+          activeSidewalks.right.material.map.repeat.set(GAME_CONSTANTS.SO_LUONG_LANE, 200);
+        }
+        scene.add(activeSidewalks.right);
+      }
+
+      // // Add curbs
+      // activeCurbs.left = groundSet.leftCurbs;
+      // if (activeCurbs.left) {
+      //   if (activeCurbs.left.material?.map) {
+      //     activeCurbs.left.material.map.wrapS = THREE.RepeatWrapping;
+      //     activeCurbs.left.material.map.wrapT = THREE.RepeatWrapping;
+      //     activeCurbs.left.material.map.repeat.set(0.5, 200);
+      //   }
+      //   scene.add(activeCurbs.left);
+      // }
+
+      // activeCurbs.right = groundSet.rightCurbs;
+      // if (activeCurbs.right) {
+      //   if (activeCurbs.right.material?.map) {
+      //     activeCurbs.right.material.map.wrapS = THREE.RepeatWrapping;
+      //     activeCurbs.right.material.map.wrapT = THREE.RepeatWrapping;
+      //     activeCurbs.right.material.map.repeat.set(0.5, 200);
+      //   }
+      //   scene.add(activeCurbs.right);
+      // }
+    }
     groundStage = newStage;
   }
 
@@ -844,7 +989,7 @@ export function WorldMap(networkStrategy = null) {
         var side = Math.random() < 0.5 ? 'left' : 'right'; // Chọn 1 bên
         var lane = side === 'left' ? -4 : 4; // Lane ngoài cùng
         var scale = minScale + (maxScale - minScale) * Math.random();
-        var sideObject = createSideObject(objectType, lane * 800, -800, position, scale);
+        var sideObject = createSideObject(objectType, lane * 800, -400, position, scale);
 
         // Xoay object hướng về lane người chơi
         if (sideObject && sideObject.mesh) {
@@ -864,7 +1009,7 @@ export function WorldMap(networkStrategy = null) {
             // Random spawn
             if (Math.random() < 0.5) {
               var scale = minScale + (maxScale - minScale) * Math.random();
-              var sideObject = createSideObject(objectType, lane * 800, -600, position, scale);
+              var sideObject = createSideObject(objectType, lane * 800, -100, position, scale);
 
               // Xoay object hướng về lane người chơi
               if (sideObject && sideObject.mesh) {
@@ -1414,6 +1559,25 @@ export function WorldMap(networkStrategy = null) {
       disposeObject(object);
     });
     objects = [];
+
+    if (activeSidewalks.left && scene) {
+      scene.remove(activeSidewalks.left);
+    }
+    if (activeSidewalks.right && scene) {
+      scene.remove(activeSidewalks.right);
+    }
+
+    activeSidewalks = { left: null, right: null };
+
+    // // Remove curbs
+    // if (activeCurbs.left && scene) {
+    //   scene.remove(activeCurbs.left);
+    // }
+    // if (activeCurbs.right && scene) {
+    //   scene.remove(activeCurbs.right);
+    // }
+
+    // activeCurbs = { left: null, right: null };
 
     // Stop audio
     if (typeof AudioManager !== 'undefined') {

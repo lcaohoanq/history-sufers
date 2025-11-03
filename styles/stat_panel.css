@@ -281,10 +281,173 @@
   color: #fff;
   margin: 1.5em auto;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75em;
+  width: 100%;
 }
 
-#controls td {
-  padding: 0.5em 1em;
+.controls-column {
+  display: flex;
+  justify-content: center;
+}
+
+.controls-direction {
+  align-items: center;
+}
+
+.controls-extra {
+  align-items: center;
+}
+
+.direction-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    '. up .'
+    'left down right';
+  gap: 0.6rem;
+  justify-items: center;
+}
+
+.key-card {
+  border-radius: 18px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 1.1rem 1rem;
+  text-align: center;
+  min-width: 112px;
+  min-height: 112px;
+}
+
+.direction-grid .key-card {
+  width: 112px;
+  height: 112px;
+}
+
+.key-up {
+  grid-area: up;
+}
+
+.key-left {
+  grid-area: left;
+}
+
+.key-down {
+  grid-area: down;
+}
+
+.key-right {
+  grid-area: right;
+}
+
+.key-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 0 0.85rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-weight: 700;
+  font-size: 1.55rem;
+  color: #ffd700;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.6);
+}
+
+.key-icon {
+  display: block;
+}
+
+.key-desc {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.extra-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.extra-grid > .key-card {
+  width: 154px;
+  min-height: 112px;
+  align-items: center;
+  text-align: center;
+  padding: 1.1rem 1rem;
+}
+
+.extra-bottom {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.extra-bottom .key-card {
+  width: 138px;
+  min-height: 112px;
+  padding: 1.05rem 0.95rem;
+}
+
+.extra-grid .key-desc {
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  #controls {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-column {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .key-card {
+    min-width: 90px;
+    min-height: 90px;
+    padding: 0.95rem 0.75rem;
+  }
+
+  .direction-grid .key-card {
+    width: 90px;
+    height: 90px;
+  }
+
+  .key-label {
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 1.25rem;
+  }
+
+  .extra-grid > .key-card {
+    width: 120px;
+    min-height: 96px;
+  }
+
+  .extra-bottom {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .extra-bottom .key-card {
+    width: 120px;
+  }
 }
 
 #variable-content {

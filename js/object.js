@@ -1,27 +1,50 @@
 import * as THREE from 'three';
 import { createCylinder, createTextLabel } from '../scripts/utils.js';
 import { Colors } from '../scripts/colors.js';
+import { createGLBModel } from '../scripts/create-glb-model.js';
+
+const SIMPLE_TREE_URL = new URL('../assets/Simple Tree.glb', import.meta.url).href;
+const VILLAGE_HUT_URL = new URL('../assets/VillageHut.glb', import.meta.url).href;
+const CAPITALIST_EXPRESS_URL = new URL('../assets/CapitalistExpress.glb', import.meta.url).href;
+const WATER_BUFFALO_URL = new URL('../assets/WaterBuffalo.glb', import.meta.url).href;
 
 /**
  * A collidable tree in the game positioned at X, Y, Z in the scene and with
  * scale S.
  */
+
+async function loadTreeInstance() {
+  const tree = await createGLBModel({
+    url: SIMPLE_TREE_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 690,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+
+  return tree;
+}
+
 export function Tree(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
-  // Đã thay thế: 300 → 180, 400 → 240, 500 → 300 (60% tán cây)
-  // Thân cây: 100 → 60, 250 → 150, 125 → 75
-
-  var top = createCylinder(1, 180, 180, 4, Colors.green, 0, 600, 0);
-  var mid = createCylinder(1, 240, 240, 4, Colors.green, 0, 480, 0);
-  var bottom = createCylinder(1, 300, 300, 4, Colors.green, 0, 300, 0);
-  var trunk = createCylinder(60, 60, 150, 32, Colors.brownDark, 0, 75, 0);
-
-  this.mesh.add(top);
-  this.mesh.add(mid);
-  this.mesh.add(bottom);
-  this.mesh.add(trunk);
+  loadTreeInstance()
+    .then((treeInstance) => {
+      this.mesh.add(treeInstance);
+      this.loadedMesh = treeInstance;
+    })
+    .catch((error) => {
+      console.error('Failed to load tree model:', error);
+      this.loadedMesh = null;
+    });
 
   // Gốc đặt theo tham số
   this.mesh.position.set(x, y, z);
@@ -1224,77 +1247,68 @@ export function HighBarrier(x, y, z, s, scene) {
   };
 }
 
-export function CapitalistExpress(x, y, z, s, scene) {
-  this.mesh = new THREE.Group();
-  this.type = "capitalistExpress";
-  this.speed = 200; // nhanh hơn, cảm giác như tàu lao tới
-  this.scene = scene;
-
-  this.mesh.userData = { deadly: true };
-
-  // ⚙ KÍCH THƯỚC CƠ BẢN (scale lớn)
-  const BASE = 50; // hệ số gốc để train ≈ chiều rộng 500 của cây
-  const HEIGHT_SCALE = 3; // tăng chiều cao lên 3 lần
-
-  // Đầu tàu
-  const head = new THREE.Mesh(
-    new THREE.BoxGeometry(BASE * 6, BASE * 3.5 * HEIGHT_SCALE, BASE * 8),  // ~360 x 630 x 480
-    new THREE.MeshStandardMaterial({ color: 0x333333 })
-  );
-  head.position.y = BASE * 3.5 * (HEIGHT_SCALE - 1) / 2; // nâng đầu tàu lên cho đúng tâm
-  this.mesh.add(head);
-
-  // Mũi tàu (nhô phía trước)
-  const nose = new THREE.Mesh(
-    new THREE.ConeGeometry(BASE * 2.2, BASE * 3.5 * HEIGHT_SCALE, 6),
-    new THREE.MeshStandardMaterial({ color: 0x444444 })
-  );
-  nose.rotation.x = Math.PI / 2;
-  nose.position.z = BASE * 4.5;
-  nose.position.y = BASE * 3.5 * (HEIGHT_SCALE - 1) / 2;
-  this.mesh.add(nose);
-
-  // Dấu $ lớn phía trước
-  const dollar = createTextLabel('$', 200, 200, {
-    color: '#038D38FF',
-    bg: 'rgba(0,0,0,0)',
-    font: 'Arial',
-    fontSize: 180,
-    pxPerUnit: 1
+async function loadCapitalistExpressInstance() {
+  return createGLBModel({
+    url: CAPITALIST_EXPRESS_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 630,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
   });
-  dollar.position.set(0, BASE * 3 * HEIGHT_SCALE, BASE * 2.5);
-  this.mesh.add(dollar);
+}
 
-  // Đèn cảnh báo (giữ nguyên nhưng theo scale mới)
-  const lightLeft = new THREE.Mesh(
-    new THREE.SphereGeometry(BASE * 0.4, 16, 16),
-    new THREE.MeshStandardMaterial({ emissive: 0xff0000 })
-  );
-  lightLeft.position.set(-BASE * 2.5, BASE * 1.2 * HEIGHT_SCALE, BASE * 3.5);
-  this.mesh.add(lightLeft);
+export function CapitalistExpress(x, y, z, s, scene) {
+  const boundsVector = new THREE.Vector3();
 
-  const lightRight = lightLeft.clone();
-  lightRight.position.x = BASE * 2.5;
-  this.mesh.add(lightRight);
+  this.mesh = new THREE.Object3D();
+  this.type = "capitalistExpress";
+  this.speed = 200;
+  this.scene = scene;
+  this.scale = s;
+  this.mesh.userData = { deadly: true };
+  this.bounds = { width: 360, height: 630, depth: 480 };
 
-  // Vị trí + scale
+  loadCapitalistExpressInstance()
+    .then((train) => {
+      this.mesh.add(train);
+      this.loadedMesh = train;
+
+      const bbox = new THREE.Box3().setFromObject(train);
+      bbox.getSize(boundsVector);
+      this.bounds = {
+        width: boundsVector.x,
+        height: boundsVector.y,
+        depth: boundsVector.z
+      };
+      this.updateHitbox();
+    })
+    .catch((error) => {
+      console.error("Failed to load Capitalist Express model:", error);
+      this.loadedMesh = null;
+    });
+
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.scale = s;
 
-  // Di chuyển
   this.update = function () {
     this.mesh.position.z += this.speed;
     if (this.mesh.position.z > 2000) {
       scene.remove(this.mesh);
     }
+    this.updateHitbox();
   };
 
-  // Va chạm - chỉnh hitbox tương đương Tree
   this.collides = function (playerMinX, playerMaxX, playerMinY, playerMaxY, playerMinZ, playerMaxZ) {
-    const w = BASE * 6 * this.scale;   // ~360 * s
-    const h = BASE * 3.5 * HEIGHT_SCALE * this.scale; // ~630 * s
-    const d = BASE * 8 * this.scale;   // ~480 * s
+    const w = this.bounds.width * this.scale;
+    const h = this.bounds.height * this.scale;
+    const d = this.bounds.depth * this.scale;
 
     const minX = this.mesh.position.x - w / 2;
     const maxX = this.mesh.position.x + w / 2;
@@ -1312,19 +1326,14 @@ export function CapitalistExpress(x, y, z, s, scene) {
       maxZ >= playerMinZ
     );
   };
-  this.enableHitbox = false;  // tắt mặc định
+  this.enableHitbox = false;
 
   this.showHitbox = function () {
     if (!this.hitboxHelper) {
-      // Tính bounding box gốc
-      let bbox = new THREE.Box3().setFromObject(this.mesh);
+      const bbox = new THREE.Box3().setFromObject(this.mesh);
+      bbox.expandByScalar(0.2);
 
-      // ✅ Expand ra 1 chút (tăng 0.2 đơn vị mỗi chiều — có thể chỉnh)
-      let expandSize = 0.2;
-      bbox.expandByScalar(expandSize);
-
-      // Tạo BoxHelper từ box đã mở rộng
-      let box = new THREE.Box3Helper(bbox, 0xff0000);
+      const box = new THREE.Box3Helper(bbox, 0xff0000);
       box.material.depthTest = false;
       box.material.depthWrite = false;
       box.renderOrder = 9999;
@@ -1337,38 +1346,48 @@ export function CapitalistExpress(x, y, z, s, scene) {
 
   this.updateHitbox = function () {
     if (this.hitboxHelper) {
-      // Cập nhật vị trí theo mesh nhưng **giữ kích thước mở rộng**
-      let bbox = new THREE.Box3().setFromObject(this.mesh);
+      const bbox = new THREE.Box3().setFromObject(this.mesh);
       bbox.expandByScalar(0.2);
       this.hitboxHelper.box.copy(bbox);
     }
   };
 }
 
+async function loadVillageHutInstance() {
+  return createGLBModel({
+    url: VILLAGE_HUT_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 480,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
 export function VillageHut(x, y, z, s) {
-  const scaleFactor = 10 * s;
-  this.mesh = new THREE.Group();
+  this.mesh = new THREE.Object3D();
   this.type = "villageHut";
   this.mesh.userData = { sideElement: true };
 
-  // Thân nhà (vách gỗ)
-  const wall = new THREE.Mesh(
-    new THREE.BoxGeometry(40, 30, 40),
-    new THREE.MeshStandardMaterial({ color: 0x8b5a2b })
-  );
-  this.mesh.add(wall);
-
-  // Mái nhà (rơm)
-  const roof = new THREE.Mesh(
-    new THREE.ConeGeometry(32, 18, 4),
-    new THREE.MeshStandardMaterial({ color: 0xd2b48c })
-  );
-  roof.position.y = 25;
-  roof.rotation.y = Math.PI / 4;
-  this.mesh.add(roof);
+  loadVillageHutInstance()
+    .then((hut) => {
+      this.mesh.add(hut);
+      this.loadedMesh = hut;
+    })
+    .catch((error) => {
+      console.error("Failed to load village hut model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  const baseScale = 1 * s;
+  this.mesh.scale.set(baseScale, baseScale, baseScale);
   this.mesh.rotation.y = Math.PI / 2;
 }
 
@@ -1403,67 +1422,41 @@ export function BambooTree(x, y, z, s) {
   this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 }
 
+async function loadWaterBuffaloInstance() {
+  return createGLBModel({
+    url: WATER_BUFFALO_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 120,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
 export function WaterBuffalo(x, y, z, s) {
-  const scaleFactor = 5 * s;
-  this.mesh = new THREE.Group();
+  this.mesh = new THREE.Object3D();
   this.type = "waterBuffalo";
   this.mesh.userData = { deadly: false };
 
-  // 🐃 Thân trâu (hơi bo tròn)
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(40, 20, 20),
-    new THREE.MeshStandardMaterial({ color: 0x4b4b4b })
-  );
-  body.position.set(0, 10, 0);
-  this.mesh.add(body);
+  loadWaterBuffaloInstance()
+    .then((buffalo) => {
+      this.mesh.add(buffalo);
+      this.loadedMesh = buffalo;
+    })
+    .catch((error) => {
+      console.error("Failed to load water buffalo model:", error);
+      this.loadedMesh = null;
+    });
 
-  // 🐃 Đầu trâu
-  const head = new THREE.Mesh(
-    new THREE.BoxGeometry(18, 14, 16),
-    new THREE.MeshStandardMaterial({ color: 0x4b4b4b })
-  );
-  head.position.set(25, 10, 0);
-  this.mesh.add(head);
-
-  // 🐃 Sừng (ConeGeometry + xoay ngang)
-  const hornMaterial = new THREE.MeshStandardMaterial({ color: 0x2e2e2e });
-  const hornLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 1, 12, 8), hornMaterial);
-  hornLeft.position.set(25, 14, -6);
-  hornLeft.rotation.z = Math.PI / 2;
-  hornLeft.rotation.y = Math.PI / 3;
-  this.mesh.add(hornLeft);
-
-  const hornRight = hornLeft.clone();
-  hornRight.position.z = 6;
-  hornRight.rotation.y = -Math.PI / 3;
-  this.mesh.add(hornRight);
-
-  // 🐃 Chân (4 chân)
-  function createLeg(px, pz) {
-    const leg = new THREE.Mesh(
-      new THREE.CylinderGeometry(2, 2, 15, 8),
-      new THREE.MeshStandardMaterial({ color: 0x3f3f3f })
-    );
-    leg.position.set(px, 2, pz);
-    return leg;
-  }
-  this.mesh.add(createLeg(12, 7));
-  this.mesh.add(createLeg(-12, 7));
-  this.mesh.add(createLeg(12, -7));
-  this.mesh.add(createLeg(-12, -7));
-
-  // 🐃 Đuôi
-  const tail = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.5, 12, 8),
-    new THREE.MeshStandardMaterial({ color: 0x3f3f3f })
-  );
-  tail.position.set(-20, 12, 0);
-  tail.rotation.z = Math.PI / 8;
-  this.mesh.add(tail);
-
-  // Gán vị trí & scale
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  const baseScale = 3 * s;
+  this.mesh.scale.set(baseScale, baseScale, baseScale);
   this.scale = s;
 }
 

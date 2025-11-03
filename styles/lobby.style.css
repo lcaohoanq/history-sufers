@@ -219,6 +219,10 @@ body {
   height: 70px;
   margin: 0 auto 20px;
   fill: white;
+  font-size: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mode-title {

@@ -78,36 +78,63 @@
       <div class="game-title">
         <div class="title">Tạm dừng</div>
       </div>
-      <table id="controls">
-        <tr>
-          <td><strong>⬆️</strong></td>
-          <td>Nhảy</td>
-        </tr>
-        <tr>
-          <td><strong>⬅️</strong></td>
-          <td>Trái</td>
-        </tr>
-        <tr>
-          <td><strong>➡️</strong></td>
-          <td>Phải</td>
-        </tr>
-        <tr>
-          <td><strong>⬇️</strong></td>
-          <td>Trượt (Siu)</td>
-        </tr>
-        <tr>
-          <td><strong>ESC</strong></td>
-          <td>Dừng trò chơi</td>
-        </tr>
-        <tr>
-          <td><strong>🇻</strong></td>
-          <td>Đổi góc nhìn</td>
-        </tr>
-        <tr>
-          <td><strong>🅿️</strong></td>
-          <td>Thay skin</td>
-        </tr>
-      </table>
+      <div id="controls">
+        <div class="controls-column controls-direction">
+          <div class="direction-grid">
+            <div class="key-card key-up">
+              <span class="key-label">
+                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                  <path d="M16 4l12 20H4z" fill="#ffd700"/>
+                </svg>
+              </span>
+              <span class="key-desc">Nhảy</span>
+            </div>
+            <div class="key-card key-left">
+              <span class="key-label">
+                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                  <path d="M4 14l20 12V2z" fill="#ffd700"/>
+                </svg>
+              </span>
+              <span class="key-desc">Trái</span>
+            </div>
+            <div class="key-card key-down">
+              <span class="key-label">
+                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                  <path d="M16 24L4 4h24z" fill="#ffd700"/>
+                </svg>
+              </span>
+              <span class="key-desc">Trượt (Siu)</span>
+            </div>
+            <div class="key-card key-right">
+              <span class="key-label">
+                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                  <path d="M28 14L8 2v24z" fill="#ffd700"/>
+                </svg>
+              </span>
+              <span class="key-desc">Phải</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-column controls-extra">
+          <div class="extra-grid">
+            <div class="key-card">
+              <span class="key-label">ESC</span>
+              <span class="key-desc">Dừng trò chơi</span>
+            </div>
+            <div class="extra-bottom">
+              <div class="key-card">
+                <span class="key-label">V</span>
+                <span class="key-desc">Đổi góc nhìn</span>
+              </div>
+              <div class="key-card">
+                <span class="key-label">P</span>
+                <span class="key-desc">Thay skin</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="animate-flicker" id="variable-content">Bấm phím bất kì để tiếp tục...</div>
     </div>
 

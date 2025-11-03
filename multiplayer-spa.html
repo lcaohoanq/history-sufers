@@ -538,6 +538,7 @@
       let currentSessionId = null;
       let gameInitialized = false;
       let raceStarting = false;
+      let playerScoresTimer = null;
 
       // ==================== VIEW SWITCHING ====================
       function switchView(viewId) {
@@ -597,16 +598,23 @@
         });
 
         // Listen for players updated
-        networkManager.on('playerJoined', (data) => {
+        networkManager.on('playerJoined', () => {
           updatePlayersList();
+          updatePlayerScores();
         });
 
-        networkManager.on('playerLeft', (data) => {
+        networkManager.on('playerLeft', () => {
           updatePlayersList();
+          updatePlayerScores();
+        });
+
+        networkManager.on('opponentUpdate', () => {
+          updatePlayerScores();
         });
 
         networkManager.on('stateChanged', () => {
           updatePlayersList();
+          updatePlayerScores();
         });
       });
 
@@ -673,6 +681,7 @@
           document.querySelector('#createRoom form').style.display = 'none';
 
           updatePlayersList();
+          updatePlayerScores();
 
           showToast('Room created successfully!', 'success');
         } catch (error) {
@@ -710,6 +719,7 @@
           document.querySelector('#createRoom form').style.display = 'none';
 
           updatePlayersList();
+          updatePlayerScores();
 
           showToast('Joined room successfully! Wait for host to start.', 'success');
         } catch (error) {
@@ -806,6 +816,7 @@
           document.querySelector('#createRoom form').style.display = 'none';
 
           updatePlayersList();
+          updatePlayerScores();
 
           showToast('Joined successfully!', 'success');
         } catch (error) {
@@ -851,6 +862,77 @@
 
         if (startBtn) {
           startBtn.style.display = isHost && allReady && players.length >= 2 ? 'block' : 'none';
+        }
+      }
+
+      function updatePlayerScores() {
+        const scoresContainer = document.getElementById('playerScores');
+        if (!scoresContainer) return;
+
+        if (!networkManager || !networkManager.room || !networkManager.room.state) {
+          scoresContainer.innerHTML = '';
+          return;
+        }
+
+        const players = networkManager.getAllPlayers().slice();
+
+        if (players.length === 0) {
+          scoresContainer.innerHTML = '<div class="player-score-empty">Chưa có người chơi</div>';
+          return;
+        }
+
+        players.sort((a, b) => {
+          const scoreA = typeof a.score === 'number' ? a.score : 0;
+          const scoreB = typeof b.score === 'number' ? b.score : 0;
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          return (a.name || '').localeCompare(b.name || '');
+        });
+
+        const fragment = document.createDocumentFragment();
+
+        players.forEach((player, index) => {
+          const item = document.createElement('div');
+          item.className = 'player-score-item';
+
+          if (player.isSelf) {
+            item.classList.add('self');
+          }
+
+          const nameEl = document.createElement('span');
+          nameEl.className = 'player-score-name';
+
+          const playerName = player.name || `Người chơi ${index + 1}`;
+          nameEl.textContent = `${index + 1}. ${playerName}${player.isSelf ? ' (Bạn)' : ''}`;
+
+          const scoreEl = document.createElement('span');
+          scoreEl.className = 'player-score-value';
+          const scoreValue = typeof player.score === 'number' ? player.score : 0;
+          scoreEl.textContent = scoreValue;
+
+          item.appendChild(nameEl);
+          item.appendChild(scoreEl);
+          fragment.appendChild(item);
+        });
+
+        scoresContainer.innerHTML = '';
+        scoresContainer.appendChild(fragment);
+      }
+
+      function startPlayerScoreUpdates() {
+        if (playerScoresTimer) return;
+        updatePlayerScores();
+        playerScoresTimer = setInterval(updatePlayerScores, 750);
+      }
+
+      function stopPlayerScoreUpdates() {
+        if (playerScoresTimer) {
+          clearInterval(playerScoresTimer);
+          playerScoresTimer = null;
+        }
+
+        const scoresContainer = document.getElementById('playerScores');
+        if (scoresContainer) {
+          scoresContainer.innerHTML = '';
         }
       }
 
@@ -914,6 +996,8 @@
             multiplayerHud.style.display = 'block';
           }
 
+          startPlayerScoreUpdates();
+
           // Handle audio transition (intro -> loop)
           if (typeof AudioManager !== 'undefined') {
             const activeAudio = AudioManager._active();
@@ -949,6 +1033,8 @@
 
         // Reset game state
         gameInitialized = false;
+
+        stopPlayerScoreUpdates();
 
         // Switch back to lobby view
         switchView('lobbyView');

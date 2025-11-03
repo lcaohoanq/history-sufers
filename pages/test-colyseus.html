@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test Colyseus</title>
+    <script src="https://unpkg.com/colyseus.js@0.15.8/dist/colyseus.js"></script>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.ico" />
+  </head>
+  <body>
+    <h1>Colyseus Test</h1>
+    <div id="output"></div>
+
+    <script>
+      const output = document.getElementById('output');
+
+      function log(msg) {
+        const p = document.createElement('p');
+        p.textContent = msg;
+        output.appendChild(p);
+        console.log(msg);
+      }
+
+      log('Checking Colyseus...');
+      log('typeof window.Colyseus: ' + typeof window.Colyseus);
+
+      if (window.Colyseus) {
+        log('window.Colyseus exists!');
+        log('window.Colyseus keys: ' + Object.keys(window.Colyseus).join(', '));
+
+        // Check for Client
+        if (window.Colyseus.Client) {
+          log('✅ window.Colyseus.Client exists');
+          log('typeof window.Colyseus.Client: ' + typeof window.Colyseus.Client);
+        } else {
+          log('❌ window.Colyseus.Client does NOT exist');
+        }
+
+        // Check if Colyseus itself is the Client
+        log('typeof window.Colyseus: ' + typeof window.Colyseus);
+
+        // Try to create a client
+        try {
+          const client = new window.Colyseus.Client('ws://localhost:3000');
+          log('✅ Successfully created client with new window.Colyseus.Client()');
+        } catch (e) {
+          log('❌ Failed with window.Colyseus.Client: ' + e.message);
+
+          // Try without .Client
+          try {
+            const client = new window.Colyseus('ws://localhost:3000');
+            log('✅ Successfully created client with new window.Colyseus()');
+          } catch (e2) {
+            log('❌ Failed with window.Colyseus: ' + e2.message);
+          }
+        }
+      } else {
+        log('❌ window.Colyseus does NOT exist!');
+      }
+    </script>
+  </body>
+</html>

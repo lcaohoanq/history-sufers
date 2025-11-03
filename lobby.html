@@ -1,561 +1,615 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sảnh chờ</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sảnh chờ</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet" />
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="js/network.js"></script>
-  <link rel="stylesheet" href="styles/lobby.style.css" />
-</head>
+    <script src="https://unpkg.com/colyseus.js@0.15.8/dist/colyseus.js"></script>
+    <script src="js/network-colyseus.js"></script>
 
-<body>
-  <!-- Animated Background Orbs -->
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
+    <link rel="stylesheet" href="styles/lobby.style.css" />
+  </head>
 
-  <!-- Food Pellets -->
-  <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
-  <div class="pellet" style="top: 25%; right: 15%; animation-delay: 0.5s"></div>
-  <div class="pellet" style="bottom: 20%; left: 20%; animation-delay: 1s"></div>
-  <div class="pellet" style="top: 60%; right: 25%; animation-delay: 1.5s"></div>
-  <div class="pellet" style="bottom: 30%; right: 10%; animation-delay: 2s"></div>
-  <div class="pellet" style="top: 40%; left: 15%; animation-delay: 0.7s"></div>
-  <div class="pellet" style="top: 70%; left: 40%; animation-delay: 1.2s"></div>
-  <div class="pellet" style="bottom: 40%; right: 40%; animation-delay: 1.8s"></div>
+  <body>
+    <!-- Animated Background Orbs -->
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
 
-  <!-- Main Container -->
-  <div class="container">
-    <!-- Header -->
-    <!-- <div class="header">
-        <a href="index.html" class="back-btn">
-          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-          </svg>
-          History Surfers
-        </a>
-        <div class="badge">Sảnh chờ</div>
-      </div> -->
+    <!-- Food Pellets -->
+    <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
+    <div class="pellet" style="top: 25%; right: 15%; animation-delay: 0.5s"></div>
+    <div class="pellet" style="bottom: 20%; left: 20%; animation-delay: 1s"></div>
+    <div class="pellet" style="top: 60%; right: 25%; animation-delay: 1.5s"></div>
+    <div class="pellet" style="bottom: 30%; right: 10%; animation-delay: 2s"></div>
+    <div class="pellet" style="top: 40%; left: 15%; animation-delay: 0.7s"></div>
+    <div class="pellet" style="top: 70%; left: 40%; animation-delay: 1.2s"></div>
+    <div class="pellet" style="bottom: 40%; right: 40%; animation-delay: 1.8s"></div>
 
-    <!-- Mode Selection -->
-    <div id="modeSelection">
-      <div class="card">
-        <h1 class="card-title">Chọn chế độ chơi</h1>
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Mode Selection -->
+      <div id="modeSelection">
+        <div class="card">
+          <h1 class="card-title">Chọn chế độ chơi</h1>
 
-        <div class="mode-grid">
-          <div class="mode-card create" onclick="showCreateRoom()">
-            <svg style="width: 50px; height: 50px; margin-bottom: 15px" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            <div class="mode-title">Tạo phòng</div>
-            <div class="mode-desc">Bắt đầu trò chơi</div>
-          </div>
+          <div class="mode-grid">
+            <!-- Single Player Mode -->
+            <button class="mode-card" onclick="location.href='singleplayer.html'">
+              <div class="mode-icon">🏃</div>
+              <h3>Chơi đơn</h3>
+              <p>Chơi một mình và luyện tập kỹ năng</p>
+            </button>
 
-          <div class="mode-card join" onclick="showJoinRoom()">
-            <svg style="width: 50px; height: 50px; margin-bottom: 15px" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-            <div class="mode-title">Tham gia phòng</div>
-            <div class="mode-desc">Nhập mã phòng</div>
-          </div>
-
-          <div class="mode-card browse" onclick="showBrowseRooms()">
-            <svg style="width: 50px; height: 50px; margin-bottom: 15px" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <div class="mode-title">Tìm phòng</div>
-            <div class="mode-desc">Tìm các phòng đang mở</div>
+            <!-- Multiplayer Mode -->
+            <button class="mode-card multiplayer" onclick="showMultiplayerOptions()">
+              <div class="mode-icon">👥</div>
+              <h3>Nhiều người chơi</h3>
+              <p>Thi đua với bạn bè</p>
+              <div class="badge-new">Colyseus</div>
+            </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Create Room Section -->
-    <div id="createRoomSection" class="hidden">
-      <div class="card" style="max-width: 600px; margin: 0 auto">
-        <h2 class="card-title">Tạo phòng chơi</h2>
-
-        <div class="form-group">
-          <label class="form-label">Tên người chơi</label>
-          <input type="text" id="createPlayerName" class="form-input" placeholder="Nhập tên của bạn" maxlength="20" />
-        </div>
-
-        <div class="btn-actions">
-          <button class="btn btn-primary" onclick="createRoom()">
-            <svg style="width: 50px; height: 50px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      <!-- Multiplayer Options -->
+      <div id="multiplayerOptions" style="display: none">
+        <div class="card">
+          <button class="btn" onclick="backToModeSelection()">
+            <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
             </svg>
-            Tạo phòng
           </button>
-          <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Join Room Section -->
-    <div id="joinRoomSection" class="hidden">
-      <div class="card" style="max-width: 600px; margin: 0 auto">
-        <h2 class="card-title">Tham gia phòng</h2>
+          <h1 class="card-title">Nhiều người chơi</h1>
 
-        <div class="form-group">
-          <label class="form-label">Tên người chơi</label>
-          <input type="text" id="joinPlayerName" class="form-input" placeholder="Nhập tên của bạn" maxlength="20" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Mã phòng</label>
-          <input type="text" id="roomCode" class="form-input" placeholder="Nhập mã phòng" maxlength="6"
-            style="text-transform: uppercase" />
-        </div>
-
-        <div class="btn-actions">
-          <button class="btn btn-secondary" onclick="joinRoom()">
-            <svg style="width: 50px; height: 50px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-            Tham gia
-          </button>
-          <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Browse Rooms Section -->
-    <div id="browseRoomsSection" class="hidden">
-      <div class="card">
-        <h2 class="card-title">Các phòng đang mở</h2>
-
-        <div class="form-group" id="browsePlayerNameGroup">
-          <label class="form-label">Tên người chơi</label>
-          <input type="text" id="browsePlayerName" class="form-input" placeholder="Nhập tên của bạn" maxlength="20" />
-        </div>
-
-        <div id="roomList" class="room-list">
-          <div class="loading">
-            <div class="spinner"></div>
-            <p style="margin-top: 20px; color: #666">Đang tải...</p>
-          </div>
-        </div>
-
-        <div class="btn-actions">
-          <button class="btn btn-primary" onclick="refreshRooms()">
-            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Tải lại
-          </button>
-          <button class="btn btn-ghost" onclick="backToModeSelection()">Hủy</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Waiting Room -->
-    <div id="waitingRoom" class="hidden">
-      <!-- Room Code Card -->
-      <div class="card-lobby">
-        <div class="room-code-display">
-          <div class="room-code-label">Mã phòng</div>
-          <div class="room-code-value" id="displayRoomCode">ABCD12</div>
-          <div class="room-code-hint">Chia sẻ mã này với bạn bè!</div>
-        </div>
-      </div>
-
-      <!-- Players Card -->
-      <div class="card-lobby">
-        <div class="player-header">
-          <div class="player-count">
-            <span id="playerCount">0</span>
-            <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="6" r="4" stroke="#ffffff" stroke-width="1.5" />
-              <path
-                d="M20 17.5C20 19.9853 20 22 12 22C4 22 4 19.9853 4 17.5C4 15.0147 7.58172 13 12 13C16.4183 13 20 15.0147 20 17.5Z"
-                stroke="#ffffff" stroke-width="1.5" />
-            </svg>
-          </div>
-          <h2 class="card-title" style="margin: 0"></h2>
-        </div>
-
-        <div id="playerList" class="player-list"></div>
-
-        <div id="errorMessage" class="alert alert-error hidden">
-          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span id="errorText"></span>
-        </div>
-
-        <div id="startingMessage" class="alert alert-success hidden">
-          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span id="startingText">Đang chờ tất cả người chơi sẵn sàng...</span>
-        </div>
-
-        <div class="btn-actions">
-          <button id="readyButton" class="btn btn-success" onclick="toggleReady()">
-            <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M12.0004 18.5816V12.5M12.7976 18.754L15.8103 19.7625C17.4511 20.3118 18.2714 20.5864 18.7773 20.3893C19.2166 20.2182 19.5499 19.8505 19.6771 19.3965C19.8236 18.8737 19.4699 18.0843 18.7624 16.5053L14.2198 6.36709C13.5279 4.82299 13.182 4.05094 12.7001 3.81172C12.2814 3.60388 11.7898 3.60309 11.3705 3.80958C10.8878 4.04726 10.5394 4.8182 9.84259 6.36006L5.25633 16.5082C4.54325 18.086 4.18671 18.875 4.33169 19.3983C4.4576 19.8528 4.78992 20.2216 5.22888 20.394C5.73435 20.5926 6.55603 20.3198 8.19939 19.7744L11.2797 18.752C11.5614 18.6585 11.7023 18.6117 11.8464 18.5933C11.9742 18.5769 12.1036 18.5771 12.2314 18.5938C12.3754 18.6126 12.5162 18.6597 12.7976 18.754Z"
-                stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            Sẵn sàng
-          </button>
-          <button class="btn btn-danger" onclick="leaveRoom()">
-            <svg version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg"
-              xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 32 32"
-              xml:space="preserve">
-              <style type="text/css">
-                .bentblocks_een {
-                  fill: #ffffff;
-                }
-              </style>
-              <path class="bentblocks_een" d="M24.485,7.515c-4.686-4.686-12.284-4.686-16.971,0c-4.686,4.686-4.686,12.284,0,16.971
-	c4.686,4.686,12.284,4.686,16.971,0C29.172,19.799,29.172,12.201,24.485,7.515z M23.071,23.071c-3.908,3.908-10.234,3.908-14.142,0
-	c-3.899-3.899-3.899-10.243,0-14.142c3.908-3.908,10.234-3.909,14.142,0C24.96,10.818,26,13.329,26,16
-	C26,18.671,24.96,21.182,23.071,23.071z M21.657,11.757L17.414,16l4.243,4.243l-1.414,1.414L16,17.414l-4.243,4.243l-1.414-1.414
-	L14.586,16l-4.243-4.243l1.414-1.414L16,14.586l4.243-4.243L21.657,11.757z" />
-            </svg>
-            Rời phòng
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Container -->
-  <div id="toast-container" class="toast-container"></div>
-
-  <script>
-    const network = window.networkManager;
-    let isReady = false;
-    let currentPlayers = [];
-    let maxPlayersPerRoom = 50;
-
-    // Toast notification system
-    function showToast(notification) {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-
-      const typeClasses = {
-        success: 'toast-success',
-        error: 'toast-error',
-        warning: 'toast-warning',
-        info: 'toast-info'
-      };
-
-      const icons = {
-        success: `<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-        error: `<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-        warning: `<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
-        info: `<path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
-      };
-
-      toast.className = `toast ${typeClasses[notification.type] || 'toast-info'}`;
-      toast.innerHTML = `
-          <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-            ${icons[notification.type] || icons.info}
-          </svg>
-          <div>
-            <div style="font-weight: 700; margin-bottom: 5px;">${notification.title}</div>
-            <div style="font-size: 0.9em;">${notification.message}</div>
-          </div>
-        `;
-
-      container.appendChild(toast);
-
-      const duration = notification.duration || 3000;
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
-      }, duration);
-    }
-
-    // Connect to server on load
-    window.addEventListener('load', async () => {
-      try {
-        await network.connect();
-        console.log('Connected to server');
-
-        network.socket.on('serverConfig', (config) => {
-          maxPlayersPerRoom = config.maxPlayersPerRoom;
-          document.getElementById('maxPlayers').textContent = config.maxPlayersPerRoom;
-          console.log('Server config received:', config);
-        });
-
-        network.socket.on('notification', (notification) => {
-          showToast(notification);
-        });
-      } catch (error) {
-        console.error('Failed to connect:', error);
-        showError('Failed to connect to server. Please refresh the page.');
-      }
-    });
-
-    function showCreateRoom() {
-      hideAllSections();
-      document.getElementById('createRoomSection').classList.remove('hidden');
-    }
-
-    function showJoinRoom() {
-      hideAllSections();
-      document.getElementById('joinRoomSection').classList.remove('hidden');
-    }
-
-    function showBrowseRooms() {
-      hideAllSections();
-      document.getElementById('browseRoomsSection').classList.remove('hidden');
-      refreshRooms();
-    }
-
-    function backToModeSelection() {
-      hideAllSections();
-      document.getElementById('modeSelection').classList.remove('hidden');
-    }
-
-    function hideAllSections() {
-      document.getElementById('modeSelection').classList.add('hidden');
-      document.getElementById('createRoomSection').classList.add('hidden');
-      document.getElementById('joinRoomSection').classList.add('hidden');
-      document.getElementById('browseRoomsSection').classList.add('hidden');
-      document.getElementById('waitingRoom').classList.add('hidden');
-    }
-
-    function createRoom() {
-      const playerName = document.getElementById('createPlayerName').value.trim() || 'Player';
-      network.createRoom(playerName);
-    }
-
-    function joinRoom(roomId) {
-      if (!roomId) {
-        roomId = document.getElementById('roomCode').value.trim().toUpperCase();
-      }
-      const playerName = document.getElementById('joinPlayerName').value.trim() || 'Player';
-
-      if (!roomId) {
-        showError('Please enter a room code');
-        return;
-      }
-
-      network.joinRoom(roomId, playerName);
-    }
-
-    function joinRoomFromBrowse(roomId) {
-      const playerName = document.getElementById('browsePlayerName').value.trim() || 'Player';
-      network.joinRoom(roomId, playerName);
-    }
-
-    function refreshRooms() {
-      network.listRooms();
-    }
-
-    function toggleReady() {
-      isReady = !isReady;
-      network.setReady(isReady);
-
-      const btn = document.getElementById('readyButton');
-      if (isReady) {
-        btn.innerHTML = `
-            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-            Chưa sẵn sàng
-          `;
-        btn.className = 'btn btn-warning';
-      } else {
-        btn.innerHTML = `
-            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M5 13l4 4L19 7"/>
-            </svg>
-            Sẵn sàng
-          `;
-        btn.className = 'btn btn-success';
-      }
-    }
-
-    function leaveRoom() {
-      network.leaveRoom();
-      backToModeSelection();
-    }
-
-    function showError(message) {
-      const errorDiv = document.getElementById('errorMessage');
-      const errorText = document.getElementById('errorText');
-      if (errorDiv && errorText) {
-        errorText.textContent = message;
-        errorDiv.classList.remove('hidden');
-        setTimeout(() => {
-          errorDiv.classList.add('hidden');
-        }, 5000);
-      } else {
-        alert(message);
-      }
-    }
-
-    function updatePlayerList(players) {
-      currentPlayers = players;
-      const playerList = document.getElementById('playerList');
-      const playerCount = document.getElementById('playerCount');
-
-      playerList.innerHTML = '';
-      playerCount.textContent = players.length;
-
-      players.forEach((player) => {
-        const playerDiv = document.createElement('div');
-        playerDiv.className = 'player-item';
-
-        const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
-          player.name
-        )}`;
-
-        playerDiv.innerHTML = `
-            <div class="player-info">
-              <img src="${avatarUrl}" alt="${player.name}" class="player-avatar" />
-              <div>
-                <div class="player-name">
-                  ${player.name}
-                  ${player.id === network.socket?.id ? '<span class="player-you">(Bạn)</span>' : ''}
-                </div>
-              </div>
+          <div class="mode-grid">
+            <div class="mode-card create" onclick="showCreateRoom()">
+              <svg
+                style="width: 50px; height: 50px; margin-bottom: 15px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <div class="mode-title">Tạo phòng</div>
+              <div class="mode-desc">Bắt đầu trò chơi</div>
             </div>
-          `;
-        playerList.appendChild(playerDiv);
+
+            <div class="mode-card join" onclick="showJoinRoom()">
+              <svg
+                style="width: 50px; height: 50px; margin-bottom: 15px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                />
+              </svg>
+              <div class="mode-title">Tham gia phòng</div>
+              <div class="mode-desc">Nhập mã phòng</div>
+            </div>
+
+            <div class="mode-card browse" onclick="showRoomList()">
+              <svg
+                style="width: 50px; height: 50px; margin-bottom: 15px"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <div class="mode-title">Danh sách phòng</div>
+              <div class="mode-desc">Xem các phòng đang chờ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Room -->
+      <div id="createRoom" style="display: none">
+        <div class="card" style="max-width: 600px; margin: 0 auto">
+          <button class="btn" onclick="backToMultiplayerOptions()">
+            <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+            </svg>
+          </button>
+
+          <h1 class="card-title">Tạo phòng mới</h1>
+
+          <form onsubmit="createRoom(event)" class="form">
+            <div class="form-group">
+              <label class="form-label">Tên host</label>
+              <input
+                type="text"
+                id="createPlayerName"
+                class="form-input"
+                placeholder="Nhập tên của bạn"
+                required
+                maxlength="20"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              <span>Tạo phòng</span>
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+              </svg>
+            </button>
+          </form>
+
+          <div id="roomInfo" class="room-info" style="display: none">
+            <div class="info-box">
+              <div class="info-label">Mã phòng của bạn:</div>
+              <div class="room-code" id="displayRoomId">LOADING...</div>
+              <button class="btn btn-secondary" onclick="copyRoomId()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                  />
+                </svg>
+                Sao chép
+              </button>
+            </div>
+
+            <div class="player-list">
+              <h3>Người chơi trong phòng (<span id="playerCount">1</span>)</h3>
+              <div id="playersList"></div>
+            </div>
+
+            <div class="ready-section">
+              <label class="checkbox-container">
+                <input type="checkbox" id="hostReady" onchange="toggleReady()" />
+                <span class="checkmark"></span>
+                <span>Tôi đã sẵn sàng</span>
+              </label>
+
+              <div class="info-message">⏳ Chờ tất cả người chơi sẵn sàng để bắt đầu...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Join Room -->
+      <div id="joinRoom" style="display: none">
+        <div class="card" style="max-width: 600px; margin: 0 auto">
+          <button class="btn" onclick="backToMultiplayerOptions()">
+            <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+            </svg>
+          </button>
+
+          <h1 class="card-title">Tham gia phòng</h1>
+
+          <form onsubmit="joinRoom(event)" class="form">
+            <div class="form-group">
+              <label for="form-label">Tên của bạn</label>
+              <input
+                type="text"
+                id="joinPlayerName"
+                placeholder="Nhập tên..."
+                required
+                class="form-input"
+                maxlength="20"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="form-label">Mã phòng</label>
+              <input
+                type="text"
+                id="joinRoomId"
+                placeholder="Nhập mã phòng..."
+                required
+                maxlength="10"
+                class="form-input"
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              <span>Tham gia</span>
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Room List -->
+      <div id="roomList" style="display: none">
+        <div class="card" style="max-width: 600px; margin: 0 auto">
+          <button class="btn" onclick="backToMultiplayerOptions()">
+            <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+            </svg>
+          </button>
+
+          <h1 class="card-title">Phòng đang chờ</h1>
+
+          <!-- <div class="refresh-section">
+            <button class="btn btn-secondary" onclick="refreshRoomList()">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+                />
+              </svg>
+              Làm mới
+            </button>
+          </div> -->
+
+          <div id="roomsList" class="rooms-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+      let networkManager = null;
+      let currentRoomId = null;
+      let currentSessionId = null;
+
+      // Initialize on load
+      window.addEventListener('load', async () => {
+        console.log('🎮 Lobby (Colyseus) loaded');
+        networkManager = window.networkManager;
+
+        if (!networkManager) {
+          showToast('⚠️ Network manager not initialized', 'error');
+          return;
+        }
+
+        // Connect to server
+        try {
+          await networkManager.connect();
+          console.log('✅ Connected to Colyseus server');
+        } catch (error) {
+          console.error('❌ Failed to connect:', error);
+          showToast('Failed to connect to server', 'error');
+        }
+
+        // Listen for notifications
+        networkManager.on('notification', (notification) => {
+          showToast(notification.message, notification.type);
+        });
+
+        // Listen for race start
+        networkManager.on('raceStart', () => {
+          console.log('🏁 Race starting, navigating to game...');
+          window.location.href = 'multiplayer-colyseus.html';
+        });
+
+        // Listen for players updated
+        networkManager.on('playerJoined', (data) => {
+          updatePlayersList();
+        });
+
+        networkManager.on('playerLeft', (data) => {
+          updatePlayersList();
+        });
+
+        networkManager.on('stateChanged', () => {
+          updatePlayersList();
+        });
       });
 
-      const allReady = players.length >= 2 && players.every((p) => p.ready);
-      const startMsg = document.getElementById('startingMessage');
-      const startText = document.getElementById('startingText');
-      if (allReady) {
-        startText.textContent = 'All players ready! Starting race...';
-        startMsg.classList.remove('hidden');
-      } else {
-        startMsg.classList.add('hidden');
+      // Navigation functions
+      function showMultiplayerOptions() {
+        document.getElementById('modeSelection').style.display = 'none';
+        document.getElementById('multiplayerOptions').style.display = 'block';
       }
-    }
 
-    // Network event handlers
-    network.on('roomCreated', (data) => {
-      hideAllSections();
-      document.getElementById('displayRoomCode').textContent = data.roomId;
-      document.getElementById('waitingRoom').classList.remove('hidden');
-      updatePlayerList(data.players);
-    });
-
-    network.on('roomJoined', (data) => {
-      hideAllSections();
-      document.getElementById('displayRoomCode').textContent = data.roomId;
-      document.getElementById('waitingRoom').classList.remove('hidden');
-      updatePlayerList(data.players);
-    });
-
-    network.on('roomList', (rooms) => {
-      const roomList = document.getElementById('roomList');
-      const browsePlayerNameGroup = document.getElementById('browsePlayerNameGroup');
-      roomList.innerHTML = '';
-
-      if (rooms.length === 0) {
-        browsePlayerNameGroup.classList.add('hidden');
-        roomList.innerHTML = `
-            <div class="alert alert-error">
-              <span>Không có dữ liệu</span>
-            </div>
-          `;
-      } else {
-        browsePlayerNameGroup.classList.remove('hidden');
-        rooms.forEach((room) => {
-          const roomDiv = document.createElement('div');
-          roomDiv.className = 'room-item';
-          roomDiv.onclick = () => joinRoomFromBrowse(room.id);
-
-          const hostAvatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
-            room.hostName || 'Unknown'
-          )}`;
-
-          roomDiv.innerHTML = `
-              <div class="room-info">
-                <img src="${hostAvatarUrl}" alt="${room.hostName}" class="player-avatar" />
-                <div>
-                  <div class="room-code">${room.id}</div>
-                  <div class="room-players">
-                <svg width="20" height="20" fill="#FFFFFF" viewBox="0 0 24 24">
-                  <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                ${room.playerCount}/${room.maxPlayers}
-              </div>
-                </div>
-              </div>
-
-            `;
-          roomList.appendChild(roomDiv);
-        });
+      function backToModeSelection() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('modeSelection').style.display = 'block';
       }
-    });
 
-    network.on('playerJoined', (data) => {
-      updatePlayerList(data.players);
-    });
+      function showCreateRoom() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('createRoom').style.display = 'block';
+      }
 
-    network.on('playerLeft', (data) => {
-      updatePlayerList(data.players);
-    });
+      function showJoinRoom() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('joinRoom').style.display = 'block';
+      }
 
-    network.on('playersUpdated', (data) => {
-      updatePlayerList(data.players);
-    });
+      function showRoomList() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('roomList').style.display = 'block';
+        refreshRoomList();
+      }
 
-    network.on('raceCountdown', (data) => {
-      document.getElementById('startingText').textContent =
-        `Race starting in ${data.countdown}...`;
-    });
+      function backToMultiplayerOptions() {
+        document.getElementById('createRoom').style.display = 'none';
+        document.getElementById('joinRoom').style.display = 'none';
+        document.getElementById('roomList').style.display = 'none';
+        document.getElementById('multiplayerOptions').style.display = 'block';
 
-    network.on('raceStart', (data) => {
-      sessionStorage.setItem('multiplayerRoom', JSON.stringify({
-        roomId: network.roomId,
-        playerId: network.playerId,
-        playerName: network.playerName,
-        players: data.players || []
-      }));
-      window.location.href = 'multiplayer.html';
-    });
-
-    network.on('error', (data) => {
-      showError(data.message);
-    });
-
-    // Add floating animation to pellets
-    const pellets = document.querySelectorAll('.pellet');
-    pellets.forEach((pellet) => {
-      const randomX = Math.random() * 20 - 10;
-      const randomY = Math.random() * 20 - 10;
-      const randomDuration = 3 + Math.random() * 2;
-
-      pellet.style.animation += `, floatPellet ${randomDuration}s infinite ease-in-out`;
-      pellet.style.setProperty('--x', randomX + 'px');
-      pellet.style.setProperty('--y', randomY + 'px');
-    });
-
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes floatPellet {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(var(--x, 10px), var(--y, 10px)); }
+        // Leave room if in one
+        if (networkManager && networkManager.room) {
+          networkManager.leaveRoom();
         }
-      `;
-    document.head.appendChild(style);
-  </script>
-</body>
+      }
 
+      // Create room
+      async function createRoom(event) {
+        event.preventDefault();
+
+        const playerName = document.getElementById('createPlayerName').value.trim();
+        if (!playerName) {
+          showToast('Please enter your name', 'error');
+          return;
+        }
+
+        try {
+          showToast('Creating room...', 'info');
+
+          const { roomId, sessionId } = await networkManager.createRoom(playerName);
+          currentRoomId = roomId;
+          currentSessionId = sessionId;
+
+          console.log('✅ Room created:', roomId);
+
+          // Show room info
+          document.getElementById('displayRoomId').textContent = roomId;
+          document.getElementById('roomInfo').style.display = 'block';
+          document.querySelector('#createRoom form').style.display = 'none';
+
+          updatePlayersList();
+
+          showToast('Room created successfully!', 'success');
+        } catch (error) {
+          console.error('❌ Failed to create room:', error);
+          showToast('Failed to create room: ' + error.message, 'error');
+        }
+      }
+
+      // Join room
+      async function joinRoom(event) {
+        event.preventDefault();
+
+        const playerName = document.getElementById('joinPlayerName').value.trim();
+        const roomId = document.getElementById('joinRoomId').value.trim().toUpperCase();
+
+        if (!playerName || !roomId) {
+          showToast('Please fill in all fields', 'error');
+          return;
+        }
+
+        try {
+          showToast('Joining room...', 'info');
+
+          const result = await networkManager.joinRoom(roomId, playerName);
+          currentRoomId = result.roomId;
+          currentSessionId = result.sessionId;
+
+          console.log('✅ Joined room:', roomId);
+
+          // Navigate to game page
+          window.location.href = 'multiplayer-colyseus.html';
+        } catch (error) {
+          console.error('❌ Failed to join room:', error);
+          showToast('Failed to join room: ' + error.message, 'error');
+        }
+      }
+
+      // Refresh room list
+      async function refreshRoomList() {
+        try {
+          showToast('Đang tải...', 'info');
+
+          const rooms = await networkManager.listRooms();
+          const roomsContainer = document.getElementById('roomsList');
+
+          if (rooms.length === 0) {
+            roomsContainer.innerHTML = '<div class="no-rooms">Không có phòng nào đang chờ</div>';
+            return;
+          }
+
+          roomsContainer.innerHTML = rooms
+            .map(
+              (room) => `
+          <div class="room-card">
+            <div class="room-header">
+              <span class="room-id">${room.roomId}</span>
+              <span class="room-players">${room.clients}/${room.maxClients} người chơi</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="quickJoinRoom('${room.roomId}')">
+              Tham gia
+            </button>
+          </div>
+        `
+            )
+            .join('');
+
+          showToast(`Found ${rooms.length} room(s)`, 'success');
+        } catch (error) {
+          console.error('❌ Failed to load rooms:', error);
+          showToast('Failed to load rooms', 'error');
+        }
+      }
+
+      // Quick join from room list
+      async function quickJoinRoom(roomId) {
+        const playerName = prompt('Nhập tên của bạn:');
+        if (!playerName) return;
+
+        try {
+          showToast('Joining room...', 'info');
+
+          await networkManager.joinRoom(roomId, playerName);
+          window.location.href = 'multiplayer-colyseus.html';
+        } catch (error) {
+          console.error('❌ Failed to join room:', error);
+          showToast('Failed to join room: ' + error.message, 'error');
+        }
+      }
+
+      // Toggle ready status
+      function toggleReady() {
+        const isReady = document.getElementById('hostReady').checked;
+        networkManager.setReady(isReady);
+        console.log('Ready status:', isReady);
+      }
+
+      // Update players list
+      function updatePlayersList() {
+        if (!networkManager || !networkManager.room) return;
+
+        const players = networkManager.getAllPlayers();
+        const playersList = document.getElementById('playersList');
+        const playerCount = document.getElementById('playerCount');
+
+        if (!playersList || !playerCount) return;
+
+        playerCount.textContent = players.length;
+
+        playersList.innerHTML = players
+          .map(
+            (player) => `
+        <div class="player-item ${player.ready ? 'ready' : ''}">
+          <span class="player-name">${player.name}${player.isSelf ? ' (You)' : ''}</span>
+          <span class="player-status">${player.ready ? '✅ Sẵn sàng' : '⏳ Chờ...'}</span>
+        </div>
+      `
+          )
+          .join('');
+      }
+
+      // Copy room ID to clipboard
+      function copyRoomId() {
+        const roomId = document.getElementById('displayRoomId').textContent;
+        navigator.clipboard.writeText(roomId).then(
+          () => showToast('Room ID copied!', 'success'),
+          () => showToast('Failed to copy', 'error')
+        );
+      }
+
+      // Toast notification
+      function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+
+        setTimeout(() => {
+          toast.className = 'toast';
+        }, 3000);
+      }
+    </script>
+
+    <style>
+      .badge-new {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .no-rooms {
+        text-align: center;
+        padding: 40px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 16px;
+      }
+
+      .room-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .room-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .room-id {
+        font-weight: 700;
+        font-size: 20px;
+        color: #fff;
+      }
+
+      .room-players {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .player-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border: 2px solid transparent;
+      }
+
+      .player-item.ready {
+        border-color: rgba(76, 175, 80, 0.5);
+        background: rgba(76, 175, 80, 0.1);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        z-index: 10000;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .toast.success {
+        background: rgba(76, 175, 80, 0.9);
+      }
+
+      .toast.error {
+        background: rgba(244, 67, 54, 0.9);
+      }
+
+      .toast.info {
+        background: rgba(33, 150, 243, 0.9);
+      }
+    </style>
+  </body>
 </html>

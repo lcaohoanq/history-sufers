@@ -1,6 +1,73 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { createCylinder, createTextLabel } from '../scripts/utils.js';
 import { Colors } from '../scripts/colors.js';
+
+const treeLoader = new GLTFLoader();
+let treeModelPromise = null;
+const scratchBox = new THREE.Box3();
+const scratchVec = new THREE.Vector3();
+
+function loadTreeModel() {
+  if (!treeModelPromise) {
+    const assetUrl = new URL('../assets/Simple Tree.glb', import.meta.url).href;
+    treeModelPromise = treeLoader.loadAsync(assetUrl).then((gltf) => {
+      const scene = gltf.scene || gltf.scenes?.[0];
+      if (!scene) {
+        throw new Error('Simple Tree.glb does not contain a scene node');
+      }
+      return scene;
+    });
+  }
+  return treeModelPromise;
+}
+
+function normaliseTreeInstance(source) {
+  const instance = source.clone(true);
+
+  instance.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      if (child.material) {
+        child.material = child.material.clone();
+      }
+    }
+  });
+
+  scratchBox.setFromObject(instance);
+  const size = scratchBox.getSize(scratchVec);
+  const desiredHeight = 690;
+  const currentHeight = size.y || 1;
+  const scaleFactor = desiredHeight / currentHeight;
+  instance.scale.multiplyScalar(scaleFactor);
+
+  instance.updateMatrixWorld(true);
+  scratchBox.setFromObject(instance);
+  const minY = scratchBox.min.y;
+  instance.position.y -= minY;
+
+  return instance;
+}
+
+function createFallbackTreeMesh() {
+  const group = new THREE.Group();
+  const top = createCylinder(1, 180, 180, 4, Colors.green, 0, 600, 0);
+  const mid = createCylinder(1, 240, 240, 4, Colors.green, 0, 480, 0);
+  const bottom = createCylinder(1, 300, 300, 4, Colors.green, 0, 300, 0);
+  const trunk = createCylinder(60, 60, 150, 32, Colors.brownDark, 0, 75, 0);
+  group.add(top);
+  group.add(mid);
+  group.add(bottom);
+  group.add(trunk);
+  group.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  return group;
+}
 
 /**
  * A collidable tree in the game positioned at X, Y, Z in the scene and with
@@ -10,18 +77,22 @@ export function Tree(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
 
-  // Đã thay thế: 300 → 180, 400 → 240, 500 → 300 (60% tán cây)
-  // Thân cây: 100 → 60, 250 → 150, 125 → 75
+  const fallbackTree = createFallbackTreeMesh();
+  this.mesh.add(fallbackTree);
+  this.loadedMesh = fallbackTree;
 
-  var top = createCylinder(1, 180, 180, 4, Colors.green, 0, 600, 0);
-  var mid = createCylinder(1, 240, 240, 4, Colors.green, 0, 480, 0);
-  var bottom = createCylinder(1, 300, 300, 4, Colors.green, 0, 300, 0);
-  var trunk = createCylinder(60, 60, 150, 32, Colors.brownDark, 0, 75, 0);
-
-  this.mesh.add(top);
-  this.mesh.add(mid);
-  this.mesh.add(bottom);
-  this.mesh.add(trunk);
+  loadTreeModel()
+    .then((source) => {
+      const treeInstance = normaliseTreeInstance(source);
+      this.mesh.add(treeInstance);
+      if (fallbackTree.parent === this.mesh) {
+        this.mesh.remove(fallbackTree);
+      }
+      this.loadedMesh = treeInstance;
+    })
+    .catch((error) => {
+      console.warn('Using fallback tree mesh due to loading error:', error);
+    });
 
   // Gốc đặt theo tham số
   this.mesh.position.set(x, y, z);

@@ -472,3 +472,6 @@ if (typeof window !== 'undefined') {
 
   console.log('🚀 NetworkManager (Colyseus) class loaded');
 }
+
+// ES6 export for SPA
+export { NetworkManager as ColyseusNetworkManager };

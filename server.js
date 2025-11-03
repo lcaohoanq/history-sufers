@@ -31,8 +31,13 @@ app.use(express.json());
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 
-// Default route - redirect to Colyseus lobby
+// Default route - serve SPA (Single Page Application)
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'multiplayer-spa.html'));
+});
+
+// Keep old lobby.html accessible for reference
+app.get('/lobby', (req, res) => {
   res.sendFile(path.join(__dirname, 'lobby.html'));
 });
 

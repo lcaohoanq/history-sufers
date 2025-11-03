@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History Surfers - Multiplayer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700"
+      rel="stylesheet"
+    />
+
+    <!-- Colyseus Client -->
+    <script src="https://unpkg.com/colyseus.js@0.15.8/dist/colyseus.js"></script>
+
+    <!-- Three.js -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.180.0/build/three.module.js"
+        }
+      }
+    </script>
+
+    <!-- Game Scripts -->
+    <script type="text/javascript" src="js/audio-manager.js"></script>
+    <script type="module" src="js/network-colyseus.js"></script>
+    <!-- NOT using game-multiplayer.js - logic is embedded in SPA -->
+    <script type="module" src="scripts/network-strategy.js"></script>
+    <script type="module" src="js/object.js"></script>
+
+    <!-- Styles -->
+    <link href="style.css" rel="stylesheet" />
+    <link href="./styles/lobby.style.css" rel="stylesheet" />
+    <link href="./styles/sound_toggle.css" rel="stylesheet" />
+    <link href="./styles/stat_panel.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <!-- ========================================
+         LOBBY VIEW (Initial State)
+         ======================================== -->
+    <div id="lobbyView" class="view active">
+      <!-- Animated Background Orbs -->
+      <div class="orb orb1"></div>
+      <div class="orb orb2"></div>
+      <div class="orb orb3"></div>
+
+      <!-- Food Pellets -->
+      <div class="pellet" style="top: 15%; left: 10%; animation-delay: 0s"></div>
+      <div class="pellet" style="top: 25%; right: 15%; animation-delay: 0.5s"></div>
+      <div class="pellet" style="bottom: 20%; left: 20%; animation-delay: 1s"></div>
+      <div class="pellet" style="top: 60%; right: 25%; animation-delay: 1.5s"></div>
+      <div class="pellet" style="bottom: 30%; right: 10%; animation-delay: 2s"></div>
+      <div class="pellet" style="top: 40%; left: 15%; animation-delay: 0.7s"></div>
+      <div class="pellet" style="top: 70%; left: 40%; animation-delay: 1.2s"></div>
+      <div class="pellet" style="bottom: 40%; right: 40%; animation-delay: 1.8s"></div>
+
+      <!-- Main Container -->
+      <div class="container">
+        <!-- Mode Selection -->
+        <div id="modeSelection">
+          <div class="card">
+            <h1 class="card-title">Chọn chế độ chơi</h1>
+
+            <div class="mode-grid">
+              <!-- Single Player Mode -->
+              <button class="mode-card" onclick="location.href='singleplayer.html'">
+                <div class="mode-icon">🏃</div>
+                <h3>Chơi đơn</h3>
+                <p>Chơi một mình và luyện tập kỹ năng</p>
+              </button>
+
+              <!-- Multiplayer Mode -->
+              <button class="mode-card multiplayer" onclick="showMultiplayerOptions()">
+                <div class="mode-icon">👥</div>
+                <h3>Nhiều người chơi</h3>
+                <p>Thi đua với bạn bè</p>
+                <div class="badge-new">Colyseus</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multiplayer Options -->
+        <div id="multiplayerOptions" style="display: none">
+          <div class="card">
+            <button class="btn" onclick="backToModeSelection()">
+              <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+                <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
+              </svg>
+              Quay lại
+            </button>
+
+            <h1 class="card-title">Nhiều người chơi</h1>
+
+            <div class="mode-grid">
+              <div class="mode-card create" onclick="showCreateRoom()">
+                <div class="mode-icon">➕</div>
+                <h3>Tạo phòng</h3>
+                <p>Tạo phòng mới và mời bạn bè</p>
+              </div>
+
+              <div class="mode-card join" onclick="showJoinRoom()">
+                <div class="mode-icon">🚪</div>
+                <h3>Tham gia</h3>
+                <p>Tham gia phòng bằng mã</p>
+              </div>
+
+              <div class="mode-card browse" onclick="showRoomList()">
+                <div class="mode-icon">🔍</div>
+                <h3>Tìm phòng</h3>
+                <p>Xem các phòng đang chờ</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Room -->
+        <div id="createRoom" style="display: none">
+          <div class="card" style="max-width: 600px; margin: 0 auto">
+            <button class="btn" onclick="backToMultiplayerOptions()">
+              <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+                <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
+              </svg>
+              Quay lại
+            </button>
+
+            <h1 class="card-title">Tạo phòng mới</h1>
+
+            <form onsubmit="createRoom(event)" class="form">
+              <div class="form-group">
+                <label for="createPlayerName">Tên của bạn</label>
+                <input
+                  type="text"
+                  id="createPlayerName"
+                  placeholder="Nhập tên..."
+                  required
+                  maxlength="20"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <span>Tạo phòng</span>
+                <span>🎮</span>
+              </button>
+            </form>
+
+            <div id="roomInfo" class="room-info" style="display: none">
+              <div class="info-box">
+                <div class="info-label">Mã phòng</div>
+                <div class="info-value">
+                  <span id="displayRoomId">ABC123</span>
+                  <button onclick="copyRoomId()" class="copy-btn">📋</button>
+                </div>
+                <div class="info-hint">Chia sẻ mã này với bạn bè</div>
+              </div>
+
+              <div class="player-list">
+                <h3>Người chơi (<span id="playerCount">0</span>)</h3>
+                <div id="playersList"></div>
+              </div>
+
+              <div class="ready-section">
+                <label class="ready-checkbox">
+                  <input type="checkbox" id="hostReady" onchange="toggleReady()" />
+                  <span>Tôi đã sẵn sàng</span>
+                </label>
+
+                <div class="info-message" id="readyMessage">
+                  ⏳ Chờ tất cả người chơi sẵn sàng...
+                </div>
+
+                <!-- Start Race Button (only for host) -->
+                <button
+                  id="startRaceBtn"
+                  class="btn btn-primary"
+                  onclick="startRace()"
+                  style="display: none; margin-top: 20px"
+                >
+                  🏁 Bắt đầu chạy đua
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Join Room -->
+        <div id="joinRoom" style="display: none">
+          <div class="card" style="max-width: 600px; margin: 0 auto">
+            <button class="btn" onclick="backToMultiplayerOptions()">
+              <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+                <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
+              </svg>
+              Quay lại
+            </button>
+
+            <h1 class="card-title">Tham gia phòng</h1>
+
+            <form onsubmit="joinRoom(event)" class="form">
+              <div class="form-group">
+                <label for="joinPlayerName">Tên của bạn</label>
+                <input
+                  type="text"
+                  id="joinPlayerName"
+                  placeholder="Nhập tên..."
+                  required
+                  maxlength="20"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="joinRoomId">Mã phòng</label>
+                <input
+                  type="text"
+                  id="joinRoomId"
+                  placeholder="Nhập mã phòng..."
+                  required
+                  maxlength="10"
+                  style="text-transform: uppercase"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <span>Tham gia</span>
+                <span>🚀</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Room List -->
+        <div id="roomList" style="display: none">
+          <div class="card" style="max-width: 600px; margin: 0 auto">
+            <button class="btn" onclick="backToMultiplayerOptions()">
+              <svg width="20" height="20" fill="#121212" viewBox="0 0 24 24">
+                <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" />
+              </svg>
+              Quay lại
+            </button>
+
+            <h1 class="card-title">Phòng đang chờ</h1>
+
+            <div id="roomsList" class="rooms-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="toast"></div>
+    </div>
+
+    <!-- ========================================
+         GAME VIEW (Hidden Initially)
+         ======================================== -->
+    <div id="gameView" class="view">
+      <!-- Sound Toggle Button -->
+      <button id="sound-toggle" class="sound-toggle" title="Toggle Sound">🔊</button>
+
+      <!-- Stats Panel (Left Side) -->
+      <div class="stats-panel" id="statsPanel">
+        <h3>ĐỘ DÂN CHỦ</h3>
+
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-label-left">
+              <span>Niềm Tin</span>
+            </span>
+            <span class="stat-label-right" id="trust-value">50/100</span>
+          </div>
+          <div class="stat-bar-container" id="trust-container">
+            <div class="stat-bar-fill stat-bar-trust" id="trust-bar" style="width: 50%"></div>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-label-left">
+              <span>Công Bằng</span>
+            </span>
+            <span class="stat-label-right" id="justice-value">50/100</span>
+          </div>
+          <div class="stat-bar-container" id="justice-container">
+            <div class="stat-bar-fill stat-bar-justice" id="justice-bar" style="width: 50%"></div>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-label-left">
+              <span>Đoàn Kết</span>
+            </span>
+            <span class="stat-label-right" id="unity-value">50/100</span>
+          </div>
+          <div class="stat-bar-container" id="unity-container">
+            <div class="stat-bar-fill stat-bar-unity" id="unity-bar" style="width: 50%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Display (Top Right) -->
+      <div class="score-display">
+        <p id="score">0</p>
+      </div>
+
+      <!-- Game Start Panel (Center) -->
+      <div class="panel" id="gamePanel">
+        <div class="game-title">
+          <div class="title">Tạm dừng</div>
+        </div>
+        <table id="controls">
+          <tr>
+            <td><strong>⬆️</strong></td>
+            <td>Nhảy</td>
+          </tr>
+          <tr>
+            <td><strong>⬅️</strong></td>
+            <td>Trái</td>
+          </tr>
+          <tr>
+            <td><strong>➡️</strong></td>
+            <td>Phải</td>
+          </tr>
+          <tr>
+            <td><strong>⬇️</strong></td>
+            <td>Trượt (Siu)</td>
+          </tr>
+          <tr>
+            <td><strong>ESC</strong></td>
+            <td>Quay về sảnh</td>
+          </tr>
+          <tr>
+            <td><strong>🇻</strong></td>
+            <td>Đổi góc nhìn</td>
+          </tr>
+          <tr>
+            <td><strong>🅿️</strong></td>
+            <td>Thay skin</td>
+          </tr>
+        </table>
+        <table id="ranks"></table>
+        <div class="animate-flicker" id="variable-content">Bấm phím bất kì để tiếp tục...</div>
+      </div>
+
+      <!-- Multiplayer HUD (Bottom Right) -->
+      <div class="multiplayer-hud" id="multiplayerHud" style="display: none">
+        <h3>🏁 Chặng đua 🏁</h3>
+        <div id="playerScores"></div>
+      </div>
+
+      <!-- Race Pause Overlay -->
+      <div id="pauseOverlay" class="pause-overlay">
+        <div class="pause-content">
+          <h2>⏸️ RACE PAUSED</h2>
+          <p id="pauseMessage">Waiting for player to reconnect...</p>
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+
+      <!-- 3D World Container -->
+      <div id="world"></div>
+    </div>
+
+    <!-- Toast Notification Container (Global) -->
+    <div id="toast-container" class="toast toast-top toast-end z-50"></div>
+
+    <style>
+      /* View Management */
+      .view {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      /* Game View Specific */
+      #gameView {
+        background: #000;
+      }
+
+      /* Toast Styles */
+      .badge-new {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .no-rooms {
+        text-align: center;
+        padding: 40px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 16px;
+      }
+
+      .room-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 12px;
+      }
+
+      .room-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .room-id {
+        font-weight: 700;
+        font-size: 20px;
+        color: #fff;
+      }
+
+      .room-players {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .player-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        border: 2px solid transparent;
+      }
+
+      .player-item.ready {
+        border-color: rgba(76, 175, 80, 0.5);
+        background: rgba(76, 175, 80, 0.1);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        z-index: 10000;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .toast.success {
+        background: rgba(76, 175, 80, 0.9);
+      }
+
+      .toast.error {
+        background: rgba(244, 67, 54, 0.9);
+      }
+
+      .toast.info {
+        background: rgba(33, 150, 243, 0.9);
+      }
+
+      /* Pause Overlay */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .pause-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+
+      .pause-overlay.active {
+        display: flex !important;
+      }
+
+      .pause-content {
+        text-align: center;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+      }
+
+      .pause-content h2 {
+        font-size: 48px;
+        margin-bottom: 20px;
+      }
+
+      .pause-content p {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .loading-spinner {
+        margin: 20px auto;
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+    </style>
+
+    <script>
+      // ==================== GLOBAL STATE ====================
+      let networkManager = null;
+      let currentRoomId = null;
+      let currentSessionId = null;
+      let gameInitialized = false;
+      let raceStarting = false;
+
+      // ==================== VIEW SWITCHING ====================
+      function switchView(viewId) {
+        document.querySelectorAll('.view').forEach((view) => {
+          view.classList.remove('active');
+        });
+        document.getElementById(viewId).classList.add('active');
+        console.log(`📄 Switched to view: ${viewId}`);
+      }
+
+      // ==================== INITIALIZATION ====================
+      window.addEventListener('load', async () => {
+        console.log('🎮 Single Page App loaded');
+
+        // Import and initialize network manager
+        const { ColyseusNetworkManager } = await import('./js/network-colyseus.js');
+        networkManager = new ColyseusNetworkManager();
+        window.networkManager = networkManager;
+
+        // Connect to server
+        try {
+          await networkManager.connect();
+          console.log('✅ Connected to Colyseus server');
+        } catch (error) {
+          console.error('❌ Failed to connect:', error);
+          showToast('Failed to connect to server', 'error');
+          return;
+        }
+
+        // Listen for notifications
+        networkManager.on('notification', (notification) => {
+          showToast(notification.message, notification.type);
+        });
+
+        // Listen for countdown
+        networkManager.on('raceCountdown', (data) => {
+          console.log('⏱️ Countdown:', data.countdown);
+          showToast(`Starting in ${data.countdown}...`, 'info');
+        });
+
+        // 🔥 Listen for race start - SWITCH TO GAME VIEW instead of navigate
+        networkManager.on('raceStart', () => {
+          console.log('🏁 Race starting, switching to game view...');
+
+          // Reset race starting flag
+          raceStarting = false;
+
+          // Switch to game view
+          switchView('gameView');
+
+          // Initialize game after switching view
+          setTimeout(() => {
+            if (!gameInitialized) {
+              window.initMultiplayerGame(); // Call game init function
+            }
+          }, 100);
+        });
+
+        // Listen for players updated
+        networkManager.on('playerJoined', (data) => {
+          updatePlayersList();
+        });
+
+        networkManager.on('playerLeft', (data) => {
+          updatePlayersList();
+        });
+
+        networkManager.on('stateChanged', () => {
+          updatePlayersList();
+        });
+      });
+
+      // ==================== LOBBY FUNCTIONS ====================
+      function showMultiplayerOptions() {
+        document.getElementById('modeSelection').style.display = 'none';
+        document.getElementById('multiplayerOptions').style.display = 'block';
+      }
+
+      function backToModeSelection() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('modeSelection').style.display = 'block';
+      }
+
+      function showCreateRoom() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('createRoom').style.display = 'block';
+      }
+
+      function showJoinRoom() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('joinRoom').style.display = 'block';
+      }
+
+      function showRoomList() {
+        document.getElementById('multiplayerOptions').style.display = 'none';
+        document.getElementById('roomList').style.display = 'block';
+        refreshRoomList();
+      }
+
+      function backToMultiplayerOptions() {
+        document.getElementById('createRoom').style.display = 'none';
+        document.getElementById('joinRoom').style.display = 'none';
+        document.getElementById('roomList').style.display = 'none';
+        document.getElementById('multiplayerOptions').style.display = 'block';
+
+        // Reset room info
+        document.getElementById('roomInfo').style.display = 'none';
+        document.querySelector('#createRoom form').style.display = 'block';
+      }
+
+      // Create room
+      async function createRoom(event) {
+        event.preventDefault();
+
+        const playerName = document.getElementById('createPlayerName').value.trim();
+        if (!playerName) {
+          showToast('Please enter your name', 'error');
+          return;
+        }
+
+        try {
+          showToast('Creating room...', 'info');
+
+          const { roomId, sessionId } = await networkManager.createRoom(playerName);
+          currentRoomId = roomId;
+          currentSessionId = sessionId;
+
+          console.log('✅ Room created:', roomId);
+
+          // Show room info
+          document.getElementById('displayRoomId').textContent = roomId;
+          document.getElementById('roomInfo').style.display = 'block';
+          document.querySelector('#createRoom form').style.display = 'none';
+
+          updatePlayersList();
+
+          showToast('Room created successfully!', 'success');
+        } catch (error) {
+          console.error('❌ Failed to create room:', error);
+          showToast('Failed to create room: ' + error.message, 'error');
+        }
+      }
+
+      // Join room
+      async function joinRoom(event) {
+        event.preventDefault();
+
+        const playerName = document.getElementById('joinPlayerName').value.trim();
+        const roomId = document.getElementById('joinRoomId').value.trim().toUpperCase();
+
+        if (!playerName || !roomId) {
+          showToast('Please fill in all fields', 'error');
+          return;
+        }
+
+        try {
+          showToast('Joining room...', 'info');
+
+          const result = await networkManager.joinRoom(roomId, playerName);
+          currentRoomId = result.roomId;
+          currentSessionId = result.sessionId;
+
+          console.log('✅ Joined room:', roomId);
+
+          // Show room info in create room screen
+          document.getElementById('joinRoom').style.display = 'none';
+          document.getElementById('createRoom').style.display = 'block';
+          document.getElementById('displayRoomId').textContent = roomId;
+          document.getElementById('roomInfo').style.display = 'block';
+          document.querySelector('#createRoom form').style.display = 'none';
+
+          updatePlayersList();
+
+          showToast('Joined room successfully! Wait for host to start.', 'success');
+        } catch (error) {
+          console.error('❌ Failed to join room:', error);
+          showToast('Failed to join room: ' + error.message, 'error');
+        }
+      }
+
+      // Start race (host only)
+      function startRace() {
+        if (!networkManager || !networkManager.room) {
+          showToast('Not in a room', 'error');
+          return;
+        }
+
+        // Prevent multiple race start attempts
+        if (raceStarting) {
+          console.warn('⚠️ Race already starting...');
+          return;
+        }
+
+        raceStarting = true;
+        console.log('🏁 Host requesting race start...');
+
+        // Disable start button
+        const startBtn = document.getElementById('startRaceBtn');
+        if (startBtn) {
+          startBtn.disabled = true;
+          startBtn.textContent = '⏳ Starting...';
+        }
+
+        try {
+          networkManager.room.send('startRace');
+        } catch (error) {
+          console.error('❌ Failed to start race:', error);
+          showToast('Failed to start race', 'error');
+          raceStarting = false;
+          if (startBtn) {
+            startBtn.disabled = false;
+            startBtn.innerHTML = '🏁 Bắt đầu chạy đua';
+          }
+        }
+      }
+
+      // Refresh room list
+      async function refreshRoomList() {
+        try {
+          showToast('Loading rooms...', 'info');
+
+          const rooms = await networkManager.listRooms();
+          const roomsContainer = document.getElementById('roomsList');
+
+          if (rooms.length === 0) {
+            roomsContainer.innerHTML = '<div class="no-rooms">Không có phòng nào đang chờ</div>';
+            return;
+          }
+
+          roomsContainer.innerHTML = rooms
+            .map(
+              (room) => `
+          <div class="room-card">
+            <div class="room-header">
+              <span class="room-id">${room.roomId}</span>
+              <span class="room-players">${room.clients}/${room.maxClients} 👥</span>
+            </div>
+            <button class="btn btn-primary" onclick="quickJoinRoom('${room.roomId}')">Tham gia</button>
+          </div>
+        `
+            )
+            .join('');
+
+          showToast(`Found ${rooms.length} room(s)`, 'success');
+        } catch (error) {
+          console.error('❌ Failed to load rooms:', error);
+          showToast('Failed to load rooms', 'error');
+        }
+      }
+
+      // Quick join from room list
+      async function quickJoinRoom(roomId) {
+        const playerName = prompt('Nhập tên của bạn:');
+        if (!playerName) return;
+
+        try {
+          showToast('Joining room...', 'info');
+
+          await networkManager.joinRoom(roomId, playerName);
+
+          // Show room info
+          document.getElementById('roomList').style.display = 'none';
+          document.getElementById('createRoom').style.display = 'block';
+          document.getElementById('displayRoomId').textContent = roomId;
+          document.getElementById('roomInfo').style.display = 'block';
+          document.querySelector('#createRoom form').style.display = 'none';
+
+          updatePlayersList();
+
+          showToast('Joined successfully!', 'success');
+        } catch (error) {
+          console.error('❌ Failed to join room:', error);
+          showToast('Failed to join room: ' + error.message, 'error');
+        }
+      }
+
+      // Toggle ready status
+      function toggleReady() {
+        const isReady = document.getElementById('hostReady').checked;
+        networkManager.setReady(isReady);
+        console.log('Ready status:', isReady);
+      }
+
+      // Update players list
+      function updatePlayersList() {
+        if (!networkManager || !networkManager.room) return;
+
+        const players = networkManager.getAllPlayers();
+        const playersList = document.getElementById('playersList');
+        const playerCount = document.getElementById('playerCount');
+
+        if (!playersList || !playerCount) return;
+
+        playerCount.textContent = players.length;
+
+        playersList.innerHTML = players
+          .map(
+            (player) => `
+        <div class="player-item ${player.ready ? 'ready' : ''}">
+          <span class="player-name">${player.name}${player.isSelf ? ' (You)' : ''}</span>
+          <span class="player-status">${player.ready ? '✅ Sẵn sàng' : '⏳ Chờ...'}</span>
+        </div>
+      `
+          )
+          .join('');
+
+        // Show start button if host and all ready
+        const isHost = networkManager.sessionId === networkManager.room.state.hostId;
+        const allReady = players.every((p) => p.ready);
+        const startBtn = document.getElementById('startRaceBtn');
+
+        if (startBtn) {
+          startBtn.style.display = isHost && allReady && players.length >= 2 ? 'block' : 'none';
+        }
+      }
+
+      // Copy room ID to clipboard
+      function copyRoomId() {
+        const roomId = document.getElementById('displayRoomId').textContent;
+        navigator.clipboard.writeText(roomId).then(
+          () => showToast('Room ID copied!', 'success'),
+          () => showToast('Failed to copy', 'error')
+        );
+      }
+
+      // Toast notification
+      function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+
+        setTimeout(() => {
+          toast.className = 'toast';
+        }, 3000);
+      }
+
+      // ==================== GAME INITIALIZATION ====================
+      window.initMultiplayerGame = async function () {
+        console.log('🎮 Initializing multiplayer game...');
+
+        if (gameInitialized) {
+          console.warn('⚠️ Game already initialized');
+          return;
+        }
+
+        if (window.currentWorld) {
+          console.warn('⚠️ World already exists');
+          return;
+        }
+
+        try {
+          gameInitialized = true;
+
+          // Import required modules
+          const { WorldMap } = await import('./scripts/maps.js');
+          const { MultiplayerStrategy } = await import('./scripts/network-strategy.js');
+
+          // Hide game panel if exists
+          const panel = document.getElementById('gamePanel');
+          if (panel) panel.style.display = 'none';
+
+          // Create multiplayer strategy
+          const networkStrategy = new MultiplayerStrategy(networkManager);
+
+          // Create world with multiplayer strategy
+          const world = new WorldMap(networkStrategy);
+          window.currentWorld = world;
+
+          console.log('✅ Multiplayer game started');
+
+          // Show multiplayer HUD
+          const multiplayerHud = document.getElementById('multiplayerHud');
+          if (multiplayerHud) {
+            multiplayerHud.style.display = 'block';
+          }
+
+          // Handle audio transition (intro -> loop)
+          if (typeof AudioManager !== 'undefined') {
+            const activeAudio = AudioManager._active();
+            if (!activeAudio.loop) {
+              // Intro is playing, transition to loop
+              console.log('🎵 Transitioning from intro to loop...');
+              AudioManager.play(); // This crossfades intro -> loop
+            } else {
+              console.log('🎵 Loop already playing');
+            }
+          }
+        } catch (error) {
+          console.error('❌ Failed to initialize game:', error);
+          showToast('Failed to start game', 'error');
+          gameInitialized = false;
+        }
+      };
+
+      // ==================== GAME RETURN TO LOBBY ====================
+      window.returnToLobby = function () {
+        console.log('🔙 Returning to lobby...');
+
+        // Cleanup game
+        if (window.currentWorld && typeof window.currentWorld.cleanup === 'function') {
+          window.currentWorld.cleanup();
+          window.currentWorld = null;
+        }
+
+        // Stop audio
+        if (typeof AudioManager !== 'undefined') {
+          AudioManager.stop();
+        }
+
+        // Reset game state
+        gameInitialized = false;
+
+        // Switch back to lobby view
+        switchView('lobbyView');
+
+        // Reset lobby to multiplayer options
+        backToMultiplayerOptions();
+        backToModeSelection();
+      };
+    </script>
+  </body>
+</html>

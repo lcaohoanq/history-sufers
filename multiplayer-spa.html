@@ -1082,6 +1082,7 @@
           .getAllPlayers()
           .filter((player) => !player.spectator)
           .slice();
+        const roomState = networkManager.room.state?.state || 'waiting';
 
         if (players.length === 0) {
           scoreContainers.forEach((container) => {
@@ -1105,11 +1106,33 @@
             }
             const playerName = player.name || `Người chơi ${index + 1}`;
             const scoreValue = typeof player.score === 'number' ? player.score : 0;
+            const { statusText, statusClass } = (() => {
+              if (player.finished) {
+                return { statusText: '✅ Đã hoàn thành', statusClass: 'status-finished' };
+              }
+              if (roomState === 'paused') {
+                return { statusText: '⏸️ Tạm dừng', statusClass: 'status-paused' };
+              }
+              if (roomState === 'racing') {
+                return { statusText: '🏃 Đang thi đấu', statusClass: 'status-racing' };
+              }
+              if (roomState === 'countdown') {
+                return { statusText: '🚦 Chuẩn bị', statusClass: 'status-racing' };
+              }
+              if (player.ready) {
+                return { statusText: '✅ Sẵn sàng', statusClass: 'status-ready' };
+              }
+              if (roomState === 'finished') {
+                return { statusText: '📊 Đang tổng kết', statusClass: 'status-waiting' };
+              }
+              return { statusText: '⏳ Chờ...', statusClass: 'status-waiting' };
+            })();
             return `
           <div class="${classes.join(' ')}">
             <span class="player-score-name">${index + 1}. ${playerName}${
               player.isSelf ? ' (Bạn)' : ''
             }</span>
+            <span class="player-score-status ${statusClass}">${statusText}</span>
             <span class="player-score-value">${scoreValue}</span>
           </div>
         `;

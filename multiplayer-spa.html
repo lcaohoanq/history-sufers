@@ -437,16 +437,66 @@
 
     <!-- Classroom Dashboard View -->
     <div id="classroomDashboard" class="view">
-      <div class="container">
-        <div class="card" style="max-width: 520px; margin: 0 auto">
-          <h1 class="card-title">Bảng điểm Classroom</h1>
-          <div class="info-hint" style="margin-bottom: 16px">
-            Điểm số cập nhật theo thời gian thực cho học viên trong phòng.
+      <div class="dashboard-wrapper">
+        <header class="dashboard-header">
+          <div>
+            <h1 class="dashboard-title">Bảng điểm Classroom</h1>
+            <p class="dashboard-subtitle">Theo dõi tiến độ học viên và quản lý lượt chơi</p>
           </div>
-          <div id="dashboardScores" data-player-scores style="margin-top: 16px"></div>
-          <div class="info-message" style="margin-top: 24px">
-            Tạo phòng mới nếu muốn bắt đầu lượt tiếp theo.
+          <div class="dashboard-meta">
+            <span class="meta-chip">
+              <span class="meta-label">Mã phòng</span>
+              <span class="meta-value" id="dashboardRoomCode">--</span>
+            </span>
+            <span class="meta-chip">
+              <span class="meta-label">Chế độ</span>
+              <span class="meta-value">Classroom</span>
+            </span>
           </div>
+        </header>
+
+        <div class="dashboard-content">
+          <section class="dashboard-panel">
+            <div class="panel-title-row">
+              <h2 class="panel-title">Tổng quan</h2>
+              <span class="panel-hint" id="dashboardLastUpdated">Đang đồng bộ...</span>
+            </div>
+
+            <div class="dashboard-stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Trạng thái phòng</div>
+                <div class="stat-value" id="dashboardRoomState">Chờ bắt đầu</div>
+                <div class="stat-hint" id="dashboardRoomCountdown">--</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Học viên</div>
+                <div class="stat-value" id="dashboardPlayerCount">0</div>
+                <div class="stat-hint" id="dashboardReadySummary">0 đang sẵn sàng</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Sẵn sàng</div>
+                <div class="stat-value" id="dashboardReadyCount">0</div>
+                <div class="stat-hint" id="dashboardReadyRatio">0/0 học viên</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Hoàn thành</div>
+                <div class="stat-value" id="dashboardFinishedCount">0</div>
+                <div class="stat-hint" id="dashboardFinishedRatio">0/0 học viên</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="panel-title-row">
+              <h2 class="panel-title">Danh sách học viên</h2>
+              <span class="panel-hint">Cập nhật mỗi 0.75s</span>
+            </div>
+            <div class="dashboard-score-list" id="dashboardScores" data-player-scores></div>
+
+            <div class="dashboard-note">
+              Sau khi lượt chơi kết thúc, tạo phòng mới để bắt đầu vòng tiếp theo.
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -485,6 +535,193 @@
         border-radius: 12px;
         font-size: 12px;
         font-weight: 600;
+      }
+
+      /* Classroom Dashboard */
+      .dashboard-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: 40px 20px 32px;
+        background: radial-gradient(circle at top, rgba(66, 165, 245, 0.2), transparent 55%),
+          linear-gradient(180deg, rgba(13, 71, 161, 0.4), rgba(3, 19, 43, 0.9));
+        color: #fff;
+      }
+
+      .dashboard-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+
+      .dashboard-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .dashboard-subtitle {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 520px;
+      }
+
+      .dashboard-meta {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .meta-chip {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: rgba(21, 101, 192, 0.35);
+        border: 1px solid rgba(100, 181, 246, 0.4);
+        min-width: 140px;
+      }
+
+      .meta-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .meta-value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .dashboard-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .dashboard-panel {
+        background: rgba(7, 26, 56, 0.65);
+        border-radius: 20px;
+        border: 1px solid rgba(33, 150, 243, 0.2);
+        padding: 24px 28px;
+        box-shadow: 0 18px 40px rgba(3, 19, 43, 0.45);
+      }
+
+      .panel-title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .panel-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .panel-hint {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .dashboard-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .stat-card {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(21, 101, 192, 0.25);
+        border: 1px solid rgba(100, 181, 246, 0.35);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 120px;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #e3f2fd;
+      }
+
+      .stat-hint {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .dashboard-score-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .dashboard-score-list .player-score-item {
+        padding: 16px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(100, 181, 246, 0.25);
+        background: rgba(21, 101, 192, 0.2);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      .dashboard-score-list .player-score-item:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.35);
+      }
+
+      .dashboard-score-list .player-score-item.self {
+        border-color: rgba(129, 212, 250, 0.65);
+        background: rgba(21, 101, 192, 0.35);
+      }
+
+      .dashboard-score-list .player-score-name {
+        font-size: 16px;
+      }
+
+      .dashboard-score-list .player-score-status {
+        font-size: 14px;
+      }
+
+      .dashboard-score-list .player-score-value {
+        font-size: 18px;
+      }
+
+      .dashboard-note {
+        margin-top: 20px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        padding-left: 4px;
+      }
+
+      @media (max-width: 768px) {
+        .dashboard-wrapper {
+          padding: 24px 16px 24px;
+        }
+
+        .dashboard-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .dashboard-panel {
+          padding: 20px;
+        }
       }
 
       .no-rooms {
@@ -990,10 +1227,23 @@
         const startBtn = document.getElementById('startRaceBtn');
         const roomState = networkManager.room.state?.state || 'waiting';
         const raceIdle = roomState === 'waiting';
+        const dashboardRoomCode = document.getElementById('dashboardRoomCode');
+        const dashboardRoomState = document.getElementById('dashboardRoomState');
+        const dashboardRoomCountdown = document.getElementById('dashboardRoomCountdown');
+        const dashboardPlayerCount = document.getElementById('dashboardPlayerCount');
+        const dashboardReadySummary = document.getElementById('dashboardReadySummary');
+        const dashboardReadyCount = document.getElementById('dashboardReadyCount');
+        const dashboardReadyRatio = document.getElementById('dashboardReadyRatio');
+        const dashboardFinishedCount = document.getElementById('dashboardFinishedCount');
+        const dashboardFinishedRatio = document.getElementById('dashboardFinishedRatio');
+        const dashboardLastUpdated = document.getElementById('dashboardLastUpdated');
 
         if (!playersList || !playerCount) return;
 
         const activePlayers = players.filter((player) => !player.spectator);
+        const readyCount = activePlayers.filter((player) => player.ready).length;
+        const finishedPlayers = activePlayers.filter((player) => player.finished).length;
+        const roomCountdown = networkManager.room.state?.countdown;
         playerCount.textContent = activePlayers.length;
 
         const playerItems = players
@@ -1020,8 +1270,7 @@
 
         const isHost = networkManager.sessionId === networkManager.room.state.hostId;
         const classroomMode = isClassroomMode();
-        const allReady =
-          activePlayers.length > 0 && activePlayers.every((player) => player.ready);
+        const allReady = activePlayers.length > 0 && readyCount === activePlayers.length;
         const enoughPlayers = activePlayers.length >= 2;
         const spectatorSelf = isLocalSpectator();
 
@@ -1064,6 +1313,62 @@
           } else {
             startBtn.style.display = 'none';
           }
+        }
+
+        const stateDisplayMap = {
+          waiting: 'Chờ bắt đầu',
+          countdown: 'Đang đếm ngược',
+          racing: 'Đang thi đấu',
+          paused: 'Đang tạm dừng',
+          finished: 'Đã kết thúc'
+        };
+
+        if (dashboardRoomCode) {
+          dashboardRoomCode.textContent = currentRoomId || '--';
+        }
+        if (dashboardRoomState) {
+          dashboardRoomState.textContent = stateDisplayMap[roomState] || 'Không xác định';
+        }
+        if (dashboardRoomCountdown) {
+          if (roomState === 'countdown' && typeof roomCountdown === 'number' && roomCountdown > 0) {
+            dashboardRoomCountdown.textContent = `Bắt đầu sau ${roomCountdown}s`;
+          } else if (roomState === 'racing') {
+            dashboardRoomCountdown.textContent = 'Đang thi đấu';
+          } else if (roomState === 'finished') {
+            dashboardRoomCountdown.textContent = 'Đang tổng kết kết quả';
+          } else {
+            dashboardRoomCountdown.textContent = 'Chờ hành động của quản trị viên';
+          }
+        }
+        if (dashboardPlayerCount) {
+          dashboardPlayerCount.textContent = activePlayers.length;
+        }
+        if (dashboardReadySummary) {
+          dashboardReadySummary.textContent = activePlayers.length
+            ? `${readyCount}/${activePlayers.length} học viên đã sẵn sàng`
+            : 'Chưa có học viên nào tham gia';
+        }
+        if (dashboardReadyCount) {
+          dashboardReadyCount.textContent = readyCount;
+        }
+        if (dashboardReadyRatio) {
+          dashboardReadyRatio.textContent = `${readyCount}/${activePlayers.length || 0} học viên`;
+        }
+        if (dashboardFinishedCount) {
+          dashboardFinishedCount.textContent = finishedPlayers;
+        }
+        if (dashboardFinishedRatio) {
+          dashboardFinishedRatio.textContent = `${finishedPlayers}/${activePlayers.length || 0} học viên`;
+        }
+        if (dashboardLastUpdated) {
+          const now = new Date();
+          dashboardLastUpdated.textContent = `Cập nhật lúc ${now
+            .toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })
+            .replace('.', ':')}`;
         }
       }
 

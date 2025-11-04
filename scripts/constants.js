@@ -281,3 +281,63 @@ export const SIDE_OBJECTS_BY_STAGE = {
     { type: 'Company', weight: 0.5 }
   ]
 };
+
+export const POINT_OBJECT_GUIDE = [
+  {
+    type: 'hammerandsickle',
+    name: 'Biểu tượng Búa Liềm',
+    description: 'Thu thập để nhận thêm điểm và buff lòng tin cơ bản.',
+    preview: { y: 120, scale: 1.2, lookAtY: 60 }
+  },
+  {
+    type: 'ballotbox',
+    name: 'Thùng Phiếu Cải Cách',
+    description: 'Đại diện cho tiến bộ dân chủ, mang lại lượng điểm lớn.',
+    preview: { y: 0, scale: 1.2, lookAtY: 100 }
+  },
+  {
+    type: 'ruleoflawstate',
+    name: 'Cột Mốc Nhà Nước Pháp Quyền',
+    description: 'Tượng trưng cho pháp quyền vững mạnh, thưởng nhiều điểm.',
+    preview: { y: 0, scale: 1.2, cameraY: 220, lookAtY: 180 }
+  },
+  {
+    type: 'reformgears',
+    name: 'Bánh Răng Cải Cách',
+    description: 'Biểu tượng vận hành cải cách, cho thêm điểm thưởng.',
+    preview: { y: 0, scale: 1.5, lookAtY: 150 }
+  },
+  {
+    type: 'unityhands',
+    name: 'Bàn Tay Đoàn Kết',
+    description: 'Tinh thần đoàn kết giữa các tầng lớp, tặng thêm điểm.',
+    preview: { y: 40, scale: 2.1, cameraY: 260, lookAtY: 50 }
+  }
+];
+
+export const PENALTY_OBJECT_GUIDE = [
+  {
+    type: 'bribeEnvelope',
+    name: 'Phong bì hối lộ',
+    description: 'Thu nhặt sẽ làm giảm điểm và uy tín – hãy tránh xa.',
+    preview: { y: 0, scale: 2.2, lookAtY: 40, cameraZ: 600 }
+  },
+  {
+    type: 'corruptedThrone',
+    name: 'Ngai vàng mục nát',
+    description: 'Biểu tượng của quyền lực tha hóa, khiến bạn mất rất nhiều điểm.',
+    preview: { y: 0, scale: 1.5, cameraY: 220, lookAtY: 120, cameraZ: 720 }
+  },
+  {
+    type: 'puppetManipulation',
+    name: 'Rối thao túng',
+    description: 'Thao túng dư luận làm tụt đoàn kết và trừ điểm nặng.',
+    preview: { y: 0, scale: 2.0, cameraY: 260, lookAtY: 160, cameraZ: 780 }
+  },
+  {
+    type: 'misbalancedScale',
+    name: 'Cân công lý lệch',
+    description: 'Cán cân bất công làm giảm chỉ số và trừ điểm đáng kể.',
+    preview: { y: 0, scale: 1.5, cameraY: 200, lookAtY: 120, cameraZ: 700 }
+  }
+];

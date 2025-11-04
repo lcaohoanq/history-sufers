@@ -19,6 +19,7 @@
     <script type="module" src="js/helpers.js"></script>
     <script type="module" src="js/object.js"></script>
     <script type="module" src="js/game.js"></script>
+    <script type="module" src="scripts/tutorial-panel.js"></script>
     <link href="style.css" rel="stylesheet" />
     <link href="./styles/sound_toggle.css" rel="stylesheet" />
     <link href="./styles/stat_panel.css" rel="stylesheet" />
@@ -79,63 +80,89 @@
       <div class="game-title">
         <div class="title">Tạm dừng</div>
       </div>
-      <div id="controls">
-        <div class="controls-column controls-direction">
-          <div class="direction-grid">
-            <div class="key-card key-up">
-              <span class="key-label">
-                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
-                  <path d="M16 4l12 20H4z" fill="#ffd700"/>
-                </svg>
-              </span>
-              <span class="key-desc">Nhảy</span>
-            </div>
-            <div class="key-card key-left">
-              <span class="key-label">
-                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
-                  <path d="M4 14l20 12V2z" fill="#ffd700"/>
-                </svg>
-              </span>
-              <span class="key-desc">Trái</span>
-            </div>
-            <div class="key-card key-down">
-              <span class="key-label">
-                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
-                  <path d="M16 24L4 4h24z" fill="#ffd700"/>
-                </svg>
-              </span>
-              <span class="key-desc">Trượt (Siu)</span>
-            </div>
-            <div class="key-card key-right">
-              <span class="key-label">
-                <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
-                  <path d="M28 14L8 2v24z" fill="#ffd700"/>
-                </svg>
-              </span>
-              <span class="key-desc">Phải</span>
+
+      <div class="tutorial-tabs" id="tutorialTabs">
+        <button class="tab-button active" data-target="controlsSection">Điều khiển</button>
+        <button class="tab-button" data-target="pointObjectsSection">Vật phẩm cộng điểm</button>
+        <button class="tab-button" data-target="penaltyObjectsSection">Vật phẩm trừ điểm</button>
+      </div>
+
+      <div class="tutorial-section active" id="controlsSection">
+        <div id="controls">
+          <div class="controls-column controls-direction">
+            <div class="direction-grid">
+              <div class="key-card key-up">
+                <span class="key-label">
+                  <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                    <path d="M16 4l12 20H4z" fill="#ffd700"/>
+                  </svg>
+                </span>
+                <span class="key-desc">Nhảy</span>
+              </div>
+              <div class="key-card key-left">
+                <span class="key-label">
+                  <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                    <path d="M4 14l20 12V2z" fill="#ffd700"/>
+                  </svg>
+                </span>
+                <span class="key-desc">Trái</span>
+              </div>
+              <div class="key-card key-down">
+                <span class="key-label">
+                  <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                    <path d="M16 24L4 4h24z" fill="#ffd700"/>
+                  </svg>
+                </span>
+                <span class="key-desc">Trượt (Siu)</span>
+              </div>
+              <div class="key-card key-right">
+                <span class="key-label">
+                  <svg width="32" height="28" viewBox="0 0 32 28" class="key-icon" aria-hidden="true">
+                    <path d="M28 14L8 2v24z" fill="#ffd700"/>
+                  </svg>
+                </span>
+                <span class="key-desc">Phải</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="controls-column controls-extra">
-          <div class="extra-grid">
-            <div class="key-card">
-              <span class="key-label">ESC</span>
-              <span class="key-desc">Dừng trò chơi</span>
-            </div>
-            <div class="extra-bottom">
+          <div class="controls-column controls-extra">
+            <div class="extra-grid">
               <div class="key-card">
-                <span class="key-label">V</span>
-                <span class="key-desc">Đổi góc nhìn</span>
+                <span class="key-label">ESC</span>
+                <span class="key-desc">Dừng trò chơi</span>
               </div>
-              <div class="key-card">
-                <span class="key-label">P</span>
-                <span class="key-desc">Thay skin</span>
+              <div class="extra-bottom">
+                <div class="key-card">
+                  <span class="key-label">V</span>
+                  <span class="key-desc">Đổi góc nhìn</span>
+                </div>
+                <div class="key-card">
+                  <span class="key-label">P</span>
+                  <span class="key-desc">Thay skin</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="tutorial-section" id="pointObjectsSection">
+        <div class="point-object-intro">
+          Ghi nhớ những vật phẩm tích cực dưới đây để ưu tiên thu thập khi lướt. Chúng sẽ giúp bạn
+          tăng điểm và các chỉ số dân chủ.
+        </div>
+        <ul class="point-object-list" id="pointObjectList"></ul>
+      </div>
+
+      <div class="tutorial-section" id="penaltyObjectsSection">
+        <div class="point-object-intro">
+          Tránh xa những vật phẩm tiêu cực này – chúng sẽ khiến bạn mất điểm và làm giảm uy tín của
+          đội hình.
+        </div>
+        <ul class="point-object-list" id="penaltyObjectList"></ul>
+      </div>
+
       <div class="animate-flicker" id="variable-content">Bấm phím bất kì để tiếp tục...</div>
     </div>
 

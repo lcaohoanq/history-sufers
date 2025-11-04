@@ -225,6 +225,33 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
 
+.player-score-status {
+  font-weight: 600;
+  color: #80d8ff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+
+.player-score-status.status-ready {
+  color: #8bc34a;
+}
+
+.player-score-status.status-racing {
+  color: #ffb74d;
+}
+
+.player-score-status.status-paused {
+  color: #ffeb3b;
+}
+
+.player-score-status.status-finished {
+  color: #4caf50;
+}
+
+.player-score-status.status-waiting {
+  color: #ffd54f;
+}
+
 .player-score-value {
   color: #ffd700;
   font-weight: 700;

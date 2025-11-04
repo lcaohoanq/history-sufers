@@ -146,6 +146,16 @@
                 />
               </div>
 
+              <div class="form-group">
+                <label class="toggle-label" for="classroomModeToggle">
+                  <input type="checkbox" id="classroomModeToggle" />
+                  <span>Chế độ Classroom</span>
+                </label>
+                <div class="info-hint">
+                  Giáo viên theo dõi bảng điểm, học viên thi đấu trong game.
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary">
                 <span>Tạo phòng</span>
                 <span>🎮</span>
@@ -168,13 +178,19 @@
               </div>
 
               <div class="ready-section">
-                <label class="ready-checkbox">
-                  <input type="checkbox" id="hostReady" onchange="toggleReady()" />
-                  <span>Tôi đã sẵn sàng</span>
-                </label>
+                <div id="readyToggleContainer">
+                  <label class="ready-checkbox">
+                    <input type="checkbox" id="hostReady" onchange="toggleReady()" />
+                    <span>Tôi đã sẵn sàng</span>
+                  </label>
+                </div>
 
                 <div class="info-message" id="readyMessage">
                   ⏳ Chờ tất cả người chơi sẵn sàng...
+                </div>
+
+                <div class="info-message" id="classroomNotice" style="display: none">
+                  👑 Bạn là quản trị viên. Khi mọi người sẵn sàng, hãy bấm Start để bắt đầu.
                 </div>
 
                 <!-- Start Race Button (only for host) -->
@@ -403,7 +419,7 @@
       <!-- Multiplayer HUD (Bottom Right) -->
       <div class="multiplayer-hud" id="multiplayerHud" style="display: none">
         <h3>🏁 Chặng đua 🏁</h3>
-        <div id="playerScores"></div>
+        <div id="playerScores" data-player-scores></div>
       </div>
 
       <!-- Race Pause Overlay -->
@@ -417,6 +433,72 @@
 
       <!-- 3D World Container -->
       <div id="world"></div>
+    </div>
+
+    <!-- Classroom Dashboard View -->
+    <div id="classroomDashboard" class="view">
+      <div class="dashboard-wrapper">
+        <header class="dashboard-header">
+          <div>
+            <h1 class="dashboard-title">Bảng điểm Classroom</h1>
+            <p class="dashboard-subtitle">Theo dõi tiến độ học viên và quản lý lượt chơi</p>
+          </div>
+          <div class="dashboard-meta">
+            <span class="meta-chip">
+              <span class="meta-label">Mã phòng</span>
+              <span class="meta-value" id="dashboardRoomCode">--</span>
+            </span>
+            <span class="meta-chip">
+              <span class="meta-label">Chế độ</span>
+              <span class="meta-value">Classroom</span>
+            </span>
+          </div>
+        </header>
+
+        <div class="dashboard-content">
+          <section class="dashboard-panel">
+            <div class="panel-title-row">
+              <h2 class="panel-title">Tổng quan</h2>
+              <span class="panel-hint" id="dashboardLastUpdated">Đang đồng bộ...</span>
+            </div>
+
+            <div class="dashboard-stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Trạng thái phòng</div>
+                <div class="stat-value" id="dashboardRoomState">Chờ bắt đầu</div>
+                <div class="stat-hint" id="dashboardRoomCountdown">--</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Học viên</div>
+                <div class="stat-value" id="dashboardPlayerCount">0</div>
+                <div class="stat-hint" id="dashboardReadySummary">0 đang sẵn sàng</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Sẵn sàng</div>
+                <div class="stat-value" id="dashboardReadyCount">0</div>
+                <div class="stat-hint" id="dashboardReadyRatio">0/0 học viên</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Hoàn thành</div>
+                <div class="stat-value" id="dashboardFinishedCount">0</div>
+                <div class="stat-hint" id="dashboardFinishedRatio">0/0 học viên</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="panel-title-row">
+              <h2 class="panel-title">Danh sách học viên</h2>
+              <span class="panel-hint">Cập nhật mỗi 0.75s</span>
+            </div>
+            <div class="dashboard-score-list" id="dashboardScores" data-player-scores></div>
+
+            <div class="dashboard-note">
+              Sau khi lượt chơi kết thúc, tạo phòng mới để bắt đầu vòng tiếp theo.
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
 
     <!-- Toast Notification Container (Global) -->
@@ -453,6 +535,193 @@
         border-radius: 12px;
         font-size: 12px;
         font-weight: 600;
+      }
+
+      /* Classroom Dashboard */
+      .dashboard-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: 40px 20px 32px;
+        background: radial-gradient(circle at top, rgba(66, 165, 245, 0.2), transparent 55%),
+          linear-gradient(180deg, rgba(13, 71, 161, 0.4), rgba(3, 19, 43, 0.9));
+        color: #fff;
+      }
+
+      .dashboard-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+
+      .dashboard-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .dashboard-subtitle {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 520px;
+      }
+
+      .dashboard-meta {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .meta-chip {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: rgba(21, 101, 192, 0.35);
+        border: 1px solid rgba(100, 181, 246, 0.4);
+        min-width: 140px;
+      }
+
+      .meta-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .meta-value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .dashboard-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .dashboard-panel {
+        background: rgba(7, 26, 56, 0.65);
+        border-radius: 20px;
+        border: 1px solid rgba(33, 150, 243, 0.2);
+        padding: 24px 28px;
+        box-shadow: 0 18px 40px rgba(3, 19, 43, 0.45);
+      }
+
+      .panel-title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .panel-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .panel-hint {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .dashboard-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .stat-card {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(21, 101, 192, 0.25);
+        border: 1px solid rgba(100, 181, 246, 0.35);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 120px;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #e3f2fd;
+      }
+
+      .stat-hint {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .dashboard-score-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .dashboard-score-list .player-score-item {
+        padding: 16px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(100, 181, 246, 0.25);
+        background: rgba(21, 101, 192, 0.2);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      .dashboard-score-list .player-score-item:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.35);
+      }
+
+      .dashboard-score-list .player-score-item.self {
+        border-color: rgba(129, 212, 250, 0.65);
+        background: rgba(21, 101, 192, 0.35);
+      }
+
+      .dashboard-score-list .player-score-name {
+        font-size: 16px;
+      }
+
+      .dashboard-score-list .player-score-status {
+        font-size: 14px;
+      }
+
+      .dashboard-score-list .player-score-value {
+        font-size: 18px;
+      }
+
+      .dashboard-note {
+        margin-top: 20px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        padding-left: 4px;
+      }
+
+      @media (max-width: 768px) {
+        .dashboard-wrapper {
+          padding: 24px 16px 24px;
+        }
+
+        .dashboard-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .dashboard-panel {
+          padding: 20px;
+        }
       }
 
       .no-rooms {
@@ -499,6 +768,16 @@
       .player-item.ready {
         border-color: rgba(76, 175, 80, 0.5);
         background: rgba(76, 175, 80, 0.1);
+      }
+
+      .player-item.spectator {
+        border-color: rgba(255, 193, 7, 0.5);
+        background: rgba(255, 193, 7, 0.08);
+      }
+
+      .player-item.spectator .player-status {
+        color: #ffc107;
+        font-weight: 600;
       }
 
       .toast {
@@ -593,6 +872,23 @@
       let gameInitialized = false;
       let raceStarting = false;
       let playerScoresTimer = null;
+      let currentRoomMode = 'public';
+
+      const CLASSROOM_MODE = 'classroom';
+
+      function isClassroomMode() {
+        return currentRoomMode === CLASSROOM_MODE;
+      }
+
+      function getLocalPlayer() {
+        if (!networkManager) return null;
+        return networkManager.getAllPlayers().find((player) => player.isSelf) || null;
+      }
+
+      function isLocalSpectator() {
+        const selfPlayer = getLocalPlayer();
+        return !!(selfPlayer && selfPlayer.spectator);
+      }
 
       // ==================== VIEW SWITCHING ====================
       function switchView(viewId) {
@@ -635,10 +931,16 @@
 
         // 🔥 Listen for race start - SWITCH TO GAME VIEW instead of navigate
         networkManager.on('raceStart', () => {
-          console.log('🏁 Race starting, switching to game view...');
+          console.log('🏁 Race starting...');
 
           // Reset race starting flag
           raceStarting = false;
+
+          if (isClassroomMode() && isLocalSpectator()) {
+            switchView('classroomDashboard');
+            startPlayerScoreUpdates();
+            return;
+          }
 
           // Switch to game view
           switchView('gameView');
@@ -666,7 +968,8 @@
           updatePlayerScores();
         });
 
-        networkManager.on('stateChanged', () => {
+        networkManager.on('stateChanged', (state) => {
+          currentRoomMode = state?.mode || networkManager.getRoomMode() || 'public';
           updatePlayersList();
           updatePlayerScores();
         });
@@ -720,19 +1023,23 @@
           return;
         }
 
-        try {
-          showToast('Creating room...', 'info');
+      try {
+        showToast('Creating room...', 'info');
 
-          const { roomId, sessionId } = await networkManager.createRoom(playerName);
-          currentRoomId = roomId;
-          currentSessionId = sessionId;
+        const classroomToggle = document.getElementById('classroomModeToggle');
+        const selectedMode = classroomToggle && classroomToggle.checked ? CLASSROOM_MODE : 'public';
 
-          console.log('✅ Room created:', roomId);
+        const { roomId, sessionId } = await networkManager.createRoom(playerName, selectedMode);
+        currentRoomId = roomId;
+        currentSessionId = sessionId;
+        currentRoomMode = networkManager.getRoomMode() || selectedMode;
 
-          // Show room info
-          document.getElementById('displayRoomId').textContent = roomId;
-          document.getElementById('roomInfo').style.display = 'block';
-          document.querySelector('#createRoom form').style.display = 'none';
+        console.log('✅ Room created:', roomId, 'mode:', currentRoomMode);
+
+        // Show room info
+        document.getElementById('displayRoomId').textContent = roomId;
+        document.getElementById('roomInfo').style.display = 'block';
+        document.querySelector('#createRoom form').style.display = 'none';
 
           updatePlayersList();
           updatePlayerScores();
@@ -762,8 +1069,9 @@
           const result = await networkManager.joinRoom(roomId, playerName);
           currentRoomId = result.roomId;
           currentSessionId = result.sessionId;
+          currentRoomMode = networkManager.getRoomMode() || currentRoomMode;
 
-          console.log('✅ Joined room:', roomId);
+          console.log('✅ Joined room:', roomId, 'mode:', currentRoomMode);
 
           // Show room info in create room screen
           document.getElementById('joinRoom').style.display = 'none';
@@ -802,7 +1110,7 @@
         const startBtn = document.getElementById('startRaceBtn');
         if (startBtn) {
           startBtn.disabled = true;
-          startBtn.textContent = '⏳ Starting...';
+          startBtn.textContent = '⏳ Đang bắt đầu...';
         }
 
         try {
@@ -813,7 +1121,7 @@
           raceStarting = false;
           if (startBtn) {
             startBtn.disabled = false;
-            startBtn.innerHTML = '🏁 Bắt đầu chạy đua';
+            startBtn.textContent = '🏁 Bắt đầu chạy đua';
           }
         }
       }
@@ -860,7 +1168,10 @@
         try {
           showToast('Joining room...', 'info');
 
-          await networkManager.joinRoom(roomId, playerName);
+          const result = await networkManager.joinRoom(roomId, playerName);
+          currentRoomId = result.roomId;
+          currentSessionId = result.sessionId;
+          currentRoomMode = networkManager.getRoomMode() || currentRoomMode;
 
           // Show room info
           document.getElementById('roomList').style.display = 'none';
@@ -881,7 +1192,24 @@
 
       // Toggle ready status
       function toggleReady() {
-        const isReady = document.getElementById('hostReady').checked;
+        const checkbox = document.getElementById('hostReady');
+
+        if (isClassroomMode()) {
+          if (isLocalSpectator()) {
+            if (checkbox) checkbox.checked = false;
+            showToast('Quản trị viên không cần đánh dấu sẵn sàng.', 'info');
+            return;
+          }
+
+          const roomState = networkManager?.room?.state?.state;
+          if (roomState === 'finished') {
+            if (checkbox) checkbox.checked = false;
+            showToast('Phiên classroom đã kết thúc. Tạo phòng mới để chơi lại.', 'info');
+            return;
+          }
+        }
+
+        const isReady = checkbox ? checkbox.checked : false;
         networkManager.setReady(isReady);
         console.log('Ready status:', isReady);
       }
@@ -893,45 +1221,178 @@
         const players = networkManager.getAllPlayers();
         const playersList = document.getElementById('playersList');
         const playerCount = document.getElementById('playerCount');
+        const readyMessage = document.getElementById('readyMessage');
+        const classroomNotice = document.getElementById('classroomNotice');
+        const readyToggleContainer = document.getElementById('readyToggleContainer');
+        const startBtn = document.getElementById('startRaceBtn');
+        const roomState = networkManager.room.state?.state || 'waiting';
+        const raceIdle = roomState === 'waiting';
+        const dashboardRoomCode = document.getElementById('dashboardRoomCode');
+        const dashboardRoomState = document.getElementById('dashboardRoomState');
+        const dashboardRoomCountdown = document.getElementById('dashboardRoomCountdown');
+        const dashboardPlayerCount = document.getElementById('dashboardPlayerCount');
+        const dashboardReadySummary = document.getElementById('dashboardReadySummary');
+        const dashboardReadyCount = document.getElementById('dashboardReadyCount');
+        const dashboardReadyRatio = document.getElementById('dashboardReadyRatio');
+        const dashboardFinishedCount = document.getElementById('dashboardFinishedCount');
+        const dashboardFinishedRatio = document.getElementById('dashboardFinishedRatio');
+        const dashboardLastUpdated = document.getElementById('dashboardLastUpdated');
 
         if (!playersList || !playerCount) return;
 
-        playerCount.textContent = players.length;
+        const activePlayers = players.filter((player) => !player.spectator);
+        const readyCount = activePlayers.filter((player) => player.ready).length;
+        const finishedPlayers = activePlayers.filter((player) => player.finished).length;
+        const roomCountdown = networkManager.room.state?.countdown;
+        playerCount.textContent = activePlayers.length;
 
-        playersList.innerHTML = players
-          .map(
-            (player) => `
-        <div class="player-item ${player.ready ? 'ready' : ''}">
-          <span class="player-name">${player.name}${player.isSelf ? ' (You)' : ''}</span>
-          <span class="player-status">${player.ready ? '✅ Sẵn sàng' : '⏳ Chờ...'}</span>
-        </div>
-      `
-          )
+        const playerItems = players
+          .map((player) => {
+            const isSpectator = player.spectator;
+            const readyClass = !isSpectator && player.ready ? 'ready' : '';
+            const status = isSpectator
+              ? '👑 Quản trị'
+              : player.ready
+              ? '✅ Sẵn sàng'
+              : '⏳ Chờ...';
+            const nameLabel = `${player.name}${player.isSelf ? ' (You)' : ''}`;
+            return `
+          <div class="player-item ${readyClass} ${isSpectator ? 'spectator' : ''}">
+            <span class="player-name">${nameLabel}</span>
+            <span class="player-status">${status}</span>
+          </div>
+        `;
+          })
           .join('');
 
-        // Show start button if host and all ready
+        playersList.innerHTML =
+          playerItems || '<div class="player-score-empty">Chưa có người chơi</div>';
+
         const isHost = networkManager.sessionId === networkManager.room.state.hostId;
-        const allReady = players.every((p) => p.ready);
-        const startBtn = document.getElementById('startRaceBtn');
+        const classroomMode = isClassroomMode();
+        const allReady = activePlayers.length > 0 && readyCount === activePlayers.length;
+        const enoughPlayers = activePlayers.length >= 2;
+        const spectatorSelf = isLocalSpectator();
+
+        if (readyToggleContainer) {
+          readyToggleContainer.style.display = spectatorSelf ? 'none' : 'block';
+        }
+
+        if (classroomNotice) {
+          classroomNotice.style.display = spectatorSelf ? 'block' : 'none';
+        }
+
+        if (readyMessage) {
+          if (classroomMode) {
+            readyMessage.textContent = allReady
+              ? 'Tất cả học viên đã sẵn sàng. Chờ admin bấm Start.'
+              : '⏳ Chờ học viên sẵn sàng...';
+            readyMessage.style.display = spectatorSelf || activePlayers.length ? 'block' : 'none';
+          } else {
+            readyMessage.textContent = '⏳ Chờ tất cả người chơi sẵn sàng...';
+            readyMessage.style.display = 'block';
+          }
+        }
 
         if (startBtn) {
-          startBtn.style.display = isHost && allReady && players.length >= 2 ? 'block' : 'none';
+          if (isHost && classroomMode && enoughPlayers && raceIdle) {
+            startBtn.style.display = 'block';
+            if (raceStarting) {
+              startBtn.disabled = true;
+              startBtn.textContent = '⏳ Đang bắt đầu...';
+            } else {
+              startBtn.disabled = !allReady;
+              startBtn.textContent = allReady ? '🏁 Bắt đầu chạy đua' : 'Đợi học viên sẵn sàng';
+            }
+          } else if (isHost && !classroomMode && allReady && enoughPlayers && raceIdle) {
+            startBtn.style.display = 'block';
+            startBtn.disabled = raceStarting;
+            if (!raceStarting) {
+              startBtn.textContent = '🏁 Bắt đầu chạy đua';
+            }
+          } else {
+            startBtn.style.display = 'none';
+          }
+        }
+
+        const stateDisplayMap = {
+          waiting: 'Chờ bắt đầu',
+          countdown: 'Đang đếm ngược',
+          racing: 'Đang thi đấu',
+          paused: 'Đang tạm dừng',
+          finished: 'Đã kết thúc'
+        };
+
+        if (dashboardRoomCode) {
+          dashboardRoomCode.textContent = currentRoomId || '--';
+        }
+        if (dashboardRoomState) {
+          dashboardRoomState.textContent = stateDisplayMap[roomState] || 'Không xác định';
+        }
+        if (dashboardRoomCountdown) {
+          if (roomState === 'countdown' && typeof roomCountdown === 'number' && roomCountdown > 0) {
+            dashboardRoomCountdown.textContent = `Bắt đầu sau ${roomCountdown}s`;
+          } else if (roomState === 'racing') {
+            dashboardRoomCountdown.textContent = 'Đang thi đấu';
+          } else if (roomState === 'finished') {
+            dashboardRoomCountdown.textContent = 'Đang tổng kết kết quả';
+          } else {
+            dashboardRoomCountdown.textContent = 'Chờ hành động của quản trị viên';
+          }
+        }
+        if (dashboardPlayerCount) {
+          dashboardPlayerCount.textContent = activePlayers.length;
+        }
+        if (dashboardReadySummary) {
+          dashboardReadySummary.textContent = activePlayers.length
+            ? `${readyCount}/${activePlayers.length} học viên đã sẵn sàng`
+            : 'Chưa có học viên nào tham gia';
+        }
+        if (dashboardReadyCount) {
+          dashboardReadyCount.textContent = readyCount;
+        }
+        if (dashboardReadyRatio) {
+          dashboardReadyRatio.textContent = `${readyCount}/${activePlayers.length || 0} học viên`;
+        }
+        if (dashboardFinishedCount) {
+          dashboardFinishedCount.textContent = finishedPlayers;
+        }
+        if (dashboardFinishedRatio) {
+          dashboardFinishedRatio.textContent = `${finishedPlayers}/${activePlayers.length || 0} học viên`;
+        }
+        if (dashboardLastUpdated) {
+          const now = new Date();
+          dashboardLastUpdated.textContent = `Cập nhật lúc ${now
+            .toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })
+            .replace('.', ':')}`;
         }
       }
 
       function updatePlayerScores() {
-        const scoresContainer = document.getElementById('playerScores');
-        if (!scoresContainer) return;
+        const scoreContainers = document.querySelectorAll('[data-player-scores]');
+        if (!scoreContainers.length) return;
 
         if (!networkManager || !networkManager.room || !networkManager.room.state) {
-          scoresContainer.innerHTML = '';
+          scoreContainers.forEach((container) => {
+            container.innerHTML = '';
+          });
           return;
         }
 
-        const players = networkManager.getAllPlayers().slice();
+        const players = networkManager
+          .getAllPlayers()
+          .filter((player) => !player.spectator)
+          .slice();
+        const roomState = networkManager.room.state?.state || 'waiting';
 
         if (players.length === 0) {
-          scoresContainer.innerHTML = '<div class="player-score-empty">Chưa có người chơi</div>';
+          scoreContainers.forEach((container) => {
+            container.innerHTML = '<div class="player-score-empty">Chưa có người chơi</div>';
+          });
           return;
         }
 
@@ -942,34 +1403,50 @@
           return (a.name || '').localeCompare(b.name || '');
         });
 
-        const fragment = document.createDocumentFragment();
+        const html = players
+          .map((player, index) => {
+            const classes = ['player-score-item'];
+            if (player.isSelf) {
+              classes.push('self');
+            }
+            const playerName = player.name || `Người chơi ${index + 1}`;
+            const scoreValue = typeof player.score === 'number' ? player.score : 0;
+            const { statusText, statusClass } = (() => {
+              if (player.finished) {
+                return { statusText: '✅ Đã hoàn thành', statusClass: 'status-finished' };
+              }
+              if (roomState === 'paused') {
+                return { statusText: '⏸️ Tạm dừng', statusClass: 'status-paused' };
+              }
+              if (roomState === 'racing') {
+                return { statusText: '🏃 Đang thi đấu', statusClass: 'status-racing' };
+              }
+              if (roomState === 'countdown') {
+                return { statusText: '🚦 Chuẩn bị', statusClass: 'status-racing' };
+              }
+              if (player.ready) {
+                return { statusText: '✅ Sẵn sàng', statusClass: 'status-ready' };
+              }
+              if (roomState === 'finished') {
+                return { statusText: '📊 Đang tổng kết', statusClass: 'status-waiting' };
+              }
+              return { statusText: '⏳ Chờ...', statusClass: 'status-waiting' };
+            })();
+            return `
+          <div class="${classes.join(' ')}">
+            <span class="player-score-name">${index + 1}. ${playerName}${
+              player.isSelf ? ' (Bạn)' : ''
+            }</span>
+            <span class="player-score-status ${statusClass}">${statusText}</span>
+            <span class="player-score-value">${scoreValue}</span>
+          </div>
+        `;
+          })
+          .join('');
 
-        players.forEach((player, index) => {
-          const item = document.createElement('div');
-          item.className = 'player-score-item';
-
-          if (player.isSelf) {
-            item.classList.add('self');
-          }
-
-          const nameEl = document.createElement('span');
-          nameEl.className = 'player-score-name';
-
-          const playerName = player.name || `Người chơi ${index + 1}`;
-          nameEl.textContent = `${index + 1}. ${playerName}${player.isSelf ? ' (Bạn)' : ''}`;
-
-          const scoreEl = document.createElement('span');
-          scoreEl.className = 'player-score-value';
-          const scoreValue = typeof player.score === 'number' ? player.score : 0;
-          scoreEl.textContent = scoreValue;
-
-          item.appendChild(nameEl);
-          item.appendChild(scoreEl);
-          fragment.appendChild(item);
+        scoreContainers.forEach((container) => {
+          container.innerHTML = html;
         });
-
-        scoresContainer.innerHTML = '';
-        scoresContainer.appendChild(fragment);
       }
 
       function startPlayerScoreUpdates() {
@@ -984,10 +1461,9 @@
           playerScoresTimer = null;
         }
 
-        const scoresContainer = document.getElementById('playerScores');
-        if (scoresContainer) {
-          scoresContainer.innerHTML = '';
-        }
+        document.querySelectorAll('[data-player-scores]').forEach((container) => {
+          container.innerHTML = '';
+        });
       }
 
       // Copy room ID to clipboard

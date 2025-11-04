@@ -24,6 +24,7 @@ export class Player extends Schema {
     this.finishTime = 0;
     this.ready = false;
     this.status = 'online';
+    this.spectator = false;
     this.colorShirt = 0xff0000;
     this.colorShorts = 0x8b0000;
   }
@@ -40,6 +41,7 @@ type('boolean')(Player.prototype, 'finished');
 type('number')(Player.prototype, 'finishTime');
 type('boolean')(Player.prototype, 'ready');
 type('string')(Player.prototype, 'status'); // 'online', 'offline'
+type('boolean')(Player.prototype, 'spectator');
 type('number')(Player.prototype, 'colorShirt');
 type('number')(Player.prototype, 'colorShorts');
 
@@ -55,6 +57,7 @@ export class GameState extends Schema {
     this.startTime = 0;
     this.hostId = '';
     this.maxPlayers = 50;
+    this.mode = 'public';
   }
 }
 
@@ -64,3 +67,4 @@ type('number')(GameState.prototype, 'countdown');
 type('number')(GameState.prototype, 'startTime');
 type('string')(GameState.prototype, 'hostId');
 type('number')(GameState.prototype, 'maxPlayers');
+type('string')(GameState.prototype, 'mode');

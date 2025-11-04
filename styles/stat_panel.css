@@ -287,6 +287,121 @@
   width: 100%;
 }
 
+.tutorial-tabs {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.tutorial-tabs .tab-button {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tutorial-tabs .tab-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 215, 0, 0.7);
+}
+
+.tutorial-tabs .tab-button.active {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.9);
+}
+
+.tutorial-section {
+  display: none;
+}
+
+.tutorial-section.active {
+  display: block;
+}
+
+.point-object-intro {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.point-object-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.point-object-item {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  color: #fff;
+  text-align: left;
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  transition: border-color 0.2s ease;
+}
+
+.point-object-item:hover {
+  border-color: rgba(255, 215, 0, 0.7);
+}
+
+.point-object-preview {
+  width: 110px;
+  height: 110px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
+.point-object-preview canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.point-object-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.point-object-item .object-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+  display: block;
+  color: #ffd700;
+}
+
+.point-object-item .object-desc {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .controls-column {
   display: flex;
   justify-content: center;
@@ -447,6 +562,20 @@
 
   .extra-bottom .key-card {
     width: 120px;
+  }
+
+  .point-object-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .point-object-info {
+    align-items: center;
+  }
+
+  .point-object-list {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -3,10 +3,23 @@ import { createCylinder, createTextLabel } from '../scripts/utils.js';
 import { Colors } from '../scripts/colors.js';
 import { createGLBModel } from '../scripts/create-glb-model.js';
 
-const SIMPLE_TREE_URL = new URL('../assets/Simple Tree.glb', import.meta.url).href;
-const VILLAGE_HUT_URL = new URL('../assets/VillageHut.glb', import.meta.url).href;
-const CAPITALIST_EXPRESS_URL = new URL('../assets/CapitalistExpress.glb', import.meta.url).href;
-const WATER_BUFFALO_URL = new URL('../assets/WaterBuffalo.glb', import.meta.url).href;
+const SIMPLE_TREE_URL = new URL('../assets/objects/SimpleTree.glb', import.meta.url).href;
+const TREE_URL = new URL('../assets/objects/Tree.glb', import.meta.url).href;
+const VILLAGE_HUT_URL = new URL('../assets/objects/VillageHut.glb', import.meta.url).href;
+const CAPITALIST_EXPRESS_URL = new URL('../assets/objects/CapitalistExpress.glb', import.meta.url).href;
+const WATER_BUFFALO_URL = new URL('../assets/objects/WaterBuffalo.glb', import.meta.url).href;
+const SKYSCRAPER_URL = new URL('../assets/objects/SkyScraper.glb', import.meta.url).href;
+const STORAGE_HOUSE_URL = new URL('../assets/objects/StorageHouse.glb', import.meta.url).href;
+const HOUSE_URL = new URL('../assets/objects/House.glb', import.meta.url).href;
+const BAMBOO_URL = new URL('../assets/objects/Bamboo.glb', import.meta.url).href;
+const CROP_FIELD_URL = new URL('../assets/objects/CropField.glb', import.meta.url).href;
+const FACTORY_URL = new URL('../assets/objects/Factory.glb', import.meta.url).href;
+const COMPANY_URL = new URL('../assets/objects/LargeBuilding_2.glb', import.meta.url).href;
+const TRAIN_URL = new URL('../assets/objects/Train.glb', import.meta.url).href;
+const GEAR_URL = new URL('../assets/objects/Gear.glb', import.meta.url).href;
+const BALLOT_BOX_URL = new URL('../assets/objects/BallotBox.glb', import.meta.url).href;
+const FIVEG_TOWER_URL = new URL('../assets/objects/RadioTower.glb', import.meta.url).href;
+const LOW_BARRIER_URL = new URL('../assets/objects/TrafficBarrier.glb', import.meta.url).href;
 
 /**
  * A collidable tree in the game positioned at X, Y, Z in the scene and with
@@ -15,7 +28,7 @@ const WATER_BUFFALO_URL = new URL('../assets/WaterBuffalo.glb', import.meta.url)
 
 async function loadTreeInstance() {
   const tree = await createGLBModel({
-    url: SIMPLE_TREE_URL,
+    url: TREE_URL,
     castShadow: true,
     receiveShadow: true,
     desiredHeight: 690,
@@ -49,29 +62,6 @@ export function Tree(x, y, z, s) {
   // Gốc đặt theo tham số
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-
-  // Lưu scale ngoài để dùng collision
-  this.scale = s;
-
-  // Fix lại luôn thông số collision theo kích thước mới (không cần *0.6 nữa)
-  // Tổng chiều cao = 690 (thay vì 1150)
-  // Bán kính tán cây = 300 (thay vì 500)
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var treeMinX = self.mesh.position.x - this.scale * 300; // half width
-    var treeMaxX = self.mesh.position.x + this.scale * 300;
-    var treeMinY = self.mesh.position.y;
-    var treeMaxY = self.mesh.position.y + this.scale * 690; // tổng cao mới
-    var treeMinZ = self.mesh.position.z - this.scale * 300;
-    var treeMaxZ = self.mesh.position.z + this.scale * 300;
-    return (
-      treeMinX <= maxX &&
-      treeMaxX >= minX &&
-      treeMinY <= maxY &&
-      treeMaxY >= minY &&
-      treeMinZ <= maxZ &&
-      treeMaxZ >= minZ
-    );
-  };
 }
 
 export function HammerAndSickle(x, y, z, s) {
@@ -254,6 +244,23 @@ export function BribeEnvelope(x, y, z, s) {
   };
 }
 
+function loadBallotBoxInstance() {
+  return createGLBModel({
+    url: BALLOT_BOX_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 250,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
 export function BallotBox(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
@@ -265,39 +272,29 @@ export function BallotBox(x, y, z, s) {
     unity: 0 // Không ảnh hưởng
   };
   this.buffValue = 500; // Điểm dương
+  this.type = 'ballotbox';
+  this.isCollected = false;
 
-  var boxMaterial = new THREE.MeshBasicMaterial({ color: 0x278d3e });
-
-  var slotMaterial = new THREE.MeshBasicMaterial({ color: 0x222222 });
-
-  var ballotMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-
-  var boxGeometry = new THREE.BoxGeometry(200, 150, 200);
-  var box = new THREE.Mesh(boxGeometry, boxMaterial);
-  box.position.set(0, 75, 0);
-  this.mesh.add(box);
-
-  var slotGeometry = new THREE.BoxGeometry(120, 2, 10);
-  var slot = new THREE.Mesh(slotGeometry, slotMaterial);
-  slot.position.set(0, 150, 0);
-  this.mesh.add(slot);
-
-  var ballotGeometry = new THREE.PlaneGeometry(80, 120);
-  var ballot = new THREE.Mesh(ballotGeometry, ballotMaterial);
-  ballot.position.set(0, 160, 0);
-  ballot.rotation.x = -Math.PI * 0.45;
-  this.mesh.add(ballot);
+  // Load GLB model thay vì tạo manual
+  loadBallotBoxInstance()
+    .then((ballotBox) => {
+      this.mesh.add(ballotBox);
+      this.loadedMesh = ballotBox;
+    })
+    .catch((error) => {
+      console.error("Failed to load ballot box model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
   this.type = 'ballotbox';
-  this.isCollected = false;
+
 
   this.update = function () {
+    // Xoay tổng thể ballot box
     this.mesh.rotation.y += 0.008;
-    ballot.position.y = 160 + Math.sin(Date.now() * 0.003) * 2;
-    ballot.rotation.z = Math.sin(Date.now() * 0.002) * 0.05;
 
     if (this.isCollected) {
       this.mesh.visible = false;
@@ -475,6 +472,23 @@ export function RuleOfLawState(x, y, z, s) {
   };
 }
 
+function loadGearInstance() {
+  return createGLBModel({
+    url: GEAR_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 200,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
 export function ReformGears(x, y, z, s) {
   var self = this;
   this.mesh = new THREE.Object3D();
@@ -487,83 +501,21 @@ export function ReformGears(x, y, z, s) {
   };
   this.buffValue = 50; // Điểm dương
 
-  var metalMat = new THREE.MeshBasicMaterial({ color: 0x707070 });
-  var goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
 
-  var gearsGroup = new THREE.Group();
-  gearsGroup.position.set(0, 120, 0);
-  gearsGroup.rotation.x = Math.PI / 2;
-  this.mesh.add(gearsGroup);
-
-  function createGear(radius, thickness, teeth, colorMat) {
-    var g = new THREE.Group();
-    var disc = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, thickness, 64), colorMat);
-    g.add(disc);
-
-    for (var i = 0; i < teeth; i++) {
-      var angle = (i / teeth) * Math.PI * 2;
-      var tooth = new THREE.Mesh(
-        new THREE.BoxGeometry(radius * 0.25, thickness * 1.2, radius * 0.1),
-        colorMat
-      );
-      tooth.position.set(
-        Math.cos(angle) * (radius - radius * 0.01),
-        0,
-        Math.sin(angle) * (radius - radius * 0.01)
-      );
-      tooth.rotation.y = angle;
-      g.add(tooth);
-    }
-    return g;
-  }
-
-  var gearA = createGear(48, 10, 18, metalMat);
-  var gearB = createGear(28, 10, 12, metalMat);
-  var gearC = createGear(68, 10, 22, metalMat);
-
-  gearA.position.set(-70, 0, 0);
-  gearB.position.set(0, 0, -50);
-  gearC.position.set(90, 0, 10);
-
-  var pivotA = new THREE.Object3D();
-  pivotA.add(gearA);
-  pivotA.position.copy(gearA.position);
-  var pivotB = new THREE.Object3D();
-  pivotB.add(gearB);
-  pivotB.position.copy(gearB.position);
-  var pivotC = new THREE.Object3D();
-  pivotC.add(gearC);
-  pivotC.position.copy(gearC.position);
-
-  gearA.position.set(0, 0, 0);
-  gearB.position.set(0, 0, 0);
-  gearC.position.set(0, 0, 0);
-
-  gearsGroup.add(pivotA, pivotB, pivotC);
-
-  var hubA = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
-  hubA.position.copy(pivotA.position);
-  gearsGroup.add(hubA);
-  var hubB = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
-  hubB.position.copy(pivotB.position);
-  gearsGroup.add(hubB);
-  var hubC = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 12, 12), goldMat);
-  hubC.position.copy(pivotC.position);
-  gearsGroup.add(hubC);
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
   this.scale = s;
   this.type = 'reformgears';
-  this._gearSpeed = 0.015;
-  this._time = 0;
+  this.isCollected = false;
 
-  this.update = function (delta) {
-    this._time += delta !== undefined ? delta : 0.016;
-    var speedB = this._gearSpeed;
-    pivotB.rotation.y += speedB;
-    pivotA.rotation.y -= speedB * (28 / 48);
-    pivotC.rotation.y -= speedB * (28 / 68);
+  // Load GLB model thay vì tạo manual
+  loadGearInstance()
+    .then((gear) => {
+      this.mesh.add(gear);
+    });
+
+  this.update = function () {
     this.mesh.rotation.y += 0.004;
 
     if (this.isCollected) {
@@ -573,13 +525,12 @@ export function ReformGears(x, y, z, s) {
   };
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    var scaleFactor = Math.sqrt(this.scale) * 1.2;
-    var obstMinX = self.mesh.position.x - scaleFactor * 200;
-    var obstMaxX = self.mesh.position.x + scaleFactor * 200;
+    var obstMinX = self.mesh.position.x - s * 200;
+    var obstMaxX = self.mesh.position.x + s * 200;
     var obstMinY = self.mesh.position.y;
-    var obstMaxY = self.mesh.position.y + scaleFactor * 260;
-    var obstMinZ = self.mesh.position.z - scaleFactor * 150;
-    var obstMaxZ = self.mesh.position.z + scaleFactor * 150;
+    var obstMaxY = self.mesh.position.y + s * 260;
+    var obstMinZ = self.mesh.position.z - s * 150;
+    var obstMaxZ = self.mesh.position.z + s * 150;
 
     return (
       obstMinX <= maxX &&
@@ -1022,9 +973,26 @@ export function MisbalancedScale(x, y, z, s) {
   };
 }
 
-export function ColonialGate(x, y, z, s, scene) {
+function loadBarrierModel() {
+  return createGLBModel({
+    url: LOW_BARRIER_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 450,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
+export function LowBarrier(x, y, z, s, scene) {
   var self = this;
-  this.mesh = new THREE.Group();
+  this.mesh = new THREE.Object3D();
   this.scene = scene;
 
   // ===== BUFF SYSTEM =====
@@ -1034,36 +1002,23 @@ export function ColonialGate(x, y, z, s, scene) {
     unity: 0
   };
   this.buffValue = 0;
+  this.type = 'lowBarrier';
+  this.scale = s;
+  this.mesh.userData = { deadly: true };
 
-  // Tường chính (rộng hơn để che lane)
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(600, 800, 100), // Tăng width lên 600 (tương đương tree)
-    new THREE.MeshStandardMaterial({ color: 0xd5d7d8 })
-  );
-  this.mesh.add(body);
-
-  // Cổng vòm
-  const arch = new THREE.Mesh(
-    new THREE.TorusGeometry(300, 40, 16, 40, Math.PI), // Scale up tương xứng
-    new THREE.MeshStandardMaterial({ color: 0x666666 })
-  );
-  arch.rotation.x = Math.PI / 2;
-  arch.position.y = 400;
-  this.mesh.add(arch);
-
-  // Emblem
-  const emblem = new THREE.Mesh(
-    new THREE.CircleGeometry(60, 24),
-    new THREE.MeshStandardMaterial({ color: 0xd5d7d8 })
-  );
-  emblem.position.set(0, 350, 55);
-  this.mesh.add(emblem);
+  // Load GLB model thay cho tạo thủ công
+  loadBarrierModel()
+    .then((barrier) => {
+      this.mesh.add(barrier);
+      this.loadedMesh = barrier;
+    })
+    .catch((error) => {
+      console.error("Failed to load barrier model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
   this.mesh.scale.set(s, s, s);
-  this.scale = s;
-  this.type = 'colonialGate';
-  this.mesh.userData = { deadly: true };
 
   this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
     const width = 600 * this.scale;   // ±300
@@ -1090,20 +1045,14 @@ export function ColonialGate(x, y, z, s, scene) {
 
   this.showHitbox = function () {
     if (!this.hitboxHelper) {
-      // Tính bounding box gốc
       let bbox = new THREE.Box3().setFromObject(this.mesh);
-
-      // ✅ Expand ra 1 chút (tăng 0.2 đơn vị mỗi chiều — có thể chỉnh)
       let expandSize = 0.2;
       bbox.expandByScalar(expandSize);
-
-      // Tạo BoxHelper từ box đã mở rộng
       let box = new THREE.Box3Helper(bbox, 0xff0000);
       box.material.depthTest = false;
       box.material.depthWrite = false;
       box.renderOrder = 9999;
       scene.add(box);
-
       this.hitboxHelper = box;
     }
     this.hitboxHelper.visible = true;
@@ -1111,13 +1060,11 @@ export function ColonialGate(x, y, z, s, scene) {
 
   this.updateHitbox = function () {
     if (this.hitboxHelper) {
-      // Cập nhật vị trí theo mesh nhưng **giữ kích thước mở rộng**
       let bbox = new THREE.Box3().setFromObject(this.mesh);
       bbox.expandByScalar(0.2);
       this.hitboxHelper.box.copy(bbox);
     }
   };
-
 }
 
 export function HighBarrier(x, y, z, s, scene) {
@@ -1265,28 +1212,18 @@ async function loadCapitalistExpressInstance() {
 }
 
 export function CapitalistExpress(x, y, z, s, scene) {
-  const boundsVector = new THREE.Vector3();
-
   this.mesh = new THREE.Object3D();
   this.type = "capitalistExpress";
   this.speed = 200;
   this.scene = scene;
   this.scale = s;
   this.mesh.userData = { deadly: true };
-  this.bounds = { width: 360, height: 630, depth: 480 };
 
   loadCapitalistExpressInstance()
     .then((train) => {
       this.mesh.add(train);
       this.loadedMesh = train;
 
-      const bbox = new THREE.Box3().setFromObject(train);
-      bbox.getSize(boundsVector);
-      this.bounds = {
-        width: boundsVector.x,
-        height: boundsVector.y,
-        depth: boundsVector.z
-      };
       this.updateHitbox();
     })
     .catch((error) => {
@@ -1306,16 +1243,16 @@ export function CapitalistExpress(x, y, z, s, scene) {
   };
 
   this.collides = function (playerMinX, playerMaxX, playerMinY, playerMaxY, playerMinZ, playerMaxZ) {
-    const w = this.bounds.width * this.scale;
-    const h = this.bounds.height * this.scale;
-    const d = this.bounds.depth * this.scale;
+    const customWidth = 300 * this.scale;
+    const customHeight = 400 * this.scale;
+    const customDepth = 200 * this.scale;
 
-    const minX = this.mesh.position.x - w / 2;
-    const maxX = this.mesh.position.x + w / 2;
+    const minX = this.mesh.position.x - customWidth / 2;
+    const maxX = this.mesh.position.x + customWidth / 2;
     const minY = this.mesh.position.y;
-    const maxY = this.mesh.position.y + h;
-    const minZ = this.mesh.position.z - d / 2;
-    const maxZ = this.mesh.position.z + d / 2;
+    const maxY = this.mesh.position.y + customHeight;
+    const minZ = this.mesh.position.z - customDepth / 2;
+    const maxZ = this.mesh.position.z + customDepth / 2;
 
     return (
       minX <= playerMaxX &&
@@ -1326,29 +1263,42 @@ export function CapitalistExpress(x, y, z, s, scene) {
       maxZ >= playerMinZ
     );
   };
-  this.enableHitbox = false;
+  this.enableHitbox = true;
 
   this.showHitbox = function () {
     if (!this.hitboxHelper) {
-      const bbox = new THREE.Box3().setFromObject(this.mesh);
-      bbox.expandByScalar(0.2);
+      // Tạo hitbox visualization dựa trên kích thước tự định nghĩa
+      const customWidth = 300 * this.scale;
+      const customHeight = 400 * this.scale;
+      const customDepth = 200 * this.scale;
 
-      const box = new THREE.Box3Helper(bbox, 0xff0000);
-      box.material.depthTest = false;
-      box.material.depthWrite = false;
-      box.renderOrder = 9999;
-      scene.add(box);
+      const geometry = new THREE.BoxGeometry(customWidth, customHeight, customDepth);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.6
+      });
 
-      this.hitboxHelper = box;
+      this.hitboxHelper = new THREE.Mesh(geometry, material);
+      this.hitboxHelper.position.set(
+        this.mesh.position.x,
+        this.mesh.position.y + customHeight / 2,
+        this.mesh.position.z
+      );
+      scene.add(this.hitboxHelper);
     }
     this.hitboxHelper.visible = true;
   };
 
   this.updateHitbox = function () {
     if (this.hitboxHelper) {
-      const bbox = new THREE.Box3().setFromObject(this.mesh);
-      bbox.expandByScalar(0.2);
-      this.hitboxHelper.box.copy(bbox);
+      const customHeight = 400 * this.scale;
+      this.hitboxHelper.position.set(
+        this.mesh.position.x,
+        this.mesh.position.y + customHeight / 2,
+        this.mesh.position.z
+      );
     }
   };
 }
@@ -1391,35 +1341,41 @@ export function VillageHut(x, y, z, s) {
   this.mesh.rotation.y = Math.PI / 2;
 }
 
+
+async function loadBambooInstance() {
+  return createGLBModel({
+    url: BAMBOO_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 500,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
 export function BambooTree(x, y, z, s) {
-  // Tree: width ~500, height ~1150 (scale s)
-  // Bamboo: cluster width ~160, height ~600, so scale up to match tree
-  const scaleFactor = (500 / 160) * s;
   this.mesh = new THREE.Group();
   this.type = "bambooTree";
   this.mesh.userData = { sideElement: true };
 
-  // 5 cây tre nhỏ khác nhau để tạo cụm
-  for (let i = 0; i < 5; i++) {
-    const height = 300 + Math.random() * 200;
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(5, 5, height, 6),
-      new THREE.MeshStandardMaterial({ color: 0x2e8b57 })
-    );
-    trunk.position.set(Math.random() * 80 - 40, height / 2, Math.random() * 80 - 40);
-    this.mesh.add(trunk);
-
-    // Lá tre trên ngọn
-    const leaf = new THREE.Mesh(
-      new THREE.ConeGeometry(10, 60, 6),
-      new THREE.MeshStandardMaterial({ color: 0x3cb371 })
-    );
-    leaf.position.set(trunk.position.x, height + 20, trunk.position.z);
-    this.mesh.add(leaf);
-  }
+  loadBambooInstance()
+    .then((bamboo) => {
+      this.mesh.add(bamboo);
+      this.loadedMesh = bamboo;
+    })
+    .catch((error) => {
+      console.error("Failed to load bamboo model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.scale.set(s, s, s);
 }
 
 async function loadWaterBuffaloInstance() {
@@ -1427,7 +1383,7 @@ async function loadWaterBuffaloInstance() {
     url: WATER_BUFFALO_URL,
     castShadow: true,
     receiveShadow: true,
-    desiredHeight: 120,
+    desiredHeight: 250,
     snapToGround: true,
     onClone: (root) => {
       root.traverse((child) => {
@@ -1455,455 +1411,367 @@ export function WaterBuffalo(x, y, z, s) {
     });
 
   this.mesh.position.set(x, y, z);
-  const baseScale = 3 * s;
-  this.mesh.scale.set(baseScale, baseScale, baseScale);
-  this.scale = s;
+  this.mesh.scale.set(s, s, s);
+}
+
+async function loadRiceStorage() {
+  return createGLBModel({
+    url: STORAGE_HOUSE_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 450,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
 }
 
 export function RiceStorage(x, y, z, s) {
-  const scaleFactor = 10 * s;
   this.mesh = new THREE.Group();
   this.type = "riceStorage";
 
-  // Nhà kho (tường chính)
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(80, 40, 50),
-    new THREE.MeshStandardMaterial({ color: 0xc9a06b }) // màu vách đất/nứa
-  );
-  base.position.y = 20;
-  this.mesh.add(base);
-
-  // Mái nhà hình chữ A
-  const roof = new THREE.Mesh(
-    new THREE.ConeGeometry(60, 25, 4),
-    new THREE.MeshStandardMaterial({ color: 0x8a4a39 }) // đỏ ngói
-  );
-  roof.position.y = 50;
-  roof.rotation.y = Math.PI / 4;
-  this.mesh.add(roof);
-
-  // Cửa gỗ
-  const door = new THREE.Mesh(
-    new THREE.BoxGeometry(20, 25, 2),
-    new THREE.MeshStandardMaterial({ color: 0x6b4f33 })
-  );
-  door.position.set(0, 12, 26);
-  this.mesh.add(door);
-
-  // Biển "KHO LÚA"
-  const label = createTextLabel("KHO LÚA", 64, 20, {
-    color: "#ffffff", bg: "rgba(0,0,0,0.5)",
-    font: "Arial", fontSize: 8, pxPerUnit: 1
-  });
-  label.position.set(0, 35, 27);
-  this.mesh.add(label);
+  loadRiceStorage()
+    .then((storage) => {
+      this.mesh.add(storage);
+      this.loadedMesh = storage;
+    })
+    .catch((error) => {
+      console.error("Failed to load rice storage model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
-  this.scale = s;
-  this.mesh.rotation.y = Math.PI / 2;
+  this.mesh.scale.set(s, s, s);
+  this.mesh.rotation.y = Math.PI;
 }
 
-export function WindPump(x, y, z, s) {
-  // Tree: width ~500, height ~1150 (scale s)
-  // WindPump: width ~20, so scale up to match tree width
-  const scaleFactor = 4 * s;
+function loadCropFieldModel() {
+  return createGLBModel({
+    url: CROP_FIELD_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 150,
+    snapToGround: false,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
+export function CropField(x, y, z, s) {
   this.mesh = new THREE.Group();
-  this.type = "windPump";
+  this.type = "cropField";
 
-  // 🏗️ Trụ đứng (bằng tre hoặc sắt)
-  const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(3, 3, 80, 12),
-    new THREE.MeshStandardMaterial({ color: 0x8b6f47 }) // nâu tre
-  );
-  pole.position.y = 40;
-  this.mesh.add(pole);
+  loadCropFieldModel()
+    .then((field) => {
+      this.mesh.add(field);
+      this.loadedMesh = field;
+    })
+    .catch((error) => {
+      console.error("Failed to load crop field model:", error);
+      this.loadedMesh = null;
+    });
 
-  // 🔄 Trục quạt phía trên
-  const head = new THREE.Mesh(
-    new THREE.BoxGeometry(6, 6, 6),
-    new THREE.MeshStandardMaterial({ color: 0x555555 })
-  );
-  head.position.y = 80;
-  this.mesh.add(head);
-
-  // 🌬️ Cánh quạt (Windmill blades)
-  const blades = new THREE.Group();
-  const bladeMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-
-  for (let i = 0; i < 6; i++) {
-    const blade = new THREE.Mesh(
-      new THREE.BoxGeometry(2, 20, 6),
-      bladeMaterial
-    );
-    blade.position.y = 80;
-    blade.position.z = 8;
-    blade.rotation.x = Math.PI / 2;
-    blade.rotation.y = (i * Math.PI * 2) / 6;
-    blades.add(blade);
-  }
-  this.mesh.add(blades);
-
-  // ⚙️ Quay quạt (nếu muốn animate)
-  this.rotateSpeed = 0.03;
-  this.update = function () {
-    blades.rotation.y += this.rotateSpeed;
-  };
-
-  // Đặt vị trí & scale chung
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
-  this.scale = s;
+  this.mesh.scale.set(s, s, s);
+}
 
-  // ✅ Collision đơn giản (hình trụ đứng) – nếu bạn cần xử lý sau
-  this.collides = function (minX, maxX, minY, maxY, minZ, maxZ) {
-    const radius = 10 * scaleFactor;
-    const height = 80 * scaleFactor;
-
-    const pumpMinX = this.mesh.position.x - radius;
-    const pumpMaxX = this.mesh.position.x + radius;
-    const pumpMinY = this.mesh.position.y;
-    const pumpMaxY = this.mesh.position.y + height;
-    const pumpMinZ = this.mesh.position.z - radius;
-    const pumpMaxZ = this.mesh.position.z + radius;
-
-    return (
-      pumpMinX <= maxX &&
-      pumpMaxX >= minX &&
-      pumpMinY <= maxY &&
-      pumpMaxY >= minY &&
-      pumpMinZ <= maxZ &&
-      pumpMaxZ >= minZ
-    );
-  };
+function loadOldFactoryModel() {
+  return createGLBModel({
+    url: FACTORY_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 800,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
 }
 
 export function OldFactory(x, y, z, s) {
-  // Tree: width ~500, height ~1150 (scale s)
-  // Factory: SCALE UP 2x để nổi bật
-  const scaleFactor = (500 / 120) * s * 2;
   this.mesh = new THREE.Group();
   this.type = "oldFactory";
 
-  // 🧱 Khối nhà chính (tường gạch)
-  const mainBuilding = new THREE.Mesh(
-    new THREE.BoxGeometry(100, 60, 80),
-    new THREE.MeshStandardMaterial({ color: 0x9b7653 })
-  );
-  mainBuilding.position.set(0, 30, 0);
-  this.mesh.add(mainBuilding);
-
-  // 🪟 Cửa sổ
-  const windowMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-  for (let i = -1; i <= 1; i++) {
-    const window = new THREE.Mesh(new THREE.PlaneGeometry(20, 15), windowMaterial);
-    window.position.set(i * 30, 40, 41);
-    this.mesh.add(window);
-  }
-
-  // 🏭 Ống khói
-  const chimney = new THREE.Mesh(
-    new THREE.CylinderGeometry(8, 10, 80, 16),
-    new THREE.MeshStandardMaterial({ color: 0x4a4a4a })
-  );
-  chimney.position.set(50, 80, -20);
-  this.mesh.add(chimney);
-
-  // Khói
-  const smoke = new THREE.Mesh(
-    new THREE.SphereGeometry(6, 8, 8),
-    new THREE.MeshStandardMaterial({ color: 0x555555, transparent: true, opacity: 0.6 })
-  );
-  smoke.position.set(50, 120, -20);
-  this.mesh.add(smoke);
-
-  // 🌫 Animation khói bay
-  this.update = function () {
-    smoke.position.y += 0.2;
-    smoke.material.opacity -= 0.002;
-    if (smoke.material.opacity <= 0) {
-      smoke.position.y = 120;
-      smoke.material.opacity = 0.6;
-    }
-  };
+  loadOldFactoryModel()
+    .then((factory) => {
+      this.mesh.add(factory);
+    })
+    .catch((error) => {
+      console.error("Failed to load old factory model:", error);
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.scale.set(s, s, s);
 
   // Quay ngang sang phải (trục Y, 90 độ)
   this.mesh.rotation.y = -Math.PI / 2;
 }
 
-export function OldApartmentBlock(x, y, z, s) {
-  const scaleFactor = 5 * s;
+
+function createHouseInstance() {
+  return createGLBModel({
+    url: HOUSE_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 700,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
+export function House(x, y, z, s) {
   this.mesh = new THREE.Group();
-  this.type = "oldApartmentBlock";
+  this.type = "house";
 
-  // Khối chính của chung cư
-  const building = new THREE.Mesh(
-    new THREE.BoxGeometry(250, 120, 80),
-    new THREE.MeshStandardMaterial({ color: 0xc9c9c9 })
-  );
-  building.position.y = 60;
-  this.mesh.add(building);
-
-  // Mái fibro xi măng
-  const roof = new THREE.Mesh(
-    new THREE.BoxGeometry(260, 5, 85),
-    new THREE.MeshStandardMaterial({ color: 0x8a8a8a })
-  );
-  roof.position.y = 122;
-  this.mesh.add(roof);
-
-  // Ban công lặp theo tầng
-  const balconyMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 });
-  for (let floor = 0; floor < 5; floor++) {
-    for (let i = -2; i <= 2; i++) {
-      const balcony = new THREE.Mesh(
-        new THREE.BoxGeometry(35, 4, 15),
-        balconyMaterial
-      );
-      balcony.position.set(i * 45, 20 + floor * 20, 43);
-      this.mesh.add(balcony);
-    }
-  }
-
-  // Cửa sổ
-  const windowMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
-  for (let floor = 0; floor < 5; floor++) {
-    for (let i = -2; i <= 2; i++) {
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(25, 15), windowMat);
-      win.position.set(i * 45, 22 + floor * 20, 41);
-      this.mesh.add(win);
-    }
-  }
+  createHouseInstance()
+    .then((house) => {
+      this.mesh.add(house);
+    })
+    .catch((error) => {
+      console.error("Failed to load house model:", error);
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
-  // Quay ngang sang phải (trục Y, 90 độ)
+  this.mesh.scale.set(s, s, s);
   this.mesh.rotation.y = -Math.PI / 2;
+}
+
+function loadFiveGTowerModel() {
+  return createGLBModel({
+    url: FIVEG_TOWER_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 1200,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
 }
 
 export function FiveGTower(x, y, z, s) {
-  // SCALE UP 100x để thấy rõ (từ 1-2 units lên ~500)
-  const scaleFactor = s * 100;
-  this.mesh = new THREE.Group();
+  this.mesh = new THREE.Object3D(); // Initialize mesh first!
   this.type = "fiveGTower";
+  this.mesh.userData = { sideElement: true };
 
-  // Trụ chính
-  const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.3, 0.5, 12, 12),
-    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.3 })
-  );
-  pole.position.y = 6;
-  this.mesh.add(pole);
-
-  // Đế trụ
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.5, 2, 1, 16),
-    new THREE.MeshStandardMaterial({ color: 0x888888 })
-  );
-  base.position.y = 0.5;
-  this.mesh.add(base);
-
-  // Ăng-ten 5G
-  const antennaGeom = new THREE.BoxGeometry(0.6, 1.5, 0.3);
-  const antennaMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  for (let i = 0; i < 3; i++) {
-    const antenna = new THREE.Mesh(antennaGeom, antennaMat);
-    const angle = (i / 3) * Math.PI * 2;
-    antenna.position.set(Math.cos(angle) * 1, 10, Math.sin(angle) * 1);
-    antenna.rotation.y = angle;
-    this.mesh.add(antenna);
-  }
+  loadFiveGTowerModel()
+    .then((tower) => {
+      this.mesh.add(tower);
+      this.loadedMesh = tower;
+    })
+    .catch((error) => {
+      console.error("Failed to load 5G tower model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.scale.set(s, s, s);
+}
+
+
+function loadTrainModel() {
+  return createGLBModel({
+    url: TRAIN_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 200,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
 }
 
 export function MetroStation(x, y, z, s) {
-  // SCALE UP 40x để match tree size
-  const scaleFactor = s * 40;
   this.mesh = new THREE.Group();
   this.type = "metroStation";
 
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(20, 1, 6),
+  // Platform base - kích thước lớn và cố định
+  const platformWidth = 800;
+  const platformHeight = 50;
+  const platformDepth = 300;
+
+  const platform = new THREE.Mesh(
+    new THREE.BoxGeometry(platformWidth, platformHeight, platformDepth),
     new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
   );
-  base.position.y = 0.5;
-  this.mesh.add(base);
+  platform.position.y = platformHeight / 2;
+  this.mesh.add(platform);
 
+  // Station roof - mái nhà lớn
   const roof = new THREE.Mesh(
-    new THREE.CylinderGeometry(10, 10, 2, 32, 1, true, 0, Math.PI),
+    new THREE.CylinderGeometry(platformWidth / 2, platformWidth / 2, 80, 32, 1, true, 0, Math.PI),
     new THREE.MeshStandardMaterial({ color: 0xeeeeee, side: THREE.DoubleSide })
   );
-  roof.position.y = 2.5;
+  roof.position.y = 200;
   roof.rotation.z = Math.PI / 2;
   this.mesh.add(roof);
 
+  // Glass walls
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0x99ccff,
     transparent: true,
     opacity: 0.4
   });
-  const frontWall = new THREE.Mesh(new THREE.BoxGeometry(20, 2, 0.2), glassMat);
-  frontWall.position.set(0, 2, 3);
+  const frontWall = new THREE.Mesh(
+    new THREE.BoxGeometry(platformWidth, 150, 10),
+    glassMat
+  );
+  frontWall.position.set(0, 100, platformDepth / 2);
   this.mesh.add(frontWall);
 
-  const pillarGeom = new THREE.CylinderGeometry(0.2, 0.2, 2.5, 12);
+  const backWall = new THREE.Mesh(
+    new THREE.BoxGeometry(platformWidth, 150, 10),
+    glassMat
+  );
+  backWall.position.set(0, 100, -platformDepth / 2);
+  this.mesh.add(backWall);
+
+  // Support pillars
+  const pillarGeom = new THREE.CylinderGeometry(15, 15, 200, 12);
   const pillarMat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
-  for (let i = -8; i <= 8; i += 4) {
+  for (let i = -3; i <= 3; i++) {
     const pillar = new THREE.Mesh(pillarGeom, pillarMat);
-    pillar.position.set(i, 1.75, -2.5);
+    pillar.position.set(i * 120, 100, -platformDepth / 3);
     this.mesh.add(pillar);
   }
 
-  if (typeof createTextLabel === "function") {
-    const label = createTextLabel('METRO', 32, 10, {
-      color: '#ff4444',
-      bg: 'rgba(0,0,0,0)',
-      font: 'Arial',
-      fontSize: 10,
-      pxPerUnit: 2
+  // Load and add train model in the center
+  loadTrainModel()
+    .then((train) => {
+      // Đặt train ở giữa platform
+      train.position.set(0, platformHeight + 10, 0); // Hơi cao hơn platform
+      train.rotation.y = Math.PI / 2; // Xoay train song song với platform
+      this.mesh.add(train);
+      this.trainModel = train;
+    })
+    .catch((error) => {
+      console.error("Failed to load train model for metro station:", error);
     });
-    label.position.set(0, 3, 10);
-    this.mesh.add(label);
+
+  // Station sign
+  if (typeof createTextLabel === "function") {
+    const signGroup = new THREE.Group();
+    const label = createTextLabel('METRO', 200, 60, {
+      color: '#FFFFFFFF',
+      bg: 'rgba(255,68,68,0.5)',
+      font: 'Arial',
+      fontSize: 40,
+      pxPerUnit: 0.5
+    });
+
+    // Đặt label ở mặt trước của ga tàu (về phía người chơi - trục Z dương)
+    label.position.set(0, 120, platformDepth / 2 + 15); // Hơi ra ngoài tường kính
+    signGroup.add(label);
+
+    // Sign group không bị rotation của mesh chính
+    this.mesh.add(signGroup);
   }
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.scale.set(s, s, s); // Chỉ scale theo parameter s
   // Quay ngang sang phải (trục Y, 90 độ)
   this.mesh.rotation.y = -Math.PI / 2;
 }
 
-export function Skyscraper(x, y, z, s, floors = 12, width = 8, depth = 6, floorHeight = 2) {
-  // SCALE UP 80x để match tree
-  const scaleFactor = s * 80;
-  this.mesh = new THREE.Group();
-  this.type = "skyscraper";
-
-  const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x556677,
-    metalness: 0.4,
-    roughness: 0.5
+function loadSkyscraperModel() {
+  return createGLBModel({
+    url: SKYSCRAPER_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 3000,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
   });
-  const glassMat = new THREE.MeshStandardMaterial({
-    color: 0x99ccff,
-    transparent: true,
-    opacity: 0.5
-  });
-
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(width, floors * floorHeight, depth),
-    wallMat
-  );
-  body.position.y = (floors * floorHeight) / 2;
-  this.mesh.add(body);
-
-  for (let i = 1; i < floors; i++) {
-    const glass = new THREE.Mesh(
-      new THREE.BoxGeometry(width * 0.9, 0.1, depth * 0.9),
-      glassMat
-    );
-    glass.position.set(0, i * floorHeight, 0);
-    this.mesh.add(glass);
-  }
-
-  const roof = new THREE.Mesh(
-    new THREE.BoxGeometry(width * 1.05, 0.5, depth * 1.05),
-    new THREE.MeshStandardMaterial({ color: 0x333333 })
-  );
-  roof.position.y = floors * floorHeight + 0.25;
-  this.mesh.add(roof);
-
-  const antenna = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.1, 0.2, 2, 8),
-    new THREE.MeshStandardMaterial({ color: 0xffffff })
-  );
-  antenna.position.y = floors * floorHeight + 1.5;
-  this.mesh.add(antenna);
-
-  this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
 }
 
-export function HighTechFactory(x, y, z, s) {
-  // Scale tương tự Tree (~500 width) nhưng mang phong cách hiện đại
-  const scaleFactor = (500 / 120) * s * 2;
-  this.mesh = new THREE.Group();
-  this.type = "highTechFactory";
+export function Skyscraper(x, y, z, s) {
+  this.mesh = new THREE.Object3D(); // Initialize mesh first!
+  this.type = "skyscraper";
+  this.mesh.userData = { sideElement: true };
 
-  // 🏢 Khối nhà chính – kính + kim loại (màu xám trắng)
-  const mainBuilding = new THREE.Mesh(
-    new THREE.BoxGeometry(110, 70, 90),
-    new THREE.MeshStandardMaterial({
-      color: 0xe0e0e0, // xám trắng
-      metalness: 0.2,
-      roughness: 0.3
+  loadSkyscraperModel()
+    .then((skyscraper) => {
+      this.mesh.add(skyscraper);
+      this.loadedMesh = skyscraper;
     })
-  );
-  mainBuilding.position.set(0, 35, 0);
-  this.mesh.add(mainBuilding);
-
-  // 🔳 Cửa kính dài (mặt trước)
-  const glassMaterial = new THREE.MeshStandardMaterial({
-    color: 0x88ccef,
-    metalness: 0.2,
-    roughness: 0.1,
-    transparent: true,
-    opacity: 0.6
-  });
-  for (let i = -1; i <= 1; i++) {
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(25, 20), glassMaterial);
-    glass.position.set(i * 35, 35, 46);
-    this.mesh.add(glass);
-  }
-
-  // 🔋 Tấm năng lượng mặt trời (phía bên hông phải)
-  const solarPanel = new THREE.Mesh(
-    new THREE.PlaneGeometry(60, 40),
-    new THREE.MeshStandardMaterial({
-      color: 0x1f2937, // xanh đen
-      metalness: 0.5,
-      roughness: 0.2
-    })
-  );
-  solarPanel.rotation.x = -Math.PI / 4;
-  solarPanel.position.set(70, 55, 0);
-  this.mesh.add(solarPanel);
-
-  // 📡 Anten vệ tinh – cảm giác "công nghệ cao"
-  const antennaBase = new THREE.Mesh(
-    new THREE.CylinderGeometry(2, 2, 15, 8),
-    new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
-  );
-  antennaBase.position.set(-40, 80, -20);
-  this.mesh.add(antennaBase);
-
-  const antennaDish = new THREE.Mesh(
-    new THREE.SphereGeometry(10, 16, 16, 0, Math.PI),
-    new THREE.MeshStandardMaterial({ color: 0xcfd3d6, metalness: 0.1 })
-  );
-  antennaDish.position.set(-40, 90, -25);
-  antennaDish.rotation.x = Math.PI / 4;
-  this.mesh.add(antennaDish);
-
-  // 💡 Đèn tín hiệu đỏ nhấp nháy
-  const warningLight = new THREE.Mesh(
-    new THREE.SphereGeometry(3, 8, 8),
-    new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 })
-  );
-  warningLight.position.set(0, 85, 0);
-  this.mesh.add(warningLight);
-
-  // Animation cho đèn công nghệ (nhấp nháy)
-  this.update = function () {
-    warningLight.material.emissiveIntensity = Math.abs(Math.sin(Date.now() * 0.005)) * 1.5;
-  };
+    .catch((error) => {
+      console.error("Failed to load skyscraper model:", error);
+      this.loadedMesh = null;
+    });
 
   this.mesh.position.set(x, y, z);
-  this.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+  this.mesh.scale.set(s, s, s);
+}
+
+function loadCompanyModel() {
+  return createGLBModel({
+    url: COMPANY_URL,
+    castShadow: true,
+    receiveShadow: true,
+    desiredHeight: 1000,
+    desiredWidth: 300,
+    snapToGround: true,
+    onClone: (root) => {
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material = child.material.clone();
+        }
+      });
+    }
+  });
+}
+
+export function Company(x, y, z, s) {
+  this.mesh = new THREE.Group();
+  this.type = "company";
+
+  loadCompanyModel()
+    .then((company) => {
+      this.mesh.add(company);
+      this.loadedMesh = company;
+    })
+    .catch((error) => {
+      console.error("Failed to load company model:", error);
+      this.loadedMesh = null;
+    });
+
+  this.mesh.position.set(x, y, z);
+  this.mesh.scale.set(s, s, s);
   this.mesh.rotation.y = -Math.PI / 2;
 }
 

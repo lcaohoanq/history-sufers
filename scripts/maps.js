@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   BallotBox,
   BribeEnvelope,
-  ColonialGate,
+  LowBarrier,
   CapitalistExpress,
   CorruptedThrone,
   HammerAndSickle,
@@ -17,13 +17,13 @@ import {
   BambooTree,
   WaterBuffalo,
   RiceStorage,
-  WindPump,
+  CropField,
   OldFactory,
-  OldApartmentBlock,
+  House,
   FiveGTower,
   MetroStation,
   Skyscraper,
-  HighTechFactory
+  Company
 } from '../js/object.js';
 import { Character } from './characters.js';
 import {
@@ -95,13 +95,12 @@ export function WorldMap(networkStrategy = null) {
   var minRowsBetweenBuff = 3;
   var minRowsBetweenSideObject = 1;
   var lastSafeLane = 0;
-  var DEBUG_HITBOX = false;
+  var DEBUG_HITBOX = true;
 
   // ===== DIFFICULTY SCALING =====
   var gameSpeed = 75; // Initial speed
   var deadlySpawnChance = 0.3; // Initial 30%
   var buffSpawnChance = 0.4; // Initial 40%
-  var multiLaneDeadlyChance = 0.5; // Chance for multiple deadly objects
   var minScale = 2; // Minimum scale for tree spawning
   var maxScale = 4; // Maximum scale for tree spawning
 
@@ -671,7 +670,6 @@ export function WorldMap(networkStrategy = null) {
         gameSpeed = 125;
         minRowsBetweenDeadly = 5;
         deadlySpawnChance = 0.6;
-        multiLaneDeadlyChance = 0.7;
 
         if (groundStage < 2) switchGround(2);
       }
@@ -680,13 +678,12 @@ export function WorldMap(networkStrategy = null) {
         gameSpeed = 150;
         minRowsBetweenDeadly = 4;
         deadlySpawnChance = 0.7;
-        multiLaneDeadlyChance = 0.7;
 
         if (groundStage < 3) switchGround(3);
       }
 
       // Spawn đường mới
-      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z > -50000) {
+      if (objects.length > 0 && objects[objects.length - 1].mesh.position.z > -80000) {
         difficulty += 1;
         createRowOfObjects(objects[objects.length - 1].mesh.position.z - 3000);
       }
@@ -978,7 +975,6 @@ export function WorldMap(networkStrategy = null) {
     if (shouldSpawnSideObject) {
       var largeObjects = [
         'OldApartmentBlock',
-        'HighTechFactory',
         'Skyscraper',
         'MetroStation',
         'OldFactory'
@@ -992,17 +988,15 @@ export function WorldMap(networkStrategy = null) {
 
       if (isLargeObject) {
         var side = Math.random() < 0.5 ? 'left' : 'right'; // Chọn 1 bên
-        var lane = side === 'left' ? -4 : 4; // Lane ngoài cùng
-        var scale = minScale + (maxScale - minScale) * Math.random();
+        var lane = side === 'left' ? -4 : 4;
+        var scale = 3 + Math.random() * 2; // Object large dùng scale lớn hơn
         var sideObject = createSideObject(objectType, lane * 800, -300, position, scale);
 
         // Xoay object hướng về lane người chơi
         if (sideObject && sideObject.mesh) {
-          // Nếu bên trái, xoay sang phải; bên phải xoay sang trái
-          // Nhưng hướng nhìn về lane người chơi
           var dx = playerLane * 800 - lane * 800;
           var dz = 0;
-          var angle = Math.atan2(dx, dz); // dz=0 nên sẽ là ±PI/2
+          var angle = Math.atan2(dx, dz);
           sideObject.mesh.rotation.y = angle;
         }
 
@@ -1013,7 +1007,8 @@ export function WorldMap(networkStrategy = null) {
           if (lane < -3 || lane > 3) {
             // Random spawn
             if (Math.random() < 0.5) {
-              var scale = minScale + (maxScale - minScale) * Math.random();
+              // Object medium/small dùng scale nhỏ hơn
+              var scale = minScale + Math.random() * (maxScale - minScale);
               var sideObject = createSideObject(objectType, lane * 800, -200, position, scale);
 
               // Xoay object hướng về lane người chơi
@@ -1073,10 +1068,10 @@ export function WorldMap(networkStrategy = null) {
         unityHands: 0.6,
         reformGears: 0.6,
         ballotBox: 0.6,
-        bribeEnvelope: 0.6,
-        corruptedThrone: 0.6,
-        puppetManipulation: 0.6,
-        misbalancedScale: 0.6
+        bribeEnvelope: 0.8,
+        corruptedThrone: 0.8,
+        puppetManipulation: 0.8,
+        misbalancedScale: 0.8
       };
 
       var objectType = weightedRandomObstacle(buffWeights);
@@ -1133,25 +1128,14 @@ export function WorldMap(networkStrategy = null) {
 
     var largeObjects = [
       'OldApartmentBlock',
-      'HighTechFactory',
+      'Company',
       'Skyscraper',
       'MetroStation',
       'OldFactory'
     ];
-    var mediumObjects = ['VillageHut', 'RiceStorage', 'WindPump'];
 
     if (largeObjects.includes(type)) {
-      // Object lớn → đẩy rất xa + hạ thấp xuống đất
-      adjustedX = x < 0 ? x - 3000 : x + 3000;
-      adjustedY = -600; // Hạ xuống sát đất hơn
-    } else if (mediumObjects.includes(type)) {
-      // Object vừa → đẩy xa vừa phải
-      adjustedX = x < 0 ? x - 1500 : x + 1500;
-      adjustedY = -400;
-    } else {
-      // Object nhỏ (Tree, Bamboo, Buffalo) → gần hơn
-      adjustedX = x < 0 ? x - 800 : x + 800;
-      adjustedY = -400;
+      adjustedX = x < 0 ? x - 1000 : x + 1000;
     }
 
     var obj = null;
@@ -1171,14 +1155,14 @@ export function WorldMap(networkStrategy = null) {
       case 'RiceStorage':
         obj = new RiceStorage(adjustedX, adjustedY, z, scale);
         break;
-      case 'WindPump':
-        obj = new WindPump(adjustedX, adjustedY, z, scale);
+      case 'CropField':
+        obj = new CropField(adjustedX, adjustedY, z, scale);
         break;
       case 'OldFactory':
         obj = new OldFactory(adjustedX, adjustedY, z, scale);
         break;
-      case 'OldApartmentBlock':
-        obj = new OldApartmentBlock(adjustedX, adjustedY, z, scale);
+      case 'House':
+        obj = new House(adjustedX, adjustedY, z, scale);
         break;
       case 'FiveGTower':
         obj = new FiveGTower(adjustedX, adjustedY, z, scale);
@@ -1189,8 +1173,8 @@ export function WorldMap(networkStrategy = null) {
       case 'Skyscraper':
         obj = new Skyscraper(adjustedX, adjustedY, z, scale);
         break;
-      case 'HighTechFactory':
-        obj = new HighTechFactory(adjustedX, adjustedY, z, scale);
+      case 'Company':
+        obj = new Company(adjustedX, adjustedY, z, scale);
         break;
       default:
         obj = new Tree(adjustedX, adjustedY, z, scale);
@@ -1223,39 +1207,7 @@ export function WorldMap(networkStrategy = null) {
     return 'Tree'; // Fallback
   }
 
-  /**
-   * Create side object by type
-   */
-  function createSideObject(type, x, y, z, scale) {
-    switch (type) {
-      case 'Tree':
-        return new Tree(x, y, z, scale);
-      case 'VillageHut':
-        return new VillageHut(x, y, z, scale);
-      case 'BambooTree':
-        return new BambooTree(x, y, z, scale);
-      case 'WaterBuffalo':
-        return new WaterBuffalo(x, y, z, scale);
-      case 'RiceStorage':
-        return new RiceStorage(x, y, z, scale);
-      case 'WindPump':
-        return new WindPump(x, y, z, scale);
-      case 'OldFactory':
-        return new OldFactory(x, y, z, scale);
-      case 'OldApartmentBlock':
-        return new OldApartmentBlock(x, y, z, scale);
-      case 'FiveGTower':
-        return new FiveGTower(x, y, z, scale);
-      case 'MetroStation':
-        return new MetroStation(x, y, z, scale);
-      case 'Skyscraper':
-        return new Skyscraper(x, y, z, scale);
-      case 'HighTechFactory':
-        return new HighTechFactory(x, y, z, scale);
-      default:
-        return new Tree(x, y, z, scale);
-    }
-  }
+
 
   function spawnHammerCoinPattern(zPos) {
     var pattern = Math.random() < 0.5 ? 'line' : 'zigzag';
@@ -1297,7 +1249,7 @@ export function WorldMap(networkStrategy = null) {
     shuffleArray(lanes);
 
     for (var i = 0; i < gateCount; i++) {
-      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 0.8, scene);
+      var gate = new LowBarrier(lanes[i] * 800, -300, zPos, 0.8, scene);
       gate.mesh.userData = { deadly: true };
 
       if (DEBUG_HITBOX) gate.showHitbox();
@@ -1315,7 +1267,7 @@ export function WorldMap(networkStrategy = null) {
     lastSafeLane = lanes[0];
 
     for (var i = 1; i < 3; i++) {
-      var gate = new ColonialGate(lanes[i] * 800, -300, zPos, 0.8, scene);
+      var gate = new LowBarrier(lanes[i] * 800, -300, zPos, 0.8, scene);
       gate.mesh.userData = { deadly: true };
 
       if (DEBUG_HITBOX) gate.showHitbox();

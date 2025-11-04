@@ -232,11 +232,11 @@ export function Character() {
 
     self.hitboxHelper = new THREE.Mesh(geometry, material);
 
-    // Position the hitbox relative to character center
+    // Position the hitbox at character center - completely independent of model geometry
     self.hitboxHelper.position.set(
-      0, // X is relative to character's center
-      (hitbox.maxY + hitbox.minY) / 2 - self.element.position.y, // Y offset from character position
-      (hitbox.maxZ + hitbox.minZ) / 2 - self.element.position.z  // Z offset from character position
+      0, // X centered on character
+      0, // Y centered on character (hitbox follows character Y movement)
+      0  // Z centered on character
     );
 
     self.element.add(self.hitboxHelper);

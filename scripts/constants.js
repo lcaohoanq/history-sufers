@@ -264,13 +264,13 @@ export const SIDE_OBJECTS_BY_STAGE = {
     { type: 'BambooTree', weight: 2 },
     { type: 'WaterBuffalo', weight: 0.5 },
     { type: 'RiceStorage', weight: 0.8 },
-    { type: 'WindPump', weight: 0.7 }
+    { type: 'CropField', weight: 0.7 }
   ],
   2: [
     { type: 'Tree', weight: 1 },
     { type: 'OldFactory', weight: 2 },
-    { type: 'OldApartmentBlock', weight: 2 },
-    { type: 'WindPump', weight: 1 },
+    { type: 'House', weight: 2 },
+    { type: 'CropField', weight: 0.5 },
     { type: 'VillageHut', weight: 0.5 }
   ],
   3: [
@@ -278,6 +278,6 @@ export const SIDE_OBJECTS_BY_STAGE = {
     { type: 'FiveGTower', weight: 2 },
     { type: 'MetroStation', weight: 1.5 },
     { type: 'Skyscraper', weight: 2.5 },
-    { type: 'HighTechFactory', weight: 0.5 }
+    { type: 'Company', weight: 0.5 }
   ]
 };

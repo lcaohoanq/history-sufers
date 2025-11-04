@@ -375,6 +375,10 @@ export function WorldMap(networkStrategy = null) {
             if (key === KEYCODE.P && !paused) {
               character.nextSkin();
             }
+            if (key === KEYCODE.B && !paused) {
+              DEBUG_HITBOX = !DEBUG_HITBOX;
+              console.log('Object DEBUG_HITBOX toggled:', DEBUG_HITBOX ? 'ON' : 'OFF');
+            }
           }
         }
       });

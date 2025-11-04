@@ -7,5 +7,7 @@ export const KEYCODE = {
   ESC: 27,
   V: 86,
   P: 80,
-  R: 82
+  R: 82,
+  H: 72,
+  B: 66
 };

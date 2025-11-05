@@ -147,12 +147,12 @@
               </div>
 
               <div class="form-group">
-                <label class="toggle-label" for="classroomModeToggle">
+                <label class="ready-checkbox" style="cursor: pointer;">
                   <input type="checkbox" id="classroomModeToggle" />
-                  <span>Chế độ Classroom</span>
+                  <span>🎓 Chế độ Lớp học (Classroom Mode)</span>
                 </label>
-                <div class="info-hint">
-                  Giáo viên theo dõi bảng điểm, học viên thi đấu trong game.
+                <div class="info-hint" style="margin-top: 8px; font-size: 14px; color: rgba(255, 255, 255, 0.6);">
+                  Người tạo sẽ làm giám sát viên và không tham gia chơi
                 </div>
               </div>
 
@@ -178,19 +178,13 @@
               </div>
 
               <div class="ready-section">
-                <div id="readyToggleContainer">
-                  <label class="ready-checkbox">
-                    <input type="checkbox" id="hostReady" onchange="toggleReady()" />
-                    <span>Tôi đã sẵn sàng</span>
-                  </label>
-                </div>
+                <label class="ready-checkbox">
+                  <input type="checkbox" id="hostReady" onchange="toggleReady()" />
+                  <span>Tôi đã sẵn sàng</span>
+                </label>
 
                 <div class="info-message" id="readyMessage">
                   ⏳ Chờ tất cả người chơi sẵn sàng...
-                </div>
-
-                <div class="info-message" id="classroomNotice" style="display: none">
-                  👑 Bạn là quản trị viên. Khi mọi người sẵn sàng, hãy bấm Start để bắt đầu.
                 </div>
 
                 <!-- Start Race Button (only for host) -->
@@ -419,7 +413,74 @@
       <!-- Multiplayer HUD (Bottom Right) -->
       <div class="multiplayer-hud" id="multiplayerHud" style="display: none">
         <h3>🏁 Chặng đua 🏁</h3>
-        <div id="playerScores" data-player-scores></div>
+        <div id="playerScores"></div>
+      </div>
+
+      <!-- 🎓 Admin Dashboard (Classroom Mode) -->
+      <div id="adminDashboard" class="admin-dashboard" style="display: none">
+        <!-- Header -->
+        <div class="admin-header">
+          <div class="admin-title">
+            <h1>🎓VNR202 - Group7 - Classroom Dashboard</h1>
+            <p class="admin-subtitle">Monitoring <span id="adminPlayerCount">0</span> students</p>
+          </div>
+          <div class="admin-controls">
+            <button class="admin-btn admin-btn-secondary" onclick="window.returnToLobby()">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 11H7.83l4.88-4.88c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0l-6.59 6.59c-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L7.83 13H19c.55 0 1-.45 1-1s-.45-1-1-1z"/>
+              </svg>
+              Exit
+            </button>
+          </div>
+        </div>
+
+        <!-- Race Status -->
+        <div class="admin-race-status" id="adminRaceStatus">
+          <div class="status-card">
+            <div class="status-icon">⏱️</div>
+            <div class="status-info">
+              <div class="status-label">Race Status</div>
+              <div class="status-value" id="adminRaceState">Racing</div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-icon">🏁</div>
+            <div class="status-info">
+              <div class="status-label">Finished</div>
+              <div class="status-value"><span id="adminFinishedCount">0</span>/<span id="adminTotalCount">0</span></div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-icon">👑</div>
+            <div class="status-info">
+              <div class="status-label">Leader</div>
+              <div class="status-value" id="adminLeader">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="admin-leaderboard">
+          <div class="leaderboard-header">
+            <h2>📊 Live Leaderboard</h2>
+            <div class="leaderboard-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="racing">Racing</button>
+              <button class="filter-btn" data-filter="finished">Finished</button>
+            </div>
+          </div>
+          <div class="leaderboard-table">
+            <div class="leaderboard-table-header">
+              <div class="col-rank">#</div>
+              <div class="col-name">Student Name</div>
+              <div class="col-score">Score</div>
+              <div class="col-status">Status</div>
+            </div>
+            <div class="leaderboard-table-body" id="adminLeaderboardBody">
+              <!-- Players will be inserted here -->
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Race Pause Overlay -->
@@ -433,72 +494,6 @@
 
       <!-- 3D World Container -->
       <div id="world"></div>
-    </div>
-
-    <!-- Classroom Dashboard View -->
-    <div id="classroomDashboard" class="view">
-      <div class="dashboard-wrapper">
-        <header class="dashboard-header">
-          <div>
-            <h1 class="dashboard-title">Bảng điểm Classroom</h1>
-            <p class="dashboard-subtitle">Theo dõi tiến độ học viên và quản lý lượt chơi</p>
-          </div>
-          <div class="dashboard-meta">
-            <span class="meta-chip">
-              <span class="meta-label">Mã phòng</span>
-              <span class="meta-value" id="dashboardRoomCode">--</span>
-            </span>
-            <span class="meta-chip">
-              <span class="meta-label">Chế độ</span>
-              <span class="meta-value">Classroom</span>
-            </span>
-          </div>
-        </header>
-
-        <div class="dashboard-content">
-          <section class="dashboard-panel">
-            <div class="panel-title-row">
-              <h2 class="panel-title">Tổng quan</h2>
-              <span class="panel-hint" id="dashboardLastUpdated">Đang đồng bộ...</span>
-            </div>
-
-            <div class="dashboard-stats-grid">
-              <div class="stat-card">
-                <div class="stat-label">Trạng thái phòng</div>
-                <div class="stat-value" id="dashboardRoomState">Chờ bắt đầu</div>
-                <div class="stat-hint" id="dashboardRoomCountdown">--</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Học viên</div>
-                <div class="stat-value" id="dashboardPlayerCount">0</div>
-                <div class="stat-hint" id="dashboardReadySummary">0 đang sẵn sàng</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Sẵn sàng</div>
-                <div class="stat-value" id="dashboardReadyCount">0</div>
-                <div class="stat-hint" id="dashboardReadyRatio">0/0 học viên</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-label">Hoàn thành</div>
-                <div class="stat-value" id="dashboardFinishedCount">0</div>
-                <div class="stat-hint" id="dashboardFinishedRatio">0/0 học viên</div>
-              </div>
-            </div>
-          </section>
-
-          <section class="dashboard-panel">
-            <div class="panel-title-row">
-              <h2 class="panel-title">Danh sách học viên</h2>
-              <span class="panel-hint">Cập nhật mỗi 0.75s</span>
-            </div>
-            <div class="dashboard-score-list" id="dashboardScores" data-player-scores></div>
-
-            <div class="dashboard-note">
-              Sau khi lượt chơi kết thúc, tạo phòng mới để bắt đầu vòng tiếp theo.
-            </div>
-          </section>
-        </div>
-      </div>
     </div>
 
     <!-- Toast Notification Container (Global) -->
@@ -535,193 +530,6 @@
         border-radius: 12px;
         font-size: 12px;
         font-weight: 600;
-      }
-
-      /* Classroom Dashboard */
-      .dashboard-wrapper {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        padding: 40px 20px 32px;
-        background: radial-gradient(circle at top, rgba(66, 165, 245, 0.2), transparent 55%),
-          linear-gradient(180deg, rgba(13, 71, 161, 0.4), rgba(3, 19, 43, 0.9));
-        color: #fff;
-      }
-
-      .dashboard-header {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 32px;
-      }
-
-      .dashboard-title {
-        font-size: 32px;
-        font-weight: 700;
-        margin: 0;
-      }
-
-      .dashboard-subtitle {
-        margin-top: 8px;
-        color: rgba(255, 255, 255, 0.7);
-        max-width: 520px;
-      }
-
-      .dashboard-meta {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-      }
-
-      .meta-chip {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 12px 16px;
-        border-radius: 12px;
-        background: rgba(21, 101, 192, 0.35);
-        border: 1px solid rgba(100, 181, 246, 0.4);
-        min-width: 140px;
-      }
-
-      .meta-label {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      .meta-value {
-        font-size: 18px;
-        font-weight: 700;
-      }
-
-      .dashboard-content {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
-
-      .dashboard-panel {
-        background: rgba(7, 26, 56, 0.65);
-        border-radius: 20px;
-        border: 1px solid rgba(33, 150, 243, 0.2);
-        padding: 24px 28px;
-        box-shadow: 0 18px 40px rgba(3, 19, 43, 0.45);
-      }
-
-      .panel-title-row {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 20px;
-      }
-
-      .panel-title {
-        font-size: 22px;
-        font-weight: 700;
-        margin: 0;
-      }
-
-      .panel-hint {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      .dashboard-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-      }
-
-      .stat-card {
-        padding: 18px;
-        border-radius: 16px;
-        background: rgba(21, 101, 192, 0.25);
-        border: 1px solid rgba(100, 181, 246, 0.35);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-height: 120px;
-      }
-
-      .stat-label {
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      .stat-value {
-        font-size: 32px;
-        font-weight: 700;
-        color: #e3f2fd;
-      }
-
-      .stat-hint {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.7);
-      }
-
-      .dashboard-score-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .dashboard-score-list .player-score-item {
-        padding: 16px 18px;
-        border-radius: 14px;
-        border: 1px solid rgba(100, 181, 246, 0.25);
-        background: rgba(21, 101, 192, 0.2);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-      }
-
-      .dashboard-score-list .player-score-item:hover {
-        transform: translateY(-3px);
-        border-color: rgba(255, 255, 255, 0.35);
-      }
-
-      .dashboard-score-list .player-score-item.self {
-        border-color: rgba(129, 212, 250, 0.65);
-        background: rgba(21, 101, 192, 0.35);
-      }
-
-      .dashboard-score-list .player-score-name {
-        font-size: 16px;
-      }
-
-      .dashboard-score-list .player-score-status {
-        font-size: 14px;
-      }
-
-      .dashboard-score-list .player-score-value {
-        font-size: 18px;
-      }
-
-      .dashboard-note {
-        margin-top: 20px;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.6);
-        padding-left: 4px;
-      }
-
-      @media (max-width: 768px) {
-        .dashboard-wrapper {
-          padding: 24px 16px 24px;
-        }
-
-        .dashboard-header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .dashboard-panel {
-          padding: 20px;
-        }
       }
 
       .no-rooms {
@@ -768,16 +576,6 @@
       .player-item.ready {
         border-color: rgba(76, 175, 80, 0.5);
         background: rgba(76, 175, 80, 0.1);
-      }
-
-      .player-item.spectator {
-        border-color: rgba(255, 193, 7, 0.5);
-        background: rgba(255, 193, 7, 0.08);
-      }
-
-      .player-item.spectator .player-status {
-        color: #ffc107;
-        font-weight: 600;
       }
 
       .toast {
@@ -862,6 +660,348 @@
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
+
+      /* 🎓 Admin Dashboard Styles */
+      .admin-dashboard {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #fff;
+        overflow-y: auto;
+        z-index: 9998;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 30px 50px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .admin-title h1 {
+        margin: 0;
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .admin-subtitle {
+        margin: 8px 0 0 0;
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .admin-controls {
+        display: flex;
+        gap: 15px;
+      }
+
+      .admin-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .admin-btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .admin-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .admin-race-status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        padding: 30px 50px;
+      }
+
+      .status-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .status-icon {
+        font-size: 48px;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      }
+
+      .status-info {
+        flex: 1;
+      }
+
+      .status-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .status-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .admin-leaderboard {
+        padding: 0 50px 50px 50px;
+      }
+
+      .leaderboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .leaderboard-header h2 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .leaderboard-filters {
+        display: flex;
+        gap: 10px;
+      }
+
+      .filter-btn {
+        padding: 8px 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .filter-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .filter-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .leaderboard-table {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+
+      .leaderboard-table-header {
+        display: grid;
+        grid-template-columns: 80px 1fr 150px 150px;
+        gap: 20px;
+        padding: 20px 30px;
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 700;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .leaderboard-table-body {
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .leaderboard-row {
+        display: grid;
+        grid-template-columns: 80px 1fr 150px 150px;
+        gap: 20px;
+        padding: 20px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        animation: slideIn 0.5s ease forwards;
+        opacity: 0;
+      }
+
+      @keyframes slideIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      .leaderboard-row:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .leaderboard-row.rank-1 {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 100%);
+        border-left: 4px solid #ffd700;
+      }
+
+      .leaderboard-row.rank-2 {
+        background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, transparent 100%);
+        border-left: 4px solid #c0c0c0;
+      }
+
+      .leaderboard-row.rank-3 {
+        background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, transparent 100%);
+        border-left: 4px solid #cd7f32;
+      }
+
+      .col-rank {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .rank-medal {
+        font-size: 32px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      }
+
+      .col-name {
+        display: flex;
+        align-items: center;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .player-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .col-score {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        font-weight: 700;
+        color: #4ade80;
+        transition: all 0.5s ease;
+      }
+
+      /* 🎓 Score highlight animation */
+      .score-updated {
+        animation: scoreFlash 0.8s ease;
+      }
+
+      @keyframes scoreFlash {
+        0% {
+          transform: scale(1);
+          color: #4ade80;
+        }
+        50% {
+          transform: scale(1.2);
+          color: #fbbf24;
+          text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+        }
+        100% {
+          transform: scale(1);
+          color: #4ade80;
+        }
+      }
+
+      .col-status {
+        display: flex;
+        align-items: center;
+      }
+
+      .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-racing {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+      }
+
+      .status-finished {
+        background: rgba(74, 222, 128, 0.2);
+        color: #4ade80;
+        border: 1px solid rgba(74, 222, 128, 0.4);
+      }
+
+      .status-waiting {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+      }
+
+      /* Scrollbar styling */
+      .leaderboard-table-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .leaderboard-table-body::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .leaderboard-table-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+      }
+
+      .leaderboard-table-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
     </style>
 
     <script>
@@ -872,23 +1012,8 @@
       let gameInitialized = false;
       let raceStarting = false;
       let playerScoresTimer = null;
-      let currentRoomMode = 'public';
-
-      const CLASSROOM_MODE = 'classroom';
-
-      function isClassroomMode() {
-        return currentRoomMode === CLASSROOM_MODE;
-      }
-
-      function getLocalPlayer() {
-        if (!networkManager) return null;
-        return networkManager.getAllPlayers().find((player) => player.isSelf) || null;
-      }
-
-      function isLocalSpectator() {
-        const selfPlayer = getLocalPlayer();
-        return !!(selfPlayer && selfPlayer.spectator);
-      }
+      let isClassroomMode = false; // 🎓 NEW: Track classroom mode
+      let isAdmin = false; // 🎓 NEW: Track if current user is admin
 
       // ==================== VIEW SWITCHING ====================
       function switchView(viewId) {
@@ -931,16 +1056,10 @@
 
         // 🔥 Listen for race start - SWITCH TO GAME VIEW instead of navigate
         networkManager.on('raceStart', () => {
-          console.log('🏁 Race starting...');
+          console.log('🏁 Race starting, switching to game view...');
 
           // Reset race starting flag
           raceStarting = false;
-
-          if (isClassroomMode() && isLocalSpectator()) {
-            switchView('classroomDashboard');
-            startPlayerScoreUpdates();
-            return;
-          }
 
           // Switch to game view
           switchView('gameView');
@@ -951,6 +1070,29 @@
               window.initMultiplayerGame(); // Call game init function
             }
           }, 100);
+        });
+
+        // 🎓 Listen for race ended - handle classroom mode
+        networkManager.on('raceEnded', (data) => {
+          console.log('🏁 Race ended:', data);
+
+          // Check if replay is allowed
+          if (networkManager.room && networkManager.room.state) {
+            const canReplay = networkManager.room.state.canReplay;
+
+            if (!canReplay) {
+              // Classroom mode: No replay
+              showToast('Race finished! Return to lobby.', 'info');
+
+              // Show final message
+              setTimeout(() => {
+                const message = isAdmin
+                  ? 'Race complete. Students cannot replay in Classroom mode.'
+                  : 'Race complete. Press ESC to return to lobby.';
+                showToast(message, 'info');
+              }, 2000);
+            }
+          }
         });
 
         // Listen for players updated
@@ -968,10 +1110,17 @@
           updatePlayerScores();
         });
 
-        networkManager.on('stateChanged', (state) => {
-          currentRoomMode = state?.mode || networkManager.getRoomMode() || 'public';
+        networkManager.on('stateChanged', () => {
           updatePlayersList();
           updatePlayerScores();
+        });
+
+        // 🔥 NEW: Listen for individual player state changes (ready, resourcesLoaded, etc.)
+        networkManager.on('playerStateChanged', () => {
+          console.log('🔄 Player state changed, updating UI...');
+          updatePlayersList();
+          updatePlayerScores();
+          updateAdminDashboard(); // 🎓 Update admin dashboard
         });
       });
 
@@ -1023,28 +1172,35 @@
           return;
         }
 
-      try {
-        showToast('Creating room...', 'info');
+        // 🎓 Check if classroom mode is enabled
+        isClassroomMode = document.getElementById('classroomModeToggle').checked;
 
-        const classroomToggle = document.getElementById('classroomModeToggle');
-        const selectedMode = classroomToggle && classroomToggle.checked ? CLASSROOM_MODE : 'public';
+        try {
+          showToast(isClassroomMode ? 'Creating classroom...' : 'Creating room...', 'info');
 
-        const { roomId, sessionId } = await networkManager.createRoom(playerName, selectedMode);
-        currentRoomId = roomId;
-        currentSessionId = sessionId;
-        currentRoomMode = networkManager.getRoomMode() || selectedMode;
+          const { roomId, sessionId } = await networkManager.createRoom(playerName, { isClassroomMode });
+          currentRoomId = roomId;
+          currentSessionId = sessionId;
 
-        console.log('✅ Room created:', roomId, 'mode:', currentRoomMode);
+          // 🎓 If classroom mode, creator is admin (not player)
+          isAdmin = isClassroomMode;
 
-        // Show room info
-        document.getElementById('displayRoomId').textContent = roomId;
-        document.getElementById('roomInfo').style.display = 'block';
-        document.querySelector('#createRoom form').style.display = 'none';
+          console.log('✅ Room created:', roomId, isClassroomMode ? '(Classroom Mode)' : '');
 
+          // Show room info
+          document.getElementById('displayRoomId').textContent = roomId;
+          document.getElementById('roomInfo').style.display = 'block';
+          document.querySelector('#createRoom form').style.display = 'none';
+
+          // 🎓 Update UI based on mode
+          updateRoomUIForClassroom();
           updatePlayersList();
           updatePlayerScores();
 
-          showToast('Room created successfully!', 'success');
+          showToast(
+            isClassroomMode ? 'Classroom created! You are the supervisor.' : 'Room created successfully!',
+            'success'
+          );
         } catch (error) {
           console.error('❌ Failed to create room:', error);
           showToast('Failed to create room: ' + error.message, 'error');
@@ -1069,9 +1225,18 @@
           const result = await networkManager.joinRoom(roomId, playerName);
           currentRoomId = result.roomId;
           currentSessionId = result.sessionId;
-          currentRoomMode = networkManager.getRoomMode() || currentRoomMode;
 
-          console.log('✅ Joined room:', roomId, 'mode:', currentRoomMode);
+          console.log('✅ Joined room:', roomId);
+
+          // 🎓 Detect if room is classroom mode
+          if (networkManager.room && networkManager.room.state) {
+            isClassroomMode = networkManager.room.state.isClassroomMode || false;
+            isAdmin = false; // Joiner is never admin
+
+            if (isClassroomMode) {
+              console.log('🎓 Joined classroom mode room');
+            }
+          }
 
           // Show room info in create room screen
           document.getElementById('joinRoom').style.display = 'none';
@@ -1080,10 +1245,17 @@
           document.getElementById('roomInfo').style.display = 'block';
           document.querySelector('#createRoom form').style.display = 'none';
 
+          // 🎓 Update UI if classroom mode
+          updateRoomUIForClassroom();
           updatePlayersList();
           updatePlayerScores();
 
-          showToast('Joined room successfully! Wait for host to start.', 'success');
+          showToast(
+            isClassroomMode
+              ? 'Joined classroom! Wait for supervisor to start.'
+              : 'Joined room successfully! Wait for host to start.',
+            'success'
+          );
         } catch (error) {
           console.error('❌ Failed to join room:', error);
           showToast('Failed to join room: ' + error.message, 'error');
@@ -1110,18 +1282,23 @@
         const startBtn = document.getElementById('startRaceBtn');
         if (startBtn) {
           startBtn.disabled = true;
-          startBtn.textContent = '⏳ Đang bắt đầu...';
+          startBtn.textContent = '⏳ Starting...';
         }
 
         try {
-          networkManager.room.send('startRace');
+          // 🎓 Use new request method for classroom mode compatibility
+          if (isClassroomMode && isAdmin) {
+            networkManager.requestStartRace();
+          } else {
+            networkManager.room.send('startRace');
+          }
         } catch (error) {
           console.error('❌ Failed to start race:', error);
           showToast('Failed to start race', 'error');
           raceStarting = false;
           if (startBtn) {
             startBtn.disabled = false;
-            startBtn.textContent = '🏁 Bắt đầu chạy đua';
+            startBtn.innerHTML = '🏁 Bắt đầu chạy đua';
           }
         }
       }
@@ -1168,10 +1345,7 @@
         try {
           showToast('Joining room...', 'info');
 
-          const result = await networkManager.joinRoom(roomId, playerName);
-          currentRoomId = result.roomId;
-          currentSessionId = result.sessionId;
-          currentRoomMode = networkManager.getRoomMode() || currentRoomMode;
+          await networkManager.joinRoom(roomId, playerName);
 
           // Show room info
           document.getElementById('roomList').style.display = 'none';
@@ -1192,26 +1366,53 @@
 
       // Toggle ready status
       function toggleReady() {
-        const checkbox = document.getElementById('hostReady');
-
-        if (isClassroomMode()) {
-          if (isLocalSpectator()) {
-            if (checkbox) checkbox.checked = false;
-            showToast('Quản trị viên không cần đánh dấu sẵn sàng.', 'info');
-            return;
-          }
-
-          const roomState = networkManager?.room?.state?.state;
-          if (roomState === 'finished') {
-            if (checkbox) checkbox.checked = false;
-            showToast('Phiên classroom đã kết thúc. Tạo phòng mới để chơi lại.', 'info');
-            return;
-          }
+        // 🎓 Admin cannot be ready in classroom mode
+        if (isClassroomMode && isAdmin) {
+          showToast('Admin không cần sẵn sàng', 'info');
+          document.getElementById('hostReady').checked = false;
+          return;
         }
 
-        const isReady = checkbox ? checkbox.checked : false;
+        const isReady = document.getElementById('hostReady').checked;
         networkManager.setReady(isReady);
         console.log('Ready status:', isReady);
+
+        // 🎓 When player is ready, mark resources as loaded
+        // Resources are already loaded when page loads (JS, CSS, Colyseus client, etc.)
+        // We just need to notify server for validation in classroom mode
+        setTimeout(() => {
+          if (networkManager && networkManager.sendResourcesLoaded) {
+            networkManager.sendResourcesLoaded(isReady); // true if ready, false if not ready
+            console.log(isReady ? '✅ Resources marked as loaded' : '⏳ Resources marked as unloaded');
+          }
+        }, 500); // Small delay to ensure ready is processed first
+      }
+
+      // 🎓 Update UI for classroom mode
+      function updateRoomUIForClassroom() {
+        if (!isClassroomMode) return;
+
+        const readySection = document.querySelector('.ready-section');
+        if (!readySection) return;
+
+        if (isAdmin) {
+          // Admin UI: Hide ready checkbox, show admin controls
+          const readyCheckbox = readySection.querySelector('.ready-checkbox');
+          if (readyCheckbox) {
+            readyCheckbox.style.display = 'none';
+          }
+
+          const readyMessage = document.getElementById('readyMessage');
+          if (readyMessage) {
+            readyMessage.innerHTML = '🎓 <strong>Chế độ Lớp học</strong><br>Bạn là giám sát viên. Đợi tất cả học sinh sẵn sàng.';
+          }
+        } else {
+          // Regular player UI in classroom mode
+          const readyMessage = document.getElementById('readyMessage');
+          if (readyMessage) {
+            readyMessage.innerHTML = '🎓 <strong>Chế độ Lớp học</strong><br>Đợi giám sát viên bắt đầu.';
+          }
+        }
       }
 
       // Update players list
@@ -1221,178 +1422,257 @@
         const players = networkManager.getAllPlayers();
         const playersList = document.getElementById('playersList');
         const playerCount = document.getElementById('playerCount');
-        const readyMessage = document.getElementById('readyMessage');
-        const classroomNotice = document.getElementById('classroomNotice');
-        const readyToggleContainer = document.getElementById('readyToggleContainer');
-        const startBtn = document.getElementById('startRaceBtn');
-        const roomState = networkManager.room.state?.state || 'waiting';
-        const raceIdle = roomState === 'waiting';
-        const dashboardRoomCode = document.getElementById('dashboardRoomCode');
-        const dashboardRoomState = document.getElementById('dashboardRoomState');
-        const dashboardRoomCountdown = document.getElementById('dashboardRoomCountdown');
-        const dashboardPlayerCount = document.getElementById('dashboardPlayerCount');
-        const dashboardReadySummary = document.getElementById('dashboardReadySummary');
-        const dashboardReadyCount = document.getElementById('dashboardReadyCount');
-        const dashboardReadyRatio = document.getElementById('dashboardReadyRatio');
-        const dashboardFinishedCount = document.getElementById('dashboardFinishedCount');
-        const dashboardFinishedRatio = document.getElementById('dashboardFinishedRatio');
-        const dashboardLastUpdated = document.getElementById('dashboardLastUpdated');
 
         if (!playersList || !playerCount) return;
 
-        const activePlayers = players.filter((player) => !player.spectator);
-        const readyCount = activePlayers.filter((player) => player.ready).length;
-        const finishedPlayers = activePlayers.filter((player) => player.finished).length;
-        const roomCountdown = networkManager.room.state?.countdown;
-        playerCount.textContent = activePlayers.length;
+        // 🎓 Filter out admin in classroom mode
+        const actualPlayers = isClassroomMode
+          ? players.filter((p) => p.sessionId !== networkManager.room.state.hostId)
+          : players;
 
-        const playerItems = players
-          .map((player) => {
-            const isSpectator = player.spectator;
-            const readyClass = !isSpectator && player.ready ? 'ready' : '';
-            const status = isSpectator
-              ? '👑 Quản trị'
-              : player.ready
-              ? '✅ Sẵn sàng'
-              : '⏳ Chờ...';
-            const nameLabel = `${player.name}${player.isSelf ? ' (You)' : ''}`;
-            return `
-          <div class="player-item ${readyClass} ${isSpectator ? 'spectator' : ''}">
-            <span class="player-name">${nameLabel}</span>
-            <span class="player-status">${status}</span>
-          </div>
-        `;
-          })
+        playerCount.textContent = actualPlayers.length;
+
+        playersList.innerHTML = actualPlayers
+          .map(
+            (player) => `
+        <div class="player-item ${player.ready ? 'ready' : ''}">
+          <span class="player-name">${player.name}${player.isSelf ? ' (You)' : ''}</span>
+          <span class="player-status">${player.ready ? '✅ Sẵn sàng' : '⏳ Chờ...'}</span>
+        </div>
+      `
+          )
           .join('');
 
-        playersList.innerHTML =
-          playerItems || '<div class="player-score-empty">Chưa có người chơi</div>';
+        // 🎓 Classroom mode: Only admin can start, all players must be ready
+        if (isClassroomMode && isAdmin) {
+          const allReady = actualPlayers.every((p) => p.ready);
+          const startBtn = document.getElementById('startRaceBtn');
 
-        const isHost = networkManager.sessionId === networkManager.room.state.hostId;
-        const classroomMode = isClassroomMode();
-        const allReady = activePlayers.length > 0 && readyCount === activePlayers.length;
-        const enoughPlayers = activePlayers.length >= 2;
-        const spectatorSelf = isLocalSpectator();
+          if (startBtn) {
+            startBtn.style.display = allReady && actualPlayers.length >= 1 ? 'block' : 'none';
+            startBtn.disabled = !allReady;
+            startBtn.innerHTML = allReady ? '🏁 Bắt đầu chạy đua' : '⏳ Chờ tất cả sẵn sàng...';
+          }
+        } else if (!isClassroomMode) {
+          // Normal mode: Show start button if host and all ready
+          const isHost = networkManager.sessionId === networkManager.room.state.hostId;
+          const allReady = actualPlayers.every((p) => p.ready);
+          const startBtn = document.getElementById('startRaceBtn');
 
-        if (readyToggleContainer) {
-          readyToggleContainer.style.display = spectatorSelf ? 'none' : 'block';
+          if (startBtn) {
+            startBtn.style.display = isHost && allReady && actualPlayers.length >= 2 ? 'block' : 'none';
+          }
+        }
+      }
+
+      // 🎓 Update Admin Dashboard (Classroom Mode)
+      function updateAdminDashboard() {
+        if (!isClassroomMode || !isAdmin || !networkManager || !networkManager.room) return;
+
+        const dashboard = document.getElementById('adminDashboard');
+        if (!dashboard) return;
+
+        const state = networkManager.room.state;
+        const players = networkManager.getAllPlayers().filter((p) => p.sessionId !== state.hostId);
+
+        // Update player count in header
+        const playerCountElem = document.getElementById('adminPlayerCount');
+        if (playerCountElem) {
+          playerCountElem.textContent = players.length;
         }
 
-        if (classroomNotice) {
-          classroomNotice.style.display = spectatorSelf ? 'block' : 'none';
+        // Update race status card
+        const raceStatusValue = document.getElementById('raceStatusValue');
+        if (raceStatusValue) {
+          const statusMap = {
+            waiting: 'Đang chờ',
+            countdown: 'Đếm ngược',
+            racing: 'Đang đua',
+            finished: 'Đã kết thúc'
+          };
+          raceStatusValue.textContent = statusMap[state.raceStatus] || 'N/A';
         }
 
-        if (readyMessage) {
-          if (classroomMode) {
-            readyMessage.textContent = allReady
-              ? 'Tất cả học viên đã sẵn sàng. Chờ admin bấm Start.'
-              : '⏳ Chờ học viên sẵn sàng...';
-            readyMessage.style.display = spectatorSelf || activePlayers.length ? 'block' : 'none';
+        // Update finished count card
+        const finishedCountValue = document.getElementById('finishedCountValue');
+        if (finishedCountValue) {
+          const finishedCount = players.filter((p) => p.finishTime !== null).length;
+          finishedCountValue.textContent = `${finishedCount} / ${players.length}`;
+        }
+
+        // Update leader card
+        const leaderValue = document.getElementById('leaderValue');
+        if (leaderValue) {
+          const sortedPlayers = players.slice().sort((a, b) => b.score - a.score);
+          if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0) {
+            leaderValue.textContent = sortedPlayers[0].name;
           } else {
-            readyMessage.textContent = '⏳ Chờ tất cả người chơi sẵn sàng...';
-            readyMessage.style.display = 'block';
+            leaderValue.textContent = 'N/A';
           }
         }
 
-        if (startBtn) {
-          if (isHost && classroomMode && enoughPlayers && raceIdle) {
-            startBtn.style.display = 'block';
-            if (raceStarting) {
-              startBtn.disabled = true;
-              startBtn.textContent = '⏳ Đang bắt đầu...';
-            } else {
-              startBtn.disabled = !allReady;
-              startBtn.textContent = allReady ? '🏁 Bắt đầu chạy đua' : 'Đợi học viên sẵn sàng';
-            }
-          } else if (isHost && !classroomMode && allReady && enoughPlayers && raceIdle) {
-            startBtn.style.display = 'block';
-            startBtn.disabled = raceStarting;
-            if (!raceStarting) {
-              startBtn.textContent = '🏁 Bắt đầu chạy đua';
-            }
-          } else {
-            startBtn.style.display = 'none';
-          }
+        // Update leaderboard table
+        updateLeaderboardTable(players);
+      }
+
+      // 🎓 Update Leaderboard Table
+      let currentFilter = 'all';
+      let previousScores = {}; // Track previous scores to detect changes
+      let previousPlayerList = []; // Track previous player order
+
+      function updateLeaderboardTable(players) {
+        const tableBody = document.querySelector('.leaderboard-table-body');
+        if (!tableBody) return;
+
+        // Apply filter
+        let filteredPlayers = players.slice();
+        if (currentFilter === 'racing') {
+          filteredPlayers = players.filter((p) => p.finishTime === null);
+        } else if (currentFilter === 'finished') {
+          filteredPlayers = players.filter((p) => p.finishTime !== null);
         }
 
-        const stateDisplayMap = {
-          waiting: 'Chờ bắt đầu',
-          countdown: 'Đang đếm ngược',
-          racing: 'Đang thi đấu',
-          paused: 'Đang tạm dừng',
-          finished: 'Đã kết thúc'
-        };
+        // Sort by score descending
+        filteredPlayers.sort((a, b) => b.score - a.score);
 
-        if (dashboardRoomCode) {
-          dashboardRoomCode.textContent = currentRoomId || '--';
-        }
-        if (dashboardRoomState) {
-          dashboardRoomState.textContent = stateDisplayMap[roomState] || 'Không xác định';
-        }
-        if (dashboardRoomCountdown) {
-          if (roomState === 'countdown' && typeof roomCountdown === 'number' && roomCountdown > 0) {
-            dashboardRoomCountdown.textContent = `Bắt đầu sau ${roomCountdown}s`;
-          } else if (roomState === 'racing') {
-            dashboardRoomCountdown.textContent = 'Đang thi đấu';
-          } else if (roomState === 'finished') {
-            dashboardRoomCountdown.textContent = 'Đang tổng kết kết quả';
-          } else {
-            dashboardRoomCountdown.textContent = 'Chờ hành động của quản trị viên';
-          }
-        }
-        if (dashboardPlayerCount) {
-          dashboardPlayerCount.textContent = activePlayers.length;
-        }
-        if (dashboardReadySummary) {
-          dashboardReadySummary.textContent = activePlayers.length
-            ? `${readyCount}/${activePlayers.length} học viên đã sẵn sàng`
-            : 'Chưa có học viên nào tham gia';
-        }
-        if (dashboardReadyCount) {
-          dashboardReadyCount.textContent = readyCount;
-        }
-        if (dashboardReadyRatio) {
-          dashboardReadyRatio.textContent = `${readyCount}/${activePlayers.length || 0} học viên`;
-        }
-        if (dashboardFinishedCount) {
-          dashboardFinishedCount.textContent = finishedPlayers;
-        }
-        if (dashboardFinishedRatio) {
-          dashboardFinishedRatio.textContent = `${finishedPlayers}/${activePlayers.length || 0} học viên`;
-        }
-        if (dashboardLastUpdated) {
-          const now = new Date();
-          dashboardLastUpdated.textContent = `Cập nhật lúc ${now
-            .toLocaleTimeString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
+        // Check if player list changed (order, count, or members)
+        const currentPlayerIds = filteredPlayers.map((p) => p.sessionId).join(',');
+        const previousPlayerIds = previousPlayerList.map((p) => p.sessionId).join(',');
+        const playersChanged = currentPlayerIds !== previousPlayerIds;
+
+        // Only regenerate entire table if players changed
+        if (playersChanged) {
+          tableBody.innerHTML = filteredPlayers
+            .map((player, index) => {
+              const rank = index + 1;
+              const rankClass = rank <= 3 ? `rank-${rank}` : '';
+              const rankDisplay =
+                rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+
+              const status = player.finishTime !== null ? 'finished' : 'racing';
+              const statusText = status === 'finished' ? 'Hoàn thành' : 'Đang đua';
+              const statusClass = `status-${status}`;
+
+              const initial = player.name.charAt(0).toUpperCase();
+
+              return `
+            <div class="leaderboard-row ${rankClass}" data-player-id="${player.sessionId}" style="animation-delay: ${index * 0.05}s">
+              <div class="col-rank">
+                ${rank <= 3 ? `<span class="rank-medal">${rankDisplay}</span>` : rankDisplay}
+              </div>
+              <div class="col-name">
+                <div class="player-avatar">${initial}</div>
+                ${player.name}
+              </div>
+              <div class="col-score" data-score="${player.score}">${player.score}</div>
+              <div class="col-status">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+              </div>
+            </div>
+          `;
             })
-            .replace('.', ':')}`;
+            .join('');
+        } else {
+          // Players didn't change, just update scores and status
+          filteredPlayers.forEach((player, index) => {
+            const row = tableBody.querySelector(
+              `.leaderboard-row[data-player-id="${player.sessionId}"]`
+            );
+            if (!row) return;
+
+            const scoreElement = row.querySelector('.col-score');
+            const statusElement = row.querySelector('.status-badge');
+
+            if (scoreElement) {
+              const currentScore = parseInt(scoreElement.getAttribute('data-score')) || 0;
+              const newScore = player.score;
+
+              // Only update if score changed
+              if (currentScore !== newScore) {
+                scoreElement.setAttribute('data-score', newScore);
+                scoreElement.textContent = newScore;
+
+                // Add flash animation
+                scoreElement.classList.remove('score-updated'); // Remove first to restart animation
+                void scoreElement.offsetWidth; // Force reflow
+                scoreElement.classList.add('score-updated');
+
+                // Remove class after animation
+                setTimeout(() => {
+                  scoreElement.classList.remove('score-updated');
+                }, 850);
+              }
+            }
+
+            // Update status if changed
+            if (statusElement) {
+              const status = player.finishTime !== null ? 'finished' : 'racing';
+              const statusText = status === 'finished' ? 'Hoàn thành' : 'Đang đua';
+              const statusClass = `status-${status}`;
+
+              statusElement.className = `status-badge ${statusClass}`;
+              statusElement.textContent = statusText;
+            }
+          });
+        }
+
+        // Update previous scores and player list
+        const newScores = {};
+        filteredPlayers.forEach((p) => {
+          newScores[p.sessionId] = p.score;
+        });
+        previousScores = newScores;
+        previousPlayerList = filteredPlayers.map((p) => ({ ...p }));
+      }
+
+      // 🎓 Setup Leaderboard Filters
+      function setupLeaderboardFilters() {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            // Update active state
+            filterBtns.forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update filter and refresh table
+            currentFilter = btn.dataset.filter;
+            updateAdminDashboard();
+          });
+        });
+      }
+
+      // 🎓 Setup Exit Dashboard Button
+      function setupExitDashboardButton() {
+        const exitBtn = document.getElementById('exitDashboardBtn');
+        if (exitBtn) {
+          exitBtn.addEventListener('click', () => {
+            // Hide admin dashboard
+            const dashboard = document.getElementById('adminDashboard');
+            if (dashboard) {
+              dashboard.style.display = 'none';
+            }
+
+            // Return to lobby
+            if (window.returnToLobby) {
+              window.returnToLobby();
+            }
+          });
         }
       }
 
       function updatePlayerScores() {
-        const scoreContainers = document.querySelectorAll('[data-player-scores]');
-        if (!scoreContainers.length) return;
+        const scoresContainer = document.getElementById('playerScores');
+        if (!scoresContainer) return;
 
         if (!networkManager || !networkManager.room || !networkManager.room.state) {
-          scoreContainers.forEach((container) => {
-            container.innerHTML = '';
-          });
+          scoresContainer.innerHTML = '';
           return;
         }
 
-        const players = networkManager
-          .getAllPlayers()
-          .filter((player) => !player.spectator)
-          .slice();
-        const roomState = networkManager.room.state?.state || 'waiting';
+        const players = networkManager.getAllPlayers().slice();
 
         if (players.length === 0) {
-          scoreContainers.forEach((container) => {
-            container.innerHTML = '<div class="player-score-empty">Chưa có người chơi</div>';
-          });
+          scoresContainer.innerHTML = '<div class="player-score-empty">Chưa có người chơi</div>';
           return;
         }
 
@@ -1403,56 +1683,44 @@
           return (a.name || '').localeCompare(b.name || '');
         });
 
-        const html = players
-          .map((player, index) => {
-            const classes = ['player-score-item'];
-            if (player.isSelf) {
-              classes.push('self');
-            }
-            const playerName = player.name || `Người chơi ${index + 1}`;
-            const scoreValue = typeof player.score === 'number' ? player.score : 0;
-            const { statusText, statusClass } = (() => {
-              if (player.finished) {
-                return { statusText: '✅ Đã hoàn thành', statusClass: 'status-finished' };
-              }
-              if (roomState === 'paused') {
-                return { statusText: '⏸️ Tạm dừng', statusClass: 'status-paused' };
-              }
-              if (roomState === 'racing') {
-                return { statusText: '🏃 Đang thi đấu', statusClass: 'status-racing' };
-              }
-              if (roomState === 'countdown') {
-                return { statusText: '🚦 Chuẩn bị', statusClass: 'status-racing' };
-              }
-              if (player.ready) {
-                return { statusText: '✅ Sẵn sàng', statusClass: 'status-ready' };
-              }
-              if (roomState === 'finished') {
-                return { statusText: '📊 Đang tổng kết', statusClass: 'status-waiting' };
-              }
-              return { statusText: '⏳ Chờ...', statusClass: 'status-waiting' };
-            })();
-            return `
-          <div class="${classes.join(' ')}">
-            <span class="player-score-name">${index + 1}. ${playerName}${
-              player.isSelf ? ' (Bạn)' : ''
-            }</span>
-            <span class="player-score-status ${statusClass}">${statusText}</span>
-            <span class="player-score-value">${scoreValue}</span>
-          </div>
-        `;
-          })
-          .join('');
+        const fragment = document.createDocumentFragment();
 
-        scoreContainers.forEach((container) => {
-          container.innerHTML = html;
+        players.forEach((player, index) => {
+          const item = document.createElement('div');
+          item.className = 'player-score-item';
+
+          if (player.isSelf) {
+            item.classList.add('self');
+          }
+
+          const nameEl = document.createElement('span');
+          nameEl.className = 'player-score-name';
+
+          const playerName = player.name || `Người chơi ${index + 1}`;
+          nameEl.textContent = `${index + 1}. ${playerName}${player.isSelf ? ' (Bạn)' : ''}`;
+
+          const scoreEl = document.createElement('span');
+          scoreEl.className = 'player-score-value';
+          const scoreValue = typeof player.score === 'number' ? player.score : 0;
+          scoreEl.textContent = scoreValue;
+
+          item.appendChild(nameEl);
+          item.appendChild(scoreEl);
+          fragment.appendChild(item);
         });
+
+        scoresContainer.innerHTML = '';
+        scoresContainer.appendChild(fragment);
+
+        // 🎓 Update admin dashboard as well (if classroom mode)
+        updateAdminDashboard();
       }
 
       function startPlayerScoreUpdates() {
         if (playerScoresTimer) return;
         updatePlayerScores();
-        playerScoresTimer = setInterval(updatePlayerScores, 750);
+        // 🎓 Update every 2 seconds for better readability
+        playerScoresTimer = setInterval(updatePlayerScores, 2000);
       }
 
       function stopPlayerScoreUpdates() {
@@ -1461,9 +1729,10 @@
           playerScoresTimer = null;
         }
 
-        document.querySelectorAll('[data-player-scores]').forEach((container) => {
-          container.innerHTML = '';
-        });
+        const scoresContainer = document.getElementById('playerScores');
+        if (scoresContainer) {
+          scoresContainer.innerHTML = '';
+        }
       }
 
       // Copy room ID to clipboard
@@ -1500,6 +1769,30 @@
           return;
         }
 
+        // 🎓 In classroom mode, admin (spectator) doesn't initialize game
+        if (isClassroomMode && isAdmin) {
+          console.log('🎓 Admin spectating, not initializing game');
+          showToast('You are spectating this classroom session', 'info');
+
+          // Show admin dashboard instead of HUD
+          const adminDashboard = document.getElementById('adminDashboard');
+          if (adminDashboard) {
+            adminDashboard.style.display = 'block';
+            setupLeaderboardFilters(); // Setup filter buttons
+            setupExitDashboardButton(); // Setup exit button
+            updateAdminDashboard(); // Initial update
+          }
+
+          // Hide multiplayer HUD
+          const multiplayerHud = document.getElementById('multiplayerHud');
+          if (multiplayerHud) {
+            multiplayerHud.style.display = 'none';
+          }
+
+          startPlayerScoreUpdates(); // This will update dashboard periodically
+          return;
+        }
+
         try {
           gameInitialized = true;
 
@@ -1527,6 +1820,14 @@
           }
 
           startPlayerScoreUpdates();
+
+          // 🎓 Notify server that resources are loaded
+          if (networkManager && networkManager.sendResourcesLoaded) {
+            setTimeout(() => {
+              networkManager.sendResourcesLoaded();
+              console.log('✅ Resources loaded notification sent');
+            }, 1000);
+          }
 
           // Handle audio transition (intro -> loop)
           if (typeof AudioManager !== 'undefined') {
@@ -1563,6 +1864,8 @@
 
         // Reset game state
         gameInitialized = false;
+        isClassroomMode = false; // 🎓 Reset classroom mode
+        isAdmin = false; // 🎓 Reset admin flag
 
         stopPlayerScoreUpdates();
 

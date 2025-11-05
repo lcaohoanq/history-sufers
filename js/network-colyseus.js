@@ -16,7 +16,6 @@ class NetworkManager {
     this.opponents = new Map();
     this.eventHandlers = new Map();
     this.isMultiplayer = false;
-    this.roomMode = 'public';
   }
 
   /**
@@ -45,23 +44,22 @@ class NetworkManager {
   /**
    * Create a new game room
    */
-  async createRoom(playerName, mode = 'public') {
+  async createRoom(playerName, options = {}) {
     if (!this.client) {
       await this.connect();
     }
 
     this.playerName = playerName || 'Player';
-    this.roomMode = mode || 'public';
 
     try {
       this.room = await this.client.create('game_room', {
         playerName: this.playerName,
-        mode: this.roomMode
+        mode: 'public',
+        isClassroomMode: options.isClassroomMode || false // 🎓 NEW
       });
 
       this.setupRoom();
-      this.roomMode = this.room?.state?.mode || this.roomMode;
-      console.log('🎉 Room created:', this.room.id);
+      console.log('🎉 Room created:', this.room.id, options.isClassroomMode ? '(Classroom)' : '');
 
       return {
         roomId: this.room.id,
@@ -89,7 +87,6 @@ class NetworkManager {
       });
 
       this.setupRoom();
-      this.roomMode = this.room?.state?.mode || this.roomMode;
       console.log('✅ Room joined:', this.room.id);
 
       return {
@@ -113,7 +110,6 @@ class NetworkManager {
     try {
       this.room = await this.client.reconnect(roomId, sessionId);
       this.setupRoom();
-      this.roomMode = this.room?.state?.mode || this.roomMode;
       console.log('✅ Room rejoined:', this.room.id);
 
       return {
@@ -154,7 +150,6 @@ class NetworkManager {
     this.sessionId = this.room.sessionId;
     this.connected = true;
     this.isMultiplayer = true;
-    this.roomMode = this.room?.state?.mode || this.roomMode;
 
     // Save session for reconnection
     this._saveSession();
@@ -166,6 +161,15 @@ class NetworkManager {
       if (sessionId !== this.sessionId) {
         this.opponents.set(sessionId, player);
       }
+
+      // 🔥 Listen to individual player property changes
+      player.onChange(() => {
+        console.log('🔄 Player changed:', player.name, 'ready:', player.ready);
+        this.emit('playerStateChanged', {
+          sessionId: sessionId,
+          player: player
+        });
+      });
 
       this.emit('playerJoined', {
         sessionId: sessionId,
@@ -197,7 +201,6 @@ class NetworkManager {
 
     // Listen to state changes
     this.room.state.onChange(() => {
-      this.roomMode = this.room?.state?.mode || this.roomMode;
       this.emit('stateChanged', this.room.state);
     });
 
@@ -269,6 +272,30 @@ class NetworkManager {
   }
 
   /**
+   * 🎓 NEW: Notify server that resources are loaded
+   */
+  sendResourcesLoaded(loaded = true) {
+    if (!this.room) {
+      console.error('❌ Not in a room');
+      return;
+    }
+    console.log(loaded ? '✅ Sending resources loaded' : '⏳ Sending resources unloaded');
+    this.room.send('resourcesLoaded', { loaded: loaded });
+  }
+
+  /**
+   * 🎓 NEW: Request to start race (admin only in classroom mode)
+   */
+  requestStartRace() {
+    if (!this.room) {
+      console.error('❌ Not in a room');
+      return;
+    }
+    console.log('✅ Requesting race start');
+    this.room.send('startRace', {});
+  }
+
+  /**
    * Send player update during race
    */
   sendPlayerUpdate(data) {
@@ -303,7 +330,6 @@ class NetworkManager {
       this.sessionId = null;
       this.opponents.clear();
       this.isMultiplayer = false;
-      this.roomMode = 'public';
       this._clearSession();
     }
   }
@@ -370,8 +396,7 @@ class NetworkManager {
       ready: player.ready,
       finished: player.finished,
       status: player.status,
-      isSelf: sessionId === this.sessionId,
-      spectator: !!player.spectator
+      isSelf: sessionId === this.sessionId
     }));
   }
 
@@ -396,8 +421,7 @@ class NetworkManager {
         shirt: player.colorShirt,
         shorts: player.colorShorts
       },
-      status: player.status,
-      spectator: !!player.spectator
+      status: player.status
     }));
   }
 
@@ -425,8 +449,7 @@ class NetworkManager {
         shirt: player.colorShirt,
         shorts: player.colorShorts
       },
-      status: player.status,
-      spectator: !!player.spectator
+      status: player.status
     };
   }
 
@@ -449,13 +472,6 @@ class NetworkManager {
       playerName: this.playerName,
       opponentCount: this.opponents.size
     };
-  }
-
-  /**
-   * Get current room mode
-   */
-  getRoomMode() {
-    return this.roomMode || 'public';
   }
 
   /**

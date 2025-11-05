@@ -25,16 +25,19 @@ const PLAYER_COLORS = [
 export class GameRoom extends Room {
   maxClients = 50;
   reconnectTimeout = 10; // seconds
-  roomMode = 'public';
 
   onCreate(options) {
     console.log('🎮 GameRoom created:', this.roomId);
 
     this.setState(new GameState());
     this.state.maxPlayers = this.maxClients;
-    this.roomMode = options?.mode === 'classroom' ? 'classroom' : 'public';
-    this.state.mode = this.roomMode;
-    console.log(`⚙️ Room mode set to: ${this.roomMode}`);
+
+    // 🎓 Set classroom mode if specified
+    if (options.isClassroomMode === true) {
+      this.state.isClassroomMode = true;
+      this.state.canReplay = false; // No replay in classroom mode
+      console.log('🎓 Classroom mode enabled');
+    }
 
     // Set up message handlers
     this.onMessage('playerReady', (client, message) => {
@@ -49,13 +52,21 @@ export class GameRoom extends Room {
       this.handlePlayerFinished(client, message);
     });
 
-    this.onMessage('startRace', (client) => {
-      this.handleStartRace(client);
+    // 🎓 NEW: Handle resources loaded
+    this.onMessage('resourcesLoaded', (client, message) => {
+      this.handleResourcesLoaded(client, message);
     });
 
-    // Auto-start race when all players are ready
+    // 🎓 NEW: Handle admin start race (only in classroom mode)
+    this.onMessage('startRace', (client, message) => {
+      this.handleStartRaceRequest(client, message);
+    });
+
+    // Auto-start race when all players are ready (only in normal mode)
     this.state.players.onAdd((player, sessionId) => {
-      this.checkAutoStart();
+      if (!this.state.isClassroomMode) {
+        this.checkAutoStart();
+      }
     });
   }
 
@@ -64,8 +75,6 @@ export class GameRoom extends Room {
 
     // Create player with all default values
     const player = new Player();
-    const isFirstPlayer = this.state.players.size === 0;
-    const isClassroomSpectator = this.roomMode === 'classroom' && isFirstPlayer;
     player.name = options.playerName || `Player${this.state.players.size + 1}`;
     player.score = 0;
     player.lane = 0;
@@ -77,7 +86,7 @@ export class GameRoom extends Room {
     player.finishTime = 0;
     player.ready = false;
     player.status = 'online';
-    player.spectator = isClassroomSpectator;
+    player.resourcesLoaded = false;
 
     // Assign color
     const colorIndex = this.state.players.size % PLAYER_COLORS.length;
@@ -86,9 +95,15 @@ export class GameRoom extends Room {
     player.colorShorts = colors.shorts;
 
     // Set host if first player
-    if (isFirstPlayer) {
+    if (this.state.players.size === 0) {
       this.state.hostId = client.sessionId;
       console.log(`👑 ${player.name} is the host`);
+
+      // 🎓 In classroom mode, host is spectator (admin)
+      if (this.state.isClassroomMode) {
+        player.isSpectator = true;
+        console.log('🎓 Host is spectator (admin) in classroom mode');
+      }
     }
 
     this.state.players.set(client.sessionId, player);
@@ -99,7 +114,7 @@ export class GameRoom extends Room {
       {
         type: 'info',
         title: 'Player Joined',
-        message: `${player.name} joined the room (${this.state.players.size}/${this.maxClients})`,
+        message: `${player.name} joined the room (${this.getActualPlayerCount()}/${this.maxClients})`,
         duration: 3000
       },
       { except: client }
@@ -108,18 +123,9 @@ export class GameRoom extends Room {
     client.send('notification', {
       type: 'success',
       title: 'Welcome!',
-      message: `You joined room ${this.roomId}`,
+      message: `You joined room ${this.roomId}${this.state.isClassroomMode ? ' (Classroom Mode)' : ''}`,
       duration: 3000
     });
-
-    if (isClassroomSpectator) {
-      client.send('notification', {
-        type: 'info',
-        title: 'Classroom Mode',
-        message: 'Bạn là quản trị viên và sẽ không tham gia chạy đua. Hãy bấm Start khi tất cả học viên sẵn sàng.',
-        duration: 4000
-      });
-    }
   }
 
   async onLeave(client, consented) {
@@ -201,37 +207,104 @@ export class GameRoom extends Room {
     const player = this.state.players.get(client.sessionId);
     if (!player) return;
 
-    if (player.spectator) {
+    // 🎓 Spectators (admin in classroom) cannot be ready
+    if (player.isSpectator) {
+      console.log('🎓 Spectator cannot be ready');
+      return;
+    }
+
+    player.ready = message.ready;
+    console.log(`${player.name} is ${message.ready ? 'ready' : 'not ready'}`);
+
+    const readyCount = this.getReadyCount();
+    const totalPlayers = this.getActualPlayerCount();
+
+    this.broadcast('notification', {
+      type: 'info',
+      title: message.ready ? 'Player Ready' : 'Player Not Ready',
+      message: `${player.name} is ${message.ready ? 'ready' : 'not ready'} (${readyCount}/${totalPlayers})`,
+      duration: 2000
+    });
+
+    // 🎓 In normal mode, check auto-start
+    if (!this.state.isClassroomMode) {
+      this.checkAutoStart();
+    }
+  }
+
+  // 🎓 NEW: Handle resources loaded notification
+  handleResourcesLoaded(client, message) {
+    const player = this.state.players.get(client.sessionId);
+    if (!player || player.isSpectator) return;
+
+    const loaded = message.loaded !== false; // Default to true
+    player.resourcesLoaded = loaded;
+
+    if (loaded) {
+      console.log(`✅ ${player.name} finished loading resources`);
+    } else {
+      console.log(`⏳ ${player.name} unloaded resources`);
+    }
+
+    const loadedCount = this.getResourcesLoadedCount();
+    const totalPlayers = this.getActualPlayerCount();
+
+    if (loaded) {
+      this.broadcast('notification', {
+        type: 'info',
+        title: 'Resources Loaded',
+        message: `${player.name} is ready (${loadedCount}/${totalPlayers})`,
+        duration: 2000
+      });
+    }
+  }
+
+  // 🎓 NEW: Handle start race request from admin
+  handleStartRaceRequest(client, message) {
+    // Only host can start
+    if (client.sessionId !== this.state.hostId) {
       client.send('notification', {
-        type: 'warning',
-        title: 'Spectator',
-        message: 'Chỉ người chơi mới cần đánh dấu sẵn sàng.',
-        duration: 2500
+        type: 'error',
+        title: 'Permission Denied',
+        message: 'Only the host can start the race',
+        duration: 3000
       });
       return;
     }
 
-    const readyState = !!message.ready;
-    player.ready = readyState;
-    console.log(`${player.name} is ${readyState ? 'ready' : 'not ready'}`);
+    // 🎓 In classroom mode, check all players ready and resources loaded
+    if (this.state.isClassroomMode) {
+      const allReady = this.areAllPlayersReady();
+      const allResourcesLoaded = this.areAllResourcesLoaded();
 
-    const activePlayers = this.getActivePlayers().map(([, activePlayer]) => activePlayer);
-    const readyCount = activePlayers.filter((p) => p.ready).length;
-    const totalPlayers = activePlayers.length;
+      if (!allReady) {
+        client.send('notification', {
+          type: 'warning',
+          title: 'Not Ready',
+          message: 'All players must be ready first',
+          duration: 3000
+        });
+        return;
+      }
 
-    this.broadcast('notification', {
-      type: 'info',
-      title: readyState ? 'Player Ready' : 'Player Not Ready',
-      message: `${player.name} is ${readyState ? 'ready' : 'not ready'} (${readyCount}/${totalPlayers})`,
-      duration: 2000
-    });
+      if (!allResourcesLoaded) {
+        client.send('notification', {
+          type: 'warning',
+          title: 'Loading Resources',
+          message: 'Wait for all players to load resources',
+          duration: 3000
+        });
+        return;
+      }
+    }
 
-    this.checkAutoStart();
+    // Start the race
+    this.startRace();
   }
 
   handlePlayerUpdate(client, message) {
     const player = this.state.players.get(client.sessionId);
-    if (!player || player.spectator || this.state.state !== 'racing') return;
+    if (!player || this.state.state !== 'racing') return;
 
     // Update player position and state
     player.posX = message.position?.x ?? player.posX;
@@ -244,7 +317,7 @@ export class GameRoom extends Room {
 
   handlePlayerFinished(client, message) {
     const player = this.state.players.get(client.sessionId);
-    if (!player || player.finished || player.spectator) return;
+    if (!player || player.finished) return;
 
     player.finished = true;
     player.finishTime = Date.now() - this.state.startTime;
@@ -260,91 +333,56 @@ export class GameRoom extends Room {
     });
 
     // Check if all players finished
-    const activePlayers = this.getActivePlayers();
-    const allFinished = activePlayers.length > 0 && activePlayers.every(([, activePlayer]) => activePlayer.finished);
+    const allFinished = Array.from(this.state.players.values()).every((p) => p.finished);
     if (allFinished) {
       this.endRace();
     }
   }
 
-  handleStartRace(client) {
-    const requester = this.state.players.get(client.sessionId);
-    if (!requester) return;
-
-    if (client.sessionId !== this.state.hostId) {
-      client.send('notification', {
-        type: 'error',
-        title: 'Not Allowed',
-        message: 'Only the host can start the race.',
-        duration: 2500
-      });
-      return;
-    }
-
-    if (this.state.state !== 'waiting') {
-      client.send('notification', {
-        type: 'warning',
-        title: 'Race Busy',
-        message: 'Race is already in progress or finished.',
-        duration: 2500
-      });
-      return;
-    }
-
-    const activePlayers = this.getActivePlayers();
-    if (activePlayers.length < 2) {
-      client.send('notification', {
-        type: 'warning',
-        title: 'Need More Players',
-        message: 'At least 2 players are required to start the race.',
-        duration: 3000
-      });
-      return;
-    }
-
-    if (!this.allActivePlayersReady()) {
-      client.send('notification', {
-        type: 'warning',
-        title: 'Players Not Ready',
-        message: 'Wait until all players are ready before starting.',
-        duration: 3000
-      });
-      return;
-    }
-
-    console.log(`🎯 Host ${requester.name} requested race start`);
-    this.startRace();
-  }
-
   // Helper methods
 
   checkAutoStart() {
-    if (this.state.mode === 'classroom') return;
     if (this.state.state !== 'waiting') return;
-    const activePlayers = this.getActivePlayers();
-    if (activePlayers.length < 2) return;
+    if (this.state.players.size < 2) return;
 
-    const allReady = activePlayers.every(([, player]) => player.ready);
+    const allReady = Array.from(this.state.players.values()).every((p) => p.ready);
     if (allReady) {
       this.startRace();
     }
   }
 
+  // 🎓 NEW: Get actual player count (exclude spectators)
+  getActualPlayerCount() {
+    return Array.from(this.state.players.values()).filter((p) => !p.isSpectator).length;
+  }
+
+  // 🎓 NEW: Get ready count (exclude spectators)
+  getReadyCount() {
+    return Array.from(this.state.players.values()).filter((p) => !p.isSpectator && p.ready).length;
+  }
+
+  // 🎓 NEW: Get resources loaded count
+  getResourcesLoadedCount() {
+    return Array.from(this.state.players.values()).filter((p) => !p.isSpectator && p.resourcesLoaded)
+      .length;
+  }
+
+  // 🎓 NEW: Check if all players ready (exclude spectators)
+  areAllPlayersReady() {
+    const actualPlayers = Array.from(this.state.players.values()).filter((p) => !p.isSpectator);
+    return actualPlayers.length > 0 && actualPlayers.every((p) => p.ready);
+  }
+
+  // 🎓 NEW: Check if all resources loaded (exclude spectators)
+  areAllResourcesLoaded() {
+    const actualPlayers = Array.from(this.state.players.values()).filter((p) => !p.isSpectator);
+    return actualPlayers.length > 0 && actualPlayers.every((p) => p.resourcesLoaded);
+  }
+
   async startRace() {
     if (this.state.state !== 'waiting') return;
 
-    const activePlayers = this.getActivePlayers();
-    if (activePlayers.length < 1) {
-      console.warn(`⚠️ Unable to start race in room ${this.roomId}: no active players`);
-      return;
-    }
-
-    if (this.roomMode === 'classroom' && !this.allActivePlayersReady()) {
-      console.warn(`⚠️ Unable to start race in room ${this.roomId}: not all players are ready`);
-      return;
-    }
-
-    console.log(`🏁 Starting race in room ${this.roomId} with ${activePlayers.length} active players`);
+    console.log(`🏁 Starting race in room ${this.roomId} with ${this.state.players.size} players`);
 
     this.state.state = 'countdown';
 
@@ -362,7 +400,6 @@ export class GameRoom extends Room {
 
     // Reset all players
     this.state.players.forEach((player) => {
-      if (player.spectator) return;
       player.finished = false;
       player.finishTime = 0;
       player.score = 0;
@@ -385,7 +422,7 @@ export class GameRoom extends Room {
     console.log(`🏁 Race ended in room ${this.roomId}`);
 
     // Calculate rankings
-    const rankings = this.getActivePlayers()
+    const rankings = Array.from(this.state.players.entries())
       .map(([sessionId, player]) => ({
         rank: 0,
         sessionId: sessionId,
@@ -402,37 +439,34 @@ export class GameRoom extends Room {
     this.broadcast('raceEnded', { rankings });
 
     // Reset after 10 seconds
-    if (this.roomMode === 'classroom') {
-      this.broadcast('notification', {
-        type: 'info',
-        title: 'Session Complete',
-        message: 'Kết thúc lượt classroom. Tạo phòng mới để bắt đầu lượt tiếp theo.',
-        duration: 5000
-      });
-      return;
-    }
-
     setTimeout(() => {
       this.resetRoom();
     }, 10000);
   }
 
   resetRoom() {
+    // 🎓 In classroom mode, don't allow replay
+    if (this.state.isClassroomMode) {
+      console.log('🎓 Classroom mode: No replay allowed');
+      this.broadcast('notification', {
+        type: 'info',
+        title: 'Race Ended',
+        message: 'Classroom mode: Please return to lobby',
+        duration: 5000
+      });
+      return;
+    }
+
     this.state.state = 'waiting';
     this.state.startTime = 0;
     this.state.countdown = 3;
 
     this.state.players.forEach((player) => {
-      if (player.spectator) {
-        player.ready = false;
-        player.finished = false;
-        player.finishTime = 0;
-        return;
-      }
       player.ready = false;
       player.finished = false;
       player.finishTime = 0;
       player.score = 0;
+      player.resourcesLoaded = false;
     });
 
     this.broadcast('raceReset');
@@ -472,15 +506,5 @@ export class GameRoom extends Room {
 
   allPlayersOnline() {
     return Array.from(this.state.players.values()).every((p) => p.status === 'online');
-  }
-
-  getActivePlayers() {
-    return Array.from(this.state.players.entries()).filter(([, player]) => !player.spectator);
-  }
-
-  allActivePlayersReady() {
-    const activePlayers = this.getActivePlayers();
-    if (activePlayers.length === 0) return false;
-    return activePlayers.every(([, player]) => player.ready);
   }
 }

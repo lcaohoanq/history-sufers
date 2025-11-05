@@ -146,6 +146,16 @@
                 />
               </div>
 
+              <div class="form-group">
+                <label class="ready-checkbox" style="cursor: pointer;">
+                  <input type="checkbox" id="classroomModeToggle" />
+                  <span>🎓 Chế độ Lớp học (Classroom Mode)</span>
+                </label>
+                <div class="info-hint" style="margin-top: 8px; font-size: 14px; color: rgba(255, 255, 255, 0.6);">
+                  Người tạo sẽ làm giám sát viên và không tham gia chơi
+                </div>
+              </div>
+
               <button type="submit" class="btn btn-primary">
                 <span>Tạo phòng</span>
                 <span>🎮</span>
@@ -593,6 +603,8 @@
       let gameInitialized = false;
       let raceStarting = false;
       let playerScoresTimer = null;
+      let isClassroomMode = false; // 🎓 NEW: Track classroom mode
+      let isAdmin = false; // 🎓 NEW: Track if current user is admin
 
       // ==================== VIEW SWITCHING ====================
       function switchView(viewId) {
@@ -651,6 +663,29 @@
           }, 100);
         });
 
+        // 🎓 Listen for race ended - handle classroom mode
+        networkManager.on('raceEnded', (data) => {
+          console.log('🏁 Race ended:', data);
+
+          // Check if replay is allowed
+          if (networkManager.room && networkManager.room.state) {
+            const canReplay = networkManager.room.state.canReplay;
+
+            if (!canReplay) {
+              // Classroom mode: No replay
+              showToast('Race finished! Return to lobby.', 'info');
+
+              // Show final message
+              setTimeout(() => {
+                const message = isAdmin
+                  ? 'Race complete. Students cannot replay in Classroom mode.'
+                  : 'Race complete. Press ESC to return to lobby.';
+                showToast(message, 'info');
+              }, 2000);
+            }
+          }
+        });
+
         // Listen for players updated
         networkManager.on('playerJoined', () => {
           updatePlayersList();
@@ -667,6 +702,13 @@
         });
 
         networkManager.on('stateChanged', () => {
+          updatePlayersList();
+          updatePlayerScores();
+        });
+
+        // 🔥 NEW: Listen for individual player state changes (ready, resourcesLoaded, etc.)
+        networkManager.on('playerStateChanged', () => {
+          console.log('🔄 Player state changed, updating UI...');
           updatePlayersList();
           updatePlayerScores();
         });
@@ -720,24 +762,35 @@
           return;
         }
 
-        try {
-          showToast('Creating room...', 'info');
+        // 🎓 Check if classroom mode is enabled
+        isClassroomMode = document.getElementById('classroomModeToggle').checked;
 
-          const { roomId, sessionId } = await networkManager.createRoom(playerName);
+        try {
+          showToast(isClassroomMode ? 'Creating classroom...' : 'Creating room...', 'info');
+
+          const { roomId, sessionId } = await networkManager.createRoom(playerName, { isClassroomMode });
           currentRoomId = roomId;
           currentSessionId = sessionId;
 
-          console.log('✅ Room created:', roomId);
+          // 🎓 If classroom mode, creator is admin (not player)
+          isAdmin = isClassroomMode;
+
+          console.log('✅ Room created:', roomId, isClassroomMode ? '(Classroom Mode)' : '');
 
           // Show room info
           document.getElementById('displayRoomId').textContent = roomId;
           document.getElementById('roomInfo').style.display = 'block';
           document.querySelector('#createRoom form').style.display = 'none';
 
+          // 🎓 Update UI based on mode
+          updateRoomUIForClassroom();
           updatePlayersList();
           updatePlayerScores();
 
-          showToast('Room created successfully!', 'success');
+          showToast(
+            isClassroomMode ? 'Classroom created! You are the supervisor.' : 'Room created successfully!',
+            'success'
+          );
         } catch (error) {
           console.error('❌ Failed to create room:', error);
           showToast('Failed to create room: ' + error.message, 'error');
@@ -765,6 +818,16 @@
 
           console.log('✅ Joined room:', roomId);
 
+          // 🎓 Detect if room is classroom mode
+          if (networkManager.room && networkManager.room.state) {
+            isClassroomMode = networkManager.room.state.isClassroomMode || false;
+            isAdmin = false; // Joiner is never admin
+
+            if (isClassroomMode) {
+              console.log('🎓 Joined classroom mode room');
+            }
+          }
+
           // Show room info in create room screen
           document.getElementById('joinRoom').style.display = 'none';
           document.getElementById('createRoom').style.display = 'block';
@@ -772,10 +835,17 @@
           document.getElementById('roomInfo').style.display = 'block';
           document.querySelector('#createRoom form').style.display = 'none';
 
+          // 🎓 Update UI if classroom mode
+          updateRoomUIForClassroom();
           updatePlayersList();
           updatePlayerScores();
 
-          showToast('Joined room successfully! Wait for host to start.', 'success');
+          showToast(
+            isClassroomMode
+              ? 'Joined classroom! Wait for supervisor to start.'
+              : 'Joined room successfully! Wait for host to start.',
+            'success'
+          );
         } catch (error) {
           console.error('❌ Failed to join room:', error);
           showToast('Failed to join room: ' + error.message, 'error');
@@ -806,7 +876,12 @@
         }
 
         try {
-          networkManager.room.send('startRace');
+          // 🎓 Use new request method for classroom mode compatibility
+          if (isClassroomMode && isAdmin) {
+            networkManager.requestStartRace();
+          } else {
+            networkManager.room.send('startRace');
+          }
         } catch (error) {
           console.error('❌ Failed to start race:', error);
           showToast('Failed to start race', 'error');
@@ -881,9 +956,53 @@
 
       // Toggle ready status
       function toggleReady() {
+        // 🎓 Admin cannot be ready in classroom mode
+        if (isClassroomMode && isAdmin) {
+          showToast('Admin không cần sẵn sàng', 'info');
+          document.getElementById('hostReady').checked = false;
+          return;
+        }
+
         const isReady = document.getElementById('hostReady').checked;
         networkManager.setReady(isReady);
         console.log('Ready status:', isReady);
+
+        // 🎓 When player is ready, mark resources as loaded
+        // Resources are already loaded when page loads (JS, CSS, Colyseus client, etc.)
+        // We just need to notify server for validation in classroom mode
+        setTimeout(() => {
+          if (networkManager && networkManager.sendResourcesLoaded) {
+            networkManager.sendResourcesLoaded(isReady); // true if ready, false if not ready
+            console.log(isReady ? '✅ Resources marked as loaded' : '⏳ Resources marked as unloaded');
+          }
+        }, 500); // Small delay to ensure ready is processed first
+      }
+
+      // 🎓 Update UI for classroom mode
+      function updateRoomUIForClassroom() {
+        if (!isClassroomMode) return;
+
+        const readySection = document.querySelector('.ready-section');
+        if (!readySection) return;
+
+        if (isAdmin) {
+          // Admin UI: Hide ready checkbox, show admin controls
+          const readyCheckbox = readySection.querySelector('.ready-checkbox');
+          if (readyCheckbox) {
+            readyCheckbox.style.display = 'none';
+          }
+
+          const readyMessage = document.getElementById('readyMessage');
+          if (readyMessage) {
+            readyMessage.innerHTML = '🎓 <strong>Chế độ Lớp học</strong><br>Bạn là giám sát viên. Đợi tất cả học sinh sẵn sàng.';
+          }
+        } else {
+          // Regular player UI in classroom mode
+          const readyMessage = document.getElementById('readyMessage');
+          if (readyMessage) {
+            readyMessage.innerHTML = '🎓 <strong>Chế độ Lớp học</strong><br>Đợi giám sát viên bắt đầu.';
+          }
+        }
       }
 
       // Update players list
@@ -896,9 +1015,14 @@
 
         if (!playersList || !playerCount) return;
 
-        playerCount.textContent = players.length;
+        // 🎓 Filter out admin in classroom mode
+        const actualPlayers = isClassroomMode
+          ? players.filter((p) => p.sessionId !== networkManager.room.state.hostId)
+          : players;
 
-        playersList.innerHTML = players
+        playerCount.textContent = actualPlayers.length;
+
+        playersList.innerHTML = actualPlayers
           .map(
             (player) => `
         <div class="player-item ${player.ready ? 'ready' : ''}">
@@ -909,13 +1033,25 @@
           )
           .join('');
 
-        // Show start button if host and all ready
-        const isHost = networkManager.sessionId === networkManager.room.state.hostId;
-        const allReady = players.every((p) => p.ready);
-        const startBtn = document.getElementById('startRaceBtn');
+        // 🎓 Classroom mode: Only admin can start, all players must be ready
+        if (isClassroomMode && isAdmin) {
+          const allReady = actualPlayers.every((p) => p.ready);
+          const startBtn = document.getElementById('startRaceBtn');
 
-        if (startBtn) {
-          startBtn.style.display = isHost && allReady && players.length >= 2 ? 'block' : 'none';
+          if (startBtn) {
+            startBtn.style.display = allReady && actualPlayers.length >= 1 ? 'block' : 'none';
+            startBtn.disabled = !allReady;
+            startBtn.innerHTML = allReady ? '🏁 Bắt đầu chạy đua' : '⏳ Chờ tất cả sẵn sàng...';
+          }
+        } else if (!isClassroomMode) {
+          // Normal mode: Show start button if host and all ready
+          const isHost = networkManager.sessionId === networkManager.room.state.hostId;
+          const allReady = actualPlayers.every((p) => p.ready);
+          const startBtn = document.getElementById('startRaceBtn');
+
+          if (startBtn) {
+            startBtn.style.display = isHost && allReady && actualPlayers.length >= 2 ? 'block' : 'none';
+          }
         }
       }
 
@@ -1024,6 +1160,20 @@
           return;
         }
 
+        // 🎓 In classroom mode, admin (spectator) doesn't initialize game
+        if (isClassroomMode && isAdmin) {
+          console.log('🎓 Admin spectating, not initializing game');
+          showToast('You are spectating this classroom session', 'info');
+
+          // Show spectator UI
+          const multiplayerHud = document.getElementById('multiplayerHud');
+          if (multiplayerHud) {
+            multiplayerHud.style.display = 'block';
+          }
+          startPlayerScoreUpdates();
+          return;
+        }
+
         try {
           gameInitialized = true;
 
@@ -1051,6 +1201,14 @@
           }
 
           startPlayerScoreUpdates();
+
+          // 🎓 Notify server that resources are loaded
+          if (networkManager && networkManager.sendResourcesLoaded) {
+            setTimeout(() => {
+              networkManager.sendResourcesLoaded();
+              console.log('✅ Resources loaded notification sent');
+            }, 1000);
+          }
 
           // Handle audio transition (intro -> loop)
           if (typeof AudioManager !== 'undefined') {
@@ -1087,6 +1245,8 @@
 
         // Reset game state
         gameInitialized = false;
+        isClassroomMode = false; // 🎓 Reset classroom mode
+        isAdmin = false; // 🎓 Reset admin flag
 
         stopPlayerScoreUpdates();
 

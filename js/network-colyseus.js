@@ -44,7 +44,7 @@ class NetworkManager {
   /**
    * Create a new game room
    */
-  async createRoom(playerName) {
+  async createRoom(playerName, options = {}) {
     if (!this.client) {
       await this.connect();
     }
@@ -54,11 +54,12 @@ class NetworkManager {
     try {
       this.room = await this.client.create('game_room', {
         playerName: this.playerName,
-        mode: 'public'
+        mode: 'public',
+        isClassroomMode: options.isClassroomMode || false // 🎓 NEW
       });
 
       this.setupRoom();
-      console.log('🎉 Room created:', this.room.id);
+      console.log('🎉 Room created:', this.room.id, options.isClassroomMode ? '(Classroom)' : '');
 
       return {
         roomId: this.room.id,
@@ -161,6 +162,15 @@ class NetworkManager {
         this.opponents.set(sessionId, player);
       }
 
+      // 🔥 Listen to individual player property changes
+      player.onChange(() => {
+        console.log('🔄 Player changed:', player.name, 'ready:', player.ready);
+        this.emit('playerStateChanged', {
+          sessionId: sessionId,
+          player: player
+        });
+      });
+
       this.emit('playerJoined', {
         sessionId: sessionId,
         playerName: player.name,
@@ -259,6 +269,30 @@ class NetworkManager {
     }
     console.log('✅ Setting ready state:', ready);
     this.room.send('playerReady', { ready: ready });
+  }
+
+  /**
+   * 🎓 NEW: Notify server that resources are loaded
+   */
+  sendResourcesLoaded(loaded = true) {
+    if (!this.room) {
+      console.error('❌ Not in a room');
+      return;
+    }
+    console.log(loaded ? '✅ Sending resources loaded' : '⏳ Sending resources unloaded');
+    this.room.send('resourcesLoaded', { loaded: loaded });
+  }
+
+  /**
+   * 🎓 NEW: Request to start race (admin only in classroom mode)
+   */
+  requestStartRace() {
+    if (!this.room) {
+      console.error('❌ Not in a room');
+      return;
+    }
+    console.log('✅ Requesting race start');
+    this.room.send('startRace', {});
   }
 
   /**

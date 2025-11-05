@@ -416,6 +416,73 @@
         <div id="playerScores"></div>
       </div>
 
+      <!-- 🎓 Admin Dashboard (Classroom Mode) -->
+      <div id="adminDashboard" class="admin-dashboard" style="display: none">
+        <!-- Header -->
+        <div class="admin-header">
+          <div class="admin-title">
+            <h1>🎓VNR202 - Group7 - Classroom Dashboard</h1>
+            <p class="admin-subtitle">Monitoring <span id="adminPlayerCount">0</span> students</p>
+          </div>
+          <div class="admin-controls">
+            <button class="admin-btn admin-btn-secondary" onclick="window.returnToLobby()">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 11H7.83l4.88-4.88c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0l-6.59 6.59c-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L7.83 13H19c.55 0 1-.45 1-1s-.45-1-1-1z"/>
+              </svg>
+              Exit
+            </button>
+          </div>
+        </div>
+
+        <!-- Race Status -->
+        <div class="admin-race-status" id="adminRaceStatus">
+          <div class="status-card">
+            <div class="status-icon">⏱️</div>
+            <div class="status-info">
+              <div class="status-label">Race Status</div>
+              <div class="status-value" id="adminRaceState">Racing</div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-icon">🏁</div>
+            <div class="status-info">
+              <div class="status-label">Finished</div>
+              <div class="status-value"><span id="adminFinishedCount">0</span>/<span id="adminTotalCount">0</span></div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="status-icon">👑</div>
+            <div class="status-info">
+              <div class="status-label">Leader</div>
+              <div class="status-value" id="adminLeader">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="admin-leaderboard">
+          <div class="leaderboard-header">
+            <h2>📊 Live Leaderboard</h2>
+            <div class="leaderboard-filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="racing">Racing</button>
+              <button class="filter-btn" data-filter="finished">Finished</button>
+            </div>
+          </div>
+          <div class="leaderboard-table">
+            <div class="leaderboard-table-header">
+              <div class="col-rank">#</div>
+              <div class="col-name">Student Name</div>
+              <div class="col-score">Score</div>
+              <div class="col-status">Status</div>
+            </div>
+            <div class="leaderboard-table-body" id="adminLeaderboardBody">
+              <!-- Players will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Race Pause Overlay -->
       <div id="pauseOverlay" class="pause-overlay">
         <div class="pause-content">
@@ -593,6 +660,348 @@
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
+
+      /* 🎓 Admin Dashboard Styles */
+      .admin-dashboard {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #fff;
+        overflow-y: auto;
+        z-index: 9998;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 30px 50px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .admin-title h1 {
+        margin: 0;
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .admin-subtitle {
+        margin: 8px 0 0 0;
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .admin-controls {
+        display: flex;
+        gap: 15px;
+      }
+
+      .admin-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .admin-btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .admin-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .admin-race-status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        padding: 30px 50px;
+      }
+
+      .status-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .status-icon {
+        font-size: 48px;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      }
+
+      .status-info {
+        flex: 1;
+      }
+
+      .status-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .status-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .admin-leaderboard {
+        padding: 0 50px 50px 50px;
+      }
+
+      .leaderboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .leaderboard-header h2 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .leaderboard-filters {
+        display: flex;
+        gap: 10px;
+      }
+
+      .filter-btn {
+        padding: 8px 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .filter-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .filter-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: #fff;
+      }
+
+      .leaderboard-table {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      }
+
+      .leaderboard-table-header {
+        display: grid;
+        grid-template-columns: 80px 1fr 150px 150px;
+        gap: 20px;
+        padding: 20px 30px;
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 700;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .leaderboard-table-body {
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .leaderboard-row {
+        display: grid;
+        grid-template-columns: 80px 1fr 150px 150px;
+        gap: 20px;
+        padding: 20px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        animation: slideIn 0.5s ease forwards;
+        opacity: 0;
+      }
+
+      @keyframes slideIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      .leaderboard-row:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .leaderboard-row.rank-1 {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 100%);
+        border-left: 4px solid #ffd700;
+      }
+
+      .leaderboard-row.rank-2 {
+        background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, transparent 100%);
+        border-left: 4px solid #c0c0c0;
+      }
+
+      .leaderboard-row.rank-3 {
+        background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, transparent 100%);
+        border-left: 4px solid #cd7f32;
+      }
+
+      .col-rank {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .rank-medal {
+        font-size: 32px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      }
+
+      .col-name {
+        display: flex;
+        align-items: center;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .player-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .col-score {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        font-weight: 700;
+        color: #4ade80;
+        transition: all 0.5s ease;
+      }
+
+      /* 🎓 Score highlight animation */
+      .score-updated {
+        animation: scoreFlash 0.8s ease;
+      }
+
+      @keyframes scoreFlash {
+        0% {
+          transform: scale(1);
+          color: #4ade80;
+        }
+        50% {
+          transform: scale(1.2);
+          color: #fbbf24;
+          text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+        }
+        100% {
+          transform: scale(1);
+          color: #4ade80;
+        }
+      }
+
+      .col-status {
+        display: flex;
+        align-items: center;
+      }
+
+      .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-racing {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+      }
+
+      .status-finished {
+        background: rgba(74, 222, 128, 0.2);
+        color: #4ade80;
+        border: 1px solid rgba(74, 222, 128, 0.4);
+      }
+
+      .status-waiting {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+      }
+
+      /* Scrollbar styling */
+      .leaderboard-table-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .leaderboard-table-body::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .leaderboard-table-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+      }
+
+      .leaderboard-table-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
     </style>
 
     <script>
@@ -711,6 +1120,7 @@
           console.log('🔄 Player state changed, updating UI...');
           updatePlayersList();
           updatePlayerScores();
+          updateAdminDashboard(); // 🎓 Update admin dashboard
         });
       });
 
@@ -1055,6 +1465,174 @@
         }
       }
 
+      // 🎓 Update Admin Dashboard (Classroom Mode)
+      function updateAdminDashboard() {
+        if (!isClassroomMode || !isAdmin || !networkManager || !networkManager.room) return;
+
+        const dashboard = document.getElementById('adminDashboard');
+        if (!dashboard) return;
+
+        const state = networkManager.room.state;
+        const players = networkManager.getAllPlayers().filter((p) => p.sessionId !== state.hostId);
+
+        // Update player count in header
+        const playerCountElem = document.getElementById('adminPlayerCount');
+        if (playerCountElem) {
+          playerCountElem.textContent = players.length;
+        }
+
+        // Update race status card
+        const raceStatusValue = document.getElementById('raceStatusValue');
+        if (raceStatusValue) {
+          const statusMap = {
+            waiting: 'Đang chờ',
+            countdown: 'Đếm ngược',
+            racing: 'Đang đua',
+            finished: 'Đã kết thúc'
+          };
+          raceStatusValue.textContent = statusMap[state.raceStatus] || 'N/A';
+        }
+
+        // Update finished count card
+        const finishedCountValue = document.getElementById('finishedCountValue');
+        if (finishedCountValue) {
+          const finishedCount = players.filter((p) => p.finishTime !== null).length;
+          finishedCountValue.textContent = `${finishedCount} / ${players.length}`;
+        }
+
+        // Update leader card
+        const leaderValue = document.getElementById('leaderValue');
+        if (leaderValue) {
+          const sortedPlayers = players.slice().sort((a, b) => b.score - a.score);
+          if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0) {
+            leaderValue.textContent = sortedPlayers[0].name;
+          } else {
+            leaderValue.textContent = 'N/A';
+          }
+        }
+
+        // Update leaderboard table
+        updateLeaderboardTable(players);
+      }
+
+      // 🎓 Update Leaderboard Table
+      let currentFilter = 'all';
+      let previousScores = {}; // Track previous scores to detect changes
+
+      function updateLeaderboardTable(players) {
+        const tableBody = document.querySelector('.leaderboard-table-body');
+        if (!tableBody) return;
+
+        // Apply filter
+        let filteredPlayers = players.slice();
+        if (currentFilter === 'racing') {
+          filteredPlayers = players.filter((p) => p.finishTime === null);
+        } else if (currentFilter === 'finished') {
+          filteredPlayers = players.filter((p) => p.finishTime !== null);
+        }
+
+        // Sort by score descending
+        filteredPlayers.sort((a, b) => b.score - a.score);
+
+        // Generate table rows (without score-updated class initially)
+        tableBody.innerHTML = filteredPlayers
+          .map((player, index) => {
+            const rank = index + 1;
+            const rankClass = rank <= 3 ? `rank-${rank}` : '';
+            const rankDisplay =
+              rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+
+            const status = player.finishTime !== null ? 'finished' : 'racing';
+            const statusText = status === 'finished' ? 'Hoàn thành' : 'Đang đua';
+            const statusClass = `status-${status}`;
+
+            const initial = player.name.charAt(0).toUpperCase();
+
+            return `
+          <div class="leaderboard-row ${rankClass}" data-player-id="${player.sessionId}" style="animation-delay: ${index * 0.05}s">
+            <div class="col-rank">
+              ${rank <= 3 ? `<span class="rank-medal">${rankDisplay}</span>` : rankDisplay}
+            </div>
+            <div class="col-name">
+              <div class="player-avatar">${initial}</div>
+              ${player.name}
+            </div>
+            <div class="col-score" data-score="${player.score}">${player.score}</div>
+            <div class="col-status">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+          </div>
+        `;
+          })
+          .join('');
+
+        // Apply flash animation to scores that changed
+        setTimeout(() => {
+          filteredPlayers.forEach((player) => {
+            if (
+              previousScores[player.sessionId] !== undefined &&
+              previousScores[player.sessionId] !== player.score
+            ) {
+              const row = tableBody.querySelector(
+                `.leaderboard-row[data-player-id="${player.sessionId}"]`
+              );
+              if (row) {
+                const scoreElement = row.querySelector('.col-score');
+                if (scoreElement) {
+                  scoreElement.classList.add('score-updated');
+                  // Remove class after animation completes (800ms)
+                  setTimeout(() => {
+                    scoreElement.classList.remove('score-updated');
+                  }, 800);
+                }
+              }
+            }
+          });
+        }, 50);
+
+        // Update previous scores for next comparison
+        const newScores = {};
+        filteredPlayers.forEach((p) => {
+          newScores[p.sessionId] = p.score;
+        });
+        previousScores = newScores;
+      }
+
+      // 🎓 Setup Leaderboard Filters
+      function setupLeaderboardFilters() {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            // Update active state
+            filterBtns.forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update filter and refresh table
+            currentFilter = btn.dataset.filter;
+            updateAdminDashboard();
+          });
+        });
+      }
+
+      // 🎓 Setup Exit Dashboard Button
+      function setupExitDashboardButton() {
+        const exitBtn = document.getElementById('exitDashboardBtn');
+        if (exitBtn) {
+          exitBtn.addEventListener('click', () => {
+            // Hide admin dashboard
+            const dashboard = document.getElementById('adminDashboard');
+            if (dashboard) {
+              dashboard.style.display = 'none';
+            }
+
+            // Return to lobby
+            if (window.returnToLobby) {
+              window.returnToLobby();
+            }
+          });
+        }
+      }
+
       function updatePlayerScores() {
         const scoresContainer = document.getElementById('playerScores');
         if (!scoresContainer) return;
@@ -1106,12 +1684,16 @@
 
         scoresContainer.innerHTML = '';
         scoresContainer.appendChild(fragment);
+
+        // 🎓 Update admin dashboard as well (if classroom mode)
+        updateAdminDashboard();
       }
 
       function startPlayerScoreUpdates() {
         if (playerScoresTimer) return;
         updatePlayerScores();
-        playerScoresTimer = setInterval(updatePlayerScores, 750);
+        // 🎓 Update every 2 seconds for better readability
+        playerScoresTimer = setInterval(updatePlayerScores, 2000);
       }
 
       function stopPlayerScoreUpdates() {
@@ -1165,12 +1747,22 @@
           console.log('🎓 Admin spectating, not initializing game');
           showToast('You are spectating this classroom session', 'info');
 
-          // Show spectator UI
+          // Show admin dashboard instead of HUD
+          const adminDashboard = document.getElementById('adminDashboard');
+          if (adminDashboard) {
+            adminDashboard.style.display = 'block';
+            setupLeaderboardFilters(); // Setup filter buttons
+            setupExitDashboardButton(); // Setup exit button
+            updateAdminDashboard(); // Initial update
+          }
+
+          // Hide multiplayer HUD
           const multiplayerHud = document.getElementById('multiplayerHud');
           if (multiplayerHud) {
-            multiplayerHud.style.display = 'block';
+            multiplayerHud.style.display = 'none';
           }
-          startPlayerScoreUpdates();
+
+          startPlayerScoreUpdates(); // This will update dashboard periodically
           return;
         }
 

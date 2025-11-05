@@ -1518,6 +1518,7 @@
       // 🎓 Update Leaderboard Table
       let currentFilter = 'all';
       let previousScores = {}; // Track previous scores to detect changes
+      let previousPlayerList = []; // Track previous player order
 
       function updateLeaderboardTable(players) {
         const tableBody = document.querySelector('.leaderboard-table-body');
@@ -1534,68 +1535,94 @@
         // Sort by score descending
         filteredPlayers.sort((a, b) => b.score - a.score);
 
-        // Generate table rows (without score-updated class initially)
-        tableBody.innerHTML = filteredPlayers
-          .map((player, index) => {
-            const rank = index + 1;
-            const rankClass = rank <= 3 ? `rank-${rank}` : '';
-            const rankDisplay =
-              rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+        // Check if player list changed (order, count, or members)
+        const currentPlayerIds = filteredPlayers.map((p) => p.sessionId).join(',');
+        const previousPlayerIds = previousPlayerList.map((p) => p.sessionId).join(',');
+        const playersChanged = currentPlayerIds !== previousPlayerIds;
 
-            const status = player.finishTime !== null ? 'finished' : 'racing';
-            const statusText = status === 'finished' ? 'Hoàn thành' : 'Đang đua';
-            const statusClass = `status-${status}`;
+        // Only regenerate entire table if players changed
+        if (playersChanged) {
+          tableBody.innerHTML = filteredPlayers
+            .map((player, index) => {
+              const rank = index + 1;
+              const rankClass = rank <= 3 ? `rank-${rank}` : '';
+              const rankDisplay =
+                rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
 
-            const initial = player.name.charAt(0).toUpperCase();
+              const status = player.finishTime !== null ? 'finished' : 'racing';
+              const statusText = status === 'finished' ? 'Hoàn thành' : 'Đang đua';
+              const statusClass = `status-${status}`;
 
-            return `
-          <div class="leaderboard-row ${rankClass}" data-player-id="${player.sessionId}" style="animation-delay: ${index * 0.05}s">
-            <div class="col-rank">
-              ${rank <= 3 ? `<span class="rank-medal">${rankDisplay}</span>` : rankDisplay}
+              const initial = player.name.charAt(0).toUpperCase();
+
+              return `
+            <div class="leaderboard-row ${rankClass}" data-player-id="${player.sessionId}" style="animation-delay: ${index * 0.05}s">
+              <div class="col-rank">
+                ${rank <= 3 ? `<span class="rank-medal">${rankDisplay}</span>` : rankDisplay}
+              </div>
+              <div class="col-name">
+                <div class="player-avatar">${initial}</div>
+                ${player.name}
+              </div>
+              <div class="col-score" data-score="${player.score}">${player.score}</div>
+              <div class="col-status">
+                <span class="status-badge ${statusClass}">${statusText}</span>
+              </div>
             </div>
-            <div class="col-name">
-              <div class="player-avatar">${initial}</div>
-              ${player.name}
-            </div>
-            <div class="col-score" data-score="${player.score}">${player.score}</div>
-            <div class="col-status">
-              <span class="status-badge ${statusClass}">${statusText}</span>
-            </div>
-          </div>
-        `;
-          })
-          .join('');
+          `;
+            })
+            .join('');
+        } else {
+          // Players didn't change, just update scores and status
+          filteredPlayers.forEach((player, index) => {
+            const row = tableBody.querySelector(
+              `.leaderboard-row[data-player-id="${player.sessionId}"]`
+            );
+            if (!row) return;
 
-        // Apply flash animation to scores that changed
-        setTimeout(() => {
-          filteredPlayers.forEach((player) => {
-            if (
-              previousScores[player.sessionId] !== undefined &&
-              previousScores[player.sessionId] !== player.score
-            ) {
-              const row = tableBody.querySelector(
-                `.leaderboard-row[data-player-id="${player.sessionId}"]`
-              );
-              if (row) {
-                const scoreElement = row.querySelector('.col-score');
-                if (scoreElement) {
-                  scoreElement.classList.add('score-updated');
-                  // Remove class after animation completes (800ms)
-                  setTimeout(() => {
-                    scoreElement.classList.remove('score-updated');
-                  }, 800);
-                }
+            const scoreElement = row.querySelector('.col-score');
+            const statusElement = row.querySelector('.status-badge');
+
+            if (scoreElement) {
+              const currentScore = parseInt(scoreElement.getAttribute('data-score')) || 0;
+              const newScore = player.score;
+
+              // Only update if score changed
+              if (currentScore !== newScore) {
+                scoreElement.setAttribute('data-score', newScore);
+                scoreElement.textContent = newScore;
+
+                // Add flash animation
+                scoreElement.classList.remove('score-updated'); // Remove first to restart animation
+                void scoreElement.offsetWidth; // Force reflow
+                scoreElement.classList.add('score-updated');
+
+                // Remove class after animation
+                setTimeout(() => {
+                  scoreElement.classList.remove('score-updated');
+                }, 850);
               }
             }
-          });
-        }, 50);
 
-        // Update previous scores for next comparison
+            // Update status if changed
+            if (statusElement) {
+              const status = player.finishTime !== null ? 'finished' : 'racing';
+              const statusText = status === 'finished' ? 'Hoàn thành' : 'Đang đua';
+              const statusClass = `status-${status}`;
+
+              statusElement.className = `status-badge ${statusClass}`;
+              statusElement.textContent = statusText;
+            }
+          });
+        }
+
+        // Update previous scores and player list
         const newScores = {};
         filteredPlayers.forEach((p) => {
           newScores[p.sessionId] = p.score;
         });
         previousScores = newScores;
+        previousPlayerList = filteredPlayers.map((p) => ({ ...p }));
       }
 
       // 🎓 Setup Leaderboard Filters

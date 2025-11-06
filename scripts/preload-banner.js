@@ -8,6 +8,7 @@ import {
 
 const STYLE_ID = 'asset-preload-style';
 const BANNER_ID = 'assetPreloadBanner';
+const BANNER_DONE_VISIBILITY_MS = 1500;
 
 let bannerElements = null;
 let unsubscribeFromProgress = null;
@@ -109,7 +110,7 @@ function ensureBannerElements() {
     banner.className = 'asset-preload-banner';
     banner.setAttribute('role', 'status');
     banner.setAttribute('aria-live', 'polite');
-    banner.dataset.state = 'active';
+    banner.dataset.state = 'hidden';
 
     const label = document.createElement('div');
     label.className = 'asset-preload-label';
@@ -155,6 +156,22 @@ function ensureBannerElements() {
   return bannerElements;
 }
 
+function setBannerDatasetState(banner, targetState) {
+  if (!banner) return;
+  const current = banner.dataset.state;
+  if (current === targetState) return;
+
+  if (current === 'hidden' && targetState !== 'hidden') {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        banner.dataset.state = targetState;
+      });
+    });
+  } else {
+    banner.dataset.state = targetState;
+  }
+}
+
 function applyBannerState(state) {
   if (!state) return;
 
@@ -195,16 +212,16 @@ function applyBannerState(state) {
   }
 
   if (!done) {
-    banner.dataset.state = 'active';
+    setBannerDatasetState(banner, 'active');
   } else if (failures.length) {
-    banner.dataset.state = 'error';
+    setBannerDatasetState(banner, 'error');
   } else {
-    banner.dataset.state = 'done';
+    setBannerDatasetState(banner, 'done');
     hideTimeout = setTimeout(() => {
       if (banner.dataset.state === 'done') {
-        banner.dataset.state = 'hidden';
+        setBannerDatasetState(banner, 'hidden');
       }
-    }, 2500);
+    }, BANNER_DONE_VISIBILITY_MS);
   }
 
   window.__assetPreloadState = state;
@@ -222,8 +239,9 @@ function handleProgressUpdate(state) {
  * @returns {Promise<object>} Resolves with the final preload state.
  */
 export function initAssetPreloader(options = {}) {
-  const { concurrency = 4, forceBanner = false } = options;
-  renderBanner = forceBanner || !isAssetPreloadPrimed();
+  const { concurrency = 4, forceBanner = false, showWhenPrimed = true } = options;
+  const primed = isAssetPreloadPrimed();
+  renderBanner = forceBanner || !primed || showWhenPrimed;
 
   if (renderBanner) {
     ensureBannerElements();
@@ -232,6 +250,8 @@ export function initAssetPreloader(options = {}) {
   if (!initialized) {
     initialized = true;
     unsubscribeFromProgress = subscribeToAssetPreload(handleProgressUpdate);
+    applyBannerState(getAssetPreloadState());
+  } else if (primed && renderBanner) {
     applyBannerState(getAssetPreloadState());
   }
 

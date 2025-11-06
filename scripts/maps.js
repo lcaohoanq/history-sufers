@@ -349,7 +349,7 @@ export function WorldMap(networkStrategy = null) {
             }
             if (key == KEYCODE.DOWN && !paused) {
               character.onDownKeyPressed();
-              AudioManager.playSoundEffect('sounds/siu.mp3');
+              // AudioManager.playSoundEffect('sounds/siu.mp3');
 
               if (currentCameraIndex === 2) {
                 const live = CAMERA_SETTING_LIVE;
@@ -573,7 +573,7 @@ export function WorldMap(networkStrategy = null) {
     showBuffNotification(buffs);
 
     // Play coin/buff SFX (respect mute setting)
-    AudioManager.playSoundEffect('sounds/subway-surfers-coin-collect.mp3');
+    AudioManager.playSoundEffect('sounds/subway-surfers-coin-collect.ogg');
 
     // Check for game over conditions
     checkGameOverConditions();

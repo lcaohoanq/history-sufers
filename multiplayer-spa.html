@@ -1014,6 +1014,7 @@
       let playerScoresTimer = null;
       let isClassroomMode = false; // 🎓 NEW: Track classroom mode
       let isAdmin = false; // 🎓 NEW: Track if current user is admin
+      let waitForAssetPreload = async () => {};
 
       // ==================== VIEW SWITCHING ====================
       function switchView(viewId) {
@@ -1027,6 +1028,24 @@
       // ==================== INITIALIZATION ====================
       window.addEventListener('load', async () => {
         console.log('🎮 Single Page App loaded');
+
+        // ⚡ Kick off shared asset preloading while the player is still in the lobby
+        try {
+          const { initAssetPreloader, waitForAssetPreloadCompletion } = await import(
+            './scripts/preload-banner.js'
+          );
+          initAssetPreloader();
+          waitForAssetPreload = async () => {
+            try {
+              await waitForAssetPreloadCompletion();
+            } catch (error) {
+              console.warn('Asset preloading completed with warnings', error);
+            }
+          };
+        } catch (error) {
+          console.error('Failed to start asset preloading:', error);
+          waitForAssetPreload = async () => {};
+        }
 
         // 🎵 Initialize audio FIRST (before anything else)
         if (typeof AudioManager !== 'undefined') {
@@ -1834,6 +1853,7 @@
         }
 
         try {
+          await waitForAssetPreload();
           gameInitialized = true;
 
           // Import required modules

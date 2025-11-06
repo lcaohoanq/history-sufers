@@ -10,7 +10,25 @@ import { updateSoundButtonUI } from '../scripts/utils.js';
  * HISTORY SURFERS - SINGLE PLAYER MODE
  */
 
-window.addEventListener('load', function () {
+window.addEventListener('load', async function () {
+  let waitForAssets = async () => {};
+
+  try {
+    const { initAssetPreloader, waitForAssetPreloadCompletion } = await import(
+      '../scripts/preload-banner.js'
+    );
+    initAssetPreloader();
+    waitForAssets = async () => {
+      try {
+        await waitForAssetPreloadCompletion();
+      } catch (error) {
+        console.warn('Asset preloading completed with warnings', error);
+      }
+    };
+  } catch (error) {
+    console.error('Failed to initialize asset preloader:', error);
+  }
+
   // Initialize audio manager
   AudioManager.init();
 
@@ -31,6 +49,12 @@ window.addEventListener('load', function () {
     console.error('Audio preload failed', e);
     // fallback: you may call AudioManager.playIntro() later after user gesture
   });
+
+  try {
+    await waitForAssets();
+  } catch (error) {
+    console.warn('Proceeding despite asset preload failure', error);
+  }
 
   // Create single player strategy
   const networkStrategy = new SinglePlayerStrategy();

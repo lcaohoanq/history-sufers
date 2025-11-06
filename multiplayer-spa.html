@@ -64,23 +64,6 @@
 
       <!-- Main Container -->
       <div class="container">
-        <!-- Asset Preload Banner -->
-        <div
-          id="assetPreloadBanner"
-          class="preload-banner"
-          role="status"
-          aria-live="polite"
-          data-state="active"
-        >
-          <div class="preload-label">
-            <span class="preload-icon">⚡</span>
-            <span id="assetPreloadMessage">Đang chuẩn bị tài nguyên...</span>
-          </div>
-          <div class="preload-progress">
-            <div id="assetPreloadProgress" class="preload-progress-fill"></div>
-          </div>
-          <small id="assetPreloadDetail">Đang kiểm tra danh sách tài nguyên...</small>
-        </div>
         <!-- Mode Selection -->
         <div id="modeSelection">
           <div class="card">
@@ -1007,76 +990,6 @@
         width: 8px;
       }
 
-      .preload-banner {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        background: rgba(14, 18, 36, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
-        padding: 14px 18px;
-        color: #ffffff;
-        position: fixed;
-        top: 24px;
-        left: 50%;
-        transform: translate(-50%, 0);
-        width: min(420px, calc(100% - 32px));
-        margin: 0;
-        box-shadow: 0 18px 35px rgba(8, 12, 26, 0.4);
-        transition: opacity 0.4s ease, transform 0.4s ease;
-        z-index: 1200;
-        pointer-events: none;
-      }
-
-      .preload-banner[data-state='hidden'] {
-        opacity: 0;
-        pointer-events: none;
-        transform: translate(-50%, -20px);
-      }
-
-      .preload-banner[data-state='done'] .preload-progress-fill {
-        background: linear-gradient(90deg, #48bb78, #38a169);
-      }
-
-      .preload-banner[data-state='error'] {
-        border-color: rgba(255, 86, 86, 0.6);
-        background: rgba(68, 16, 16, 0.85);
-      }
-
-      .preload-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 15px;
-        font-weight: 500;
-        letter-spacing: 0.3px;
-      }
-
-      .preload-icon {
-        font-size: 18px;
-      }
-
-      .preload-progress {
-        position: relative;
-        height: 6px;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-        overflow: hidden;
-      }
-
-      .preload-progress-fill {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #4fd1c5, #63b3ed);
-        transition: width 0.3s ease;
-      }
-
-      .preload-banner small {
-        font-size: 12px;
-        opacity: 0.75;
-      }
-
       .leaderboard-table-body::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.05);
       }
@@ -1101,89 +1014,7 @@
       let playerScoresTimer = null;
       let isClassroomMode = false; // 🎓 NEW: Track classroom mode
       let isAdmin = false; // 🎓 NEW: Track if current user is admin
-      let assetPreloadPromise = null;
-      let assetPreloadHideTimeout = null;
-
-      const assetPreloadBanner = document.getElementById('assetPreloadBanner');
-      const assetPreloadMessage = document.getElementById('assetPreloadMessage');
-      const assetPreloadDetail = document.getElementById('assetPreloadDetail');
-      const assetPreloadProgress = document.getElementById('assetPreloadProgress');
-
-      window.__assetPreloadState =
-        window.__assetPreloadState || { total: 0, completed: 0, failures: [], done: false };
-      window.__assetPreloadPromise = window.__assetPreloadPromise || null;
-
-      function updateAssetPreloadBanner(state = {}) {
-        if (!assetPreloadBanner) {
-          return;
-        }
-
-        const snapshot = {
-          total: state.total ?? 0,
-          completed: state.completed ?? 0,
-          failures: Array.isArray(state.failures) ? state.failures : [],
-          done: state.done === true
-        };
-
-        const { total, completed, failures, done } = snapshot;
-        const percent = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
-
-        if (assetPreloadProgress) {
-          assetPreloadProgress.style.width = `${percent}%`;
-        }
-
-        if (assetPreloadMessage) {
-          if (!done) {
-            assetPreloadMessage.textContent = 'Đang chuẩn bị tài nguyên...';
-          } else if (failures.length) {
-            assetPreloadMessage.textContent = 'Một số tài nguyên chưa tải được';
-          } else {
-            assetPreloadMessage.textContent = 'Tài nguyên đã sẵn sàng!';
-          }
-        }
-
-        if (assetPreloadDetail) {
-          if (!done) {
-            assetPreloadDetail.textContent = total
-              ? `Đã chuẩn bị ${completed}/${total} (${percent}%)`
-              : 'Đang kiểm tra danh sách tài nguyên...';
-          } else if (failures.length) {
-            assetPreloadDetail.textContent = `Hoàn tất ${completed}/${total}. Sẽ thử lại khi vào game.`;
-          } else {
-            assetPreloadDetail.textContent = `Đã chuẩn bị ${completed}/${total} (${percent}%)`;
-          }
-        }
-
-        if (assetPreloadHideTimeout) {
-          clearTimeout(assetPreloadHideTimeout);
-          assetPreloadHideTimeout = null;
-        }
-
-        if (!done) {
-          assetPreloadBanner.dataset.state = 'active';
-        } else if (failures.length) {
-          assetPreloadBanner.dataset.state = 'error';
-        } else {
-          assetPreloadBanner.dataset.state = 'done';
-          assetPreloadHideTimeout = setTimeout(() => {
-            if (assetPreloadBanner && assetPreloadBanner.dataset.state === 'done') {
-              assetPreloadBanner.dataset.state = 'hidden';
-            }
-          }, 2500);
-        }
-
-        window.__assetPreloadState = { total, completed, failures, done };
-      }
-
-      async function ensureAssetPreloadComplete() {
-        if (assetPreloadPromise) {
-          try {
-            await assetPreloadPromise;
-          } catch (error) {
-            console.warn('Asset preloading completed with warnings', error);
-          }
-        }
-      }
+      let waitForAssetPreload = async () => {};
 
       // ==================== VIEW SWITCHING ====================
       function switchView(viewId) {
@@ -1198,39 +1029,22 @@
       window.addEventListener('load', async () => {
         console.log('🎮 Single Page App loaded');
 
-        // ⚡ Kick off asset preloading while the player is still in the lobby
+        // ⚡ Kick off shared asset preloading while the player is still in the lobby
         try {
-          const { startAssetPreload } = await import('./scripts/preload-assets.js');
-          assetPreloadPromise = startAssetPreload({
-            onProgress: updateAssetPreloadBanner
-          }).catch((error) => {
-            console.error('Asset preload rejected:', error);
-            return {
-              done: true,
-              total: 0,
-              completed: 0,
-              failures: [{ url: 'asset-preload', error }]
-            };
-          });
-          window.__assetPreloadPromise = assetPreloadPromise;
-          assetPreloadPromise.then((finalState) => {
-            updateAssetPreloadBanner(finalState);
-          });
+          const { initAssetPreloader, waitForAssetPreloadCompletion } = await import(
+            './scripts/preload-banner.js'
+          );
+          initAssetPreloader();
+          waitForAssetPreload = async () => {
+            try {
+              await waitForAssetPreloadCompletion();
+            } catch (error) {
+              console.warn('Asset preloading completed with warnings', error);
+            }
+          };
         } catch (error) {
           console.error('Failed to start asset preloading:', error);
-          window.__assetPreloadState = {
-            total: 0,
-            completed: 0,
-            failures: [{ url: 'preload-module', error }],
-            done: false
-          };
-          if (assetPreloadBanner && assetPreloadMessage && assetPreloadDetail) {
-            assetPreloadBanner.dataset.state = 'error';
-            assetPreloadMessage.textContent = 'Không thể tải trước tài nguyên';
-            assetPreloadDetail.textContent = 'Tải lần đầu khi vào game có thể chậm hơn.';
-          }
-          assetPreloadPromise = Promise.resolve(window.__assetPreloadState);
-          window.__assetPreloadPromise = assetPreloadPromise;
+          waitForAssetPreload = async () => {};
         }
 
         // 🎵 Initialize audio FIRST (before anything else)
@@ -2039,7 +1853,7 @@
         }
 
         try {
-          await ensureAssetPreloadComplete();
+          await waitForAssetPreload();
           gameInitialized = true;
 
           // Import required modules

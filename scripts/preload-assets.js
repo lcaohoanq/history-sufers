@@ -1,0 +1,203 @@
+const CACHE_NAME = 'history-surfers-preload-v1';
+
+const GLB_ASSETS = [
+  new URL('../assets/objects/SimpleTree.glb', import.meta.url).href,
+  new URL('../assets/objects/Tree.glb', import.meta.url).href,
+  new URL('../assets/objects/VillageHut.glb', import.meta.url).href,
+  new URL('../assets/objects/CapitalistExpress.glb', import.meta.url).href,
+  new URL('../assets/objects/WaterBuffalo.glb', import.meta.url).href,
+  new URL('../assets/objects/SkyScraper.glb', import.meta.url).href,
+  new URL('../assets/objects/StorageHouse.glb', import.meta.url).href,
+  new URL('../assets/objects/House.glb', import.meta.url).href,
+  new URL('../assets/objects/Bamboo.glb', import.meta.url).href,
+  new URL('../assets/objects/CropField.glb', import.meta.url).href,
+  new URL('../assets/objects/Factory.glb', import.meta.url).href,
+  new URL('../assets/objects/LargeBuilding_2.glb', import.meta.url).href,
+  new URL('../assets/objects/Train.glb', import.meta.url).href,
+  new URL('../assets/objects/Gear.glb', import.meta.url).href,
+  new URL('../assets/objects/BallotBox.glb', import.meta.url).href,
+  new URL('../assets/objects/RadioTower.glb', import.meta.url).href,
+  new URL('../assets/objects/TrafficBarrier.glb', import.meta.url).href,
+  new URL('../assets/models/business_man.glb', import.meta.url).href,
+  new URL('../assets/models/worker.glb', import.meta.url).href,
+  new URL('../assets/models/farmer.glb', import.meta.url).href
+];
+
+const TEXTURE_ASSETS = [
+  new URL('../assets/xp.jpg', import.meta.url).href,
+  new URL('../assets/road.jpg', import.meta.url).href,
+  new URL('../assets/bamboo.jpg', import.meta.url).href,
+  new URL('../textures/road/Road007_1K-JPG_Color.jpg', import.meta.url).href,
+  new URL('../textures/ground/Ground067_1K-JPG_Color.jpg', import.meta.url).href,
+  new URL('../textures/brick/Bricks075A_1K-JPG_Color.jpg', import.meta.url).href,
+  new URL('../textures/ground/co.jpg', import.meta.url).href,
+  new URL('../textures/brick/leda.jpg', import.meta.url).href,
+  new URL('../textures/road/viahe.jpg', import.meta.url).href,
+  new URL('../textures/ground/co-1.jpg', import.meta.url).href,
+  new URL('../textures/brick/leda-1.jpg', import.meta.url).href,
+  new URL('../textures/road/viahe-1.jpg', import.meta.url).href
+];
+
+const AUDIO_ASSETS = [
+  new URL('../sounds/intro.wav', import.meta.url).href,
+  new URL('../sounds/loop.wav', import.meta.url).href,
+  new URL('../sounds/gameover.mp3', import.meta.url).href,
+  new URL('../sounds/error.mp3', import.meta.url).href,
+  new URL('../sounds/siu.mp3', import.meta.url).href,
+  new URL('../sounds/subway-surfers-coin-collect.mp3', import.meta.url).href
+];
+
+const manifest = buildManifest();
+
+const state = {
+  started: false,
+  done: false,
+  total: manifest.length,
+  completed: 0,
+  failures: []
+};
+
+let preloadPromise = null;
+const subscribers = new Set();
+let gltfModulePromise = null;
+
+function buildManifest() {
+  const items = [];
+  const appended = new Set();
+  function push(url, type) {
+    if (!url || appended.has(url)) {
+      return;
+    }
+    appended.add(url);
+    items.push({ url, type });
+  }
+
+  GLB_ASSETS.forEach((url) => push(url, 'glb'));
+  TEXTURE_ASSETS.forEach((url) => push(url, 'texture'));
+  AUDIO_ASSETS.forEach((url) => push(url, 'audio'));
+  return items;
+}
+
+function snapshotState(extra = {}) {
+  return { ...state, ...extra, total: state.total, completed: state.completed };
+}
+
+function notify(extra) {
+  const current = snapshotState(extra);
+  subscribers.forEach((listener) => {
+    try {
+      listener(current);
+    } catch (error) {
+      console.error('Asset preload listener failed', error);
+    }
+  });
+  return current;
+}
+
+async function getGLTFModule() {
+  if (!gltfModulePromise) {
+    gltfModulePromise = import('./glb-model-cache.js');
+  }
+  return gltfModulePromise;
+}
+
+async function warmGLB(url) {
+  const { getGLTFClone } = await getGLTFModule();
+  await getGLTFClone(url);
+}
+
+async function warmViaFetch(url) {
+  const response = await fetch(url, { cache: 'force-cache' });
+  if (!response.ok) {
+    throw new Error(`Request for ${url} failed with status ${response.status}`);
+  }
+  const cacheableResponse = response.clone();
+  // Consume the body to ensure the asset is fully cached.
+  await response.arrayBuffer();
+  if ('caches' in window) {
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(url, cacheableResponse);
+    } catch (error) {
+      // Ignore cache storage errors (e.g., cross-origin or quota issues)
+    }
+  }
+}
+
+async function processAsset(item) {
+  if (item.type === 'glb') {
+    await warmGLB(item.url);
+  } else {
+    await warmViaFetch(item.url);
+  }
+}
+
+async function runWithConcurrency(items, concurrency, onItem) {
+  let index = 0;
+  const workerCount = Math.min(concurrency, items.length || 1);
+
+  async function work() {
+    while (true) {
+      const current = index++;
+      if (current >= items.length) {
+        break;
+      }
+      await onItem(items[current], current);
+    }
+  }
+
+  const workers = [];
+  for (let i = 0; i < workerCount; i++) {
+    workers.push(work());
+  }
+  await Promise.all(workers);
+}
+
+export function getAssetPreloadState() {
+  return snapshotState();
+}
+
+export function subscribeToAssetPreload(listener) {
+  if (typeof listener !== 'function') {
+    return () => {};
+  }
+  subscribers.add(listener);
+  listener(snapshotState());
+  return () => subscribers.delete(listener);
+}
+
+export function startAssetPreload(options = {}) {
+  const { concurrency = 4, onProgress } = options;
+  if (typeof onProgress === 'function') {
+    subscribeToAssetPreload(onProgress);
+  }
+
+  if (state.started) {
+    return preloadPromise;
+  }
+
+  state.started = true;
+  state.total = manifest.length;
+  notify();
+
+  preloadPromise = (async () => {
+    await runWithConcurrency(manifest, Math.max(1, concurrency), async (item) => {
+      try {
+        await processAsset(item);
+      } catch (error) {
+        state.failures.push({ url: item.url, type: item.type, error });
+      } finally {
+        state.completed += 1;
+        notify({ lastUrl: item.url });
+      }
+    });
+    state.done = true;
+    return notify({ done: true });
+  })();
+
+  return preloadPromise;
+}
+
+export function waitForAssetPreload() {
+  return preloadPromise ?? Promise.resolve(snapshotState());
+}

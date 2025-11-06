@@ -1,4 +1,6 @@
 const CACHE_NAME = 'history-surfers-preload-v1';
+const STORAGE_KEY = 'hs-preload-status';
+const STORAGE_READY_VALUE = `${CACHE_NAME}::ready`;
 
 const GLB_ASSETS = [
   new URL('../assets/objects/SimpleTree.glb', import.meta.url).href,
@@ -60,6 +62,7 @@ const state = {
 let preloadPromise = null;
 const subscribers = new Set();
 let gltfModulePromise = null;
+let warmedFromStorage = false;
 
 function buildManifest() {
   const items = [];
@@ -153,6 +156,55 @@ async function runWithConcurrency(items, concurrency, onItem) {
   await Promise.all(workers);
 }
 
+function readStoredReady() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return false;
+  }
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === STORAGE_READY_VALUE) {
+      return true;
+    }
+    if (stored && stored !== STORAGE_READY_VALUE) {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
+function persistStoredReady() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+  try {
+    window.localStorage.setItem(STORAGE_KEY, STORAGE_READY_VALUE);
+  } catch (error) {}
+}
+
+function clearStoredReady() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch (error) {}
+}
+
+function initializeFromStorage() {
+  warmedFromStorage = readStoredReady();
+  if (warmedFromStorage) {
+    state.started = true;
+    state.done = true;
+    state.completed = state.total;
+    state.failures = [];
+    preloadPromise = Promise.resolve(snapshotState({ done: true }));
+  }
+}
+
+initializeFromStorage();
+
 export function getAssetPreloadState() {
   return snapshotState();
 }
@@ -166,18 +218,33 @@ export function subscribeToAssetPreload(listener) {
   return () => subscribers.delete(listener);
 }
 
+export function isAssetPreloadPrimed() {
+  return state.done === true && state.failures.length === 0 && state.completed >= state.total && state.total > 0;
+}
+
 export function startAssetPreload(options = {}) {
   const { concurrency = 4, onProgress } = options;
   if (typeof onProgress === 'function') {
     subscribeToAssetPreload(onProgress);
   }
 
-  if (state.started) {
+  if (state.done && state.failures.length === 0) {
+    if (!preloadPromise) {
+      preloadPromise = Promise.resolve(snapshotState({ done: true }));
+    }
     return preloadPromise;
   }
 
+  if (state.started) {
+    return preloadPromise ?? Promise.resolve(snapshotState());
+  }
+
   state.started = true;
+  state.done = false;
   state.total = manifest.length;
+  state.completed = 0;
+  state.failures = [];
+  clearStoredReady();
   notify();
 
   preloadPromise = (async () => {
@@ -192,7 +259,13 @@ export function startAssetPreload(options = {}) {
       }
     });
     state.done = true;
-    return notify({ done: true });
+    const finalState = notify({ done: true });
+    if (state.failures.length === 0) {
+      persistStoredReady();
+    } else {
+      clearStoredReady();
+    }
+    return finalState;
   })();
 
   return preloadPromise;

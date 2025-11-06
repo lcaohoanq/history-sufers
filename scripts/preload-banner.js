@@ -2,7 +2,8 @@ import {
   startAssetPreload,
   subscribeToAssetPreload,
   getAssetPreloadState,
-  waitForAssetPreload
+  waitForAssetPreload,
+  isAssetPreloadPrimed
 } from './preload-assets.js';
 
 const STYLE_ID = 'asset-preload-style';
@@ -12,6 +13,7 @@ let bannerElements = null;
 let unsubscribeFromProgress = null;
 let hideTimeout = null;
 let initialized = false;
+let renderBanner = true;
 
 function ensureStyleSheet() {
   if (document.getElementById(STYLE_ID)) {
@@ -156,6 +158,11 @@ function ensureBannerElements() {
 function applyBannerState(state) {
   if (!state) return;
 
+  if (!renderBanner) {
+    window.__assetPreloadState = state;
+    return;
+  }
+
   const { banner, message, detail, progressFill } = ensureBannerElements();
   if (!banner || !message || !detail || !progressFill) {
     return;
@@ -215,7 +222,12 @@ function handleProgressUpdate(state) {
  * @returns {Promise<object>} Resolves with the final preload state.
  */
 export function initAssetPreloader(options = {}) {
-  ensureBannerElements();
+  const { concurrency = 4, forceBanner = false } = options;
+  renderBanner = forceBanner || !isAssetPreloadPrimed();
+
+  if (renderBanner) {
+    ensureBannerElements();
+  }
 
   if (!initialized) {
     initialized = true;
@@ -223,10 +235,8 @@ export function initAssetPreloader(options = {}) {
     applyBannerState(getAssetPreloadState());
   }
 
-  const { concurrency = 4 } = options;
   const preloadPromise = startAssetPreload({
-    concurrency,
-    onProgress: handleProgressUpdate
+    concurrency
   });
 
   window.__assetPreloadPromise = preloadPromise;
@@ -271,4 +281,5 @@ export function disposeAssetPreloader() {
     hideTimeout = null;
   }
   initialized = false;
+  renderBanner = true;
 }

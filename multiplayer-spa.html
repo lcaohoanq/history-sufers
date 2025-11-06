@@ -1028,6 +1028,19 @@
       window.addEventListener('load', async () => {
         console.log('🎮 Single Page App loaded');
 
+        // 🎵 Initialize audio FIRST (before anything else)
+        if (typeof AudioManager !== 'undefined') {
+          try {
+            console.log('🎵 Initializing audio...');
+            AudioManager.init();
+            await AudioManager.loadAll();
+            console.log('✅ Audio buffers loaded successfully');
+          } catch (error) {
+            console.error('❌ Failed to load audio:', error);
+            showToast('Audio loading failed', 'warning');
+          }
+        }
+
         // Import and initialize network manager
         const { ColyseusNetworkManager } = await import('./js/network-colyseus.js');
         networkManager = new ColyseusNetworkManager();
@@ -1047,6 +1060,21 @@
         networkManager.on('notification', (notification) => {
           showToast(notification.message, notification.type);
         });
+
+        // 🎵 Setup sound toggle button
+        const soundToggleBtn = document.getElementById('sound-toggle');
+        if (soundToggleBtn && typeof AudioManager !== 'undefined') {
+          // Set initial button state
+          soundToggleBtn.textContent = AudioManager.getMuteState() ? '🔇' : '🔊';
+
+          soundToggleBtn.addEventListener('click', () => {
+            const isMuted = AudioManager.toggleMute();
+            soundToggleBtn.textContent = isMuted ? '🔇' : '🔊';
+            console.log('🎵 Sound toggled:', isMuted ? 'muted' : 'unmuted');
+          });
+
+          console.log('✅ Sound toggle button setup');
+        }
 
         // Listen for countdown
         networkManager.on('raceCountdown', (data) => {
@@ -1128,6 +1156,18 @@
       function showMultiplayerOptions() {
         document.getElementById('modeSelection').style.display = 'none';
         document.getElementById('multiplayerOptions').style.display = 'block';
+
+        // 🎵 Play intro music when entering multiplayer lobby
+        if (typeof AudioManager !== 'undefined') {
+          const activeAudio = AudioManager._active();
+          // Only play if not already playing
+          if (!activeAudio.intro && !activeAudio.loop && !activeAudio.gameover) {
+            console.log('🎵 Starting intro music...');
+            AudioManager.playIntro();
+          } else {
+            console.log('🎵 Audio already playing');
+          }
+        }
       }
 
       function backToModeSelection() {
@@ -1832,6 +1872,14 @@
           // Handle audio transition (intro -> loop)
           if (typeof AudioManager !== 'undefined') {
             const activeAudio = AudioManager._active();
+            
+            // Check if audio buffers are loaded
+            const buffers = AudioManager._buffers();
+            if (!buffers.intro || !buffers.loop) {
+              console.warn('⚠️ Audio buffers not loaded yet, skipping audio transition');
+              return;
+            }
+
             if (!activeAudio.loop) {
               // Intro is playing, transition to loop
               console.log('🎵 Transitioning from intro to loop...');
@@ -1875,6 +1923,17 @@
         // Reset lobby to multiplayer options
         backToMultiplayerOptions();
         backToModeSelection();
+
+        // 🎵 Restart intro music after returning to lobby
+        if (typeof AudioManager !== 'undefined') {
+          setTimeout(() => {
+            const activeAudio = AudioManager._active();
+            if (!activeAudio.intro && !activeAudio.loop && !activeAudio.gameover) {
+              console.log('🎵 Restarting intro music in lobby...');
+              AudioManager.playIntro();
+            }
+          }, 500);
+        }
       };
     </script>
   </body>

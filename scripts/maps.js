@@ -95,7 +95,7 @@ export function WorldMap(networkStrategy = null) {
   var minRowsBetweenBuff = 3;
   var minRowsBetweenSideObject = 1;
   var lastSafeLane = 0;
-  var DEBUG_HITBOX = true;
+  var DEBUG_HITBOX = false;
 
   // ===== DIFFICULTY SCALING =====
   var gameSpeed = 75; // Initial speed

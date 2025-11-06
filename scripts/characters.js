@@ -44,7 +44,7 @@ export function Character() {
 
   // Hitbox visualization
   this.hitboxHelper = null;
-  this.showHitbox = true; // Toggle this to show/hide hitbox
+  this.showHitbox = false; // Toggle this to show/hide hitbox
 
   // Load the model
   init();
